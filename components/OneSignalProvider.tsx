@@ -15,9 +15,6 @@ export const OneSignalProvider: React.FC<OneSignalProviderProps> = ({ children }
         await OneSignal.init({
           appId: '66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1',
           allowLocalhostAsSecureOrigin: true,
-          notifyButton: {
-            enable: false, // カスタムボタンを使用するため無効化
-          },
         });
         
         console.log('OneSignal initialized successfully');
@@ -45,4 +42,3 @@ export const OneSignalProvider: React.FC<OneSignalProviderProps> = ({ children }
 
   return <>{children}</>;
 };
-
