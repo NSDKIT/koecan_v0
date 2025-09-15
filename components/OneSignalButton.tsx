@@ -12,8 +12,8 @@ export const OneSignalButton: React.FC = () => {
     const checkSubscription = async () => {
       try {
         if (window.OneSignal) {
-          const isSubscribed = await OneSignal.getNotificationPermission();
-          setIsSubscribed(isSubscribed === 'granted');
+          const permission = await OneSignal.Notifications.permission;
+          setIsSubscribed(permission === 'granted');
         }
       } catch (error) {
         console.error('OneSignal subscription check failed:', error);
@@ -26,9 +26,8 @@ export const OneSignalButton: React.FC = () => {
   const handleSubscribe = async () => {
     setIsLoading(true);
     try {
-      await OneSignal.showNativePrompt();
-      const permission = await OneSignal.getNotificationPermission();
-      setIsSubscribed(permission === 'granted');
+      const result = await OneSignal.Notifications.requestPermission();
+      setIsSubscribed(result === true);
     } catch (error) {
       console.error('OneSignal subscription failed:', error);
     } finally {
