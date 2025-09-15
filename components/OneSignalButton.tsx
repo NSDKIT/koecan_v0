@@ -2,13 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// OneSignalの型定義
-declare global {
-  interface Window {
-    OneSignal?: any[];
-  }
-}
-
 export const OneSignalButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -18,12 +11,12 @@ export const OneSignalButton: React.FC = () => {
   useEffect(() => {
     // OneSignalの準備状態を確認
     const checkOneSignalReady = () => {
-      if (window.OneSignal && typeof window.OneSignal.push === 'function') {
+      if ((window as any).OneSignal && typeof (window as any).OneSignal.push === 'function') {
         setOneSignalReady(true);
         
         // 購読状態を確認
-        window.OneSignal.push(function() {
-          window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+        (window as any).OneSignal.push(function() {
+          (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
             setIsSubscribed(isEnabled);
             console.log('Subscription status checked:', isEnabled);
           });
@@ -59,24 +52,24 @@ export const OneSignalButton: React.FC = () => {
     setMessage('');
     
     try {
-      if (window.OneSignal && oneSignalReady) {
+      if ((window as any).OneSignal && oneSignalReady) {
         console.log('Using OneSignal for subscription...');
         
-        window.OneSignal.push(function() {
+        (window as any).OneSignal.push(function() {
           // プッシュ通知を要求
-          window.OneSignal.showNativePrompt().then(function() {
+          (window as any).OneSignal.showNativePrompt().then(function() {
             console.log('Native prompt shown');
             
             // 購読状態を再確認
             setTimeout(() => {
-              window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+              (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
                 setIsSubscribed(isEnabled);
                 
                 if (isEnabled) {
                   setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
                   
                   // ユーザーIDを表示
-                  window.OneSignal.getUserId(function(userId: string) {
+                  (window as any).OneSignal.getUserId(function(userId: string) {
                     console.log('OneSignal User ID:', userId);
                   });
                 } else {
@@ -108,9 +101,9 @@ export const OneSignalButton: React.FC = () => {
   };
 
   const handleUnsubscribe = () => {
-    if (window.OneSignal && oneSignalReady) {
-      window.OneSignal.push(function() {
-        window.OneSignal.setSubscription(false).then(function() {
+    if ((window as any).OneSignal && oneSignalReady) {
+      (window as any).OneSignal.push(function() {
+        (window as any).OneSignal.setSubscription(false).then(function() {
           setIsSubscribed(false);
           setMessage('🔕 プッシュ通知を無効にしました。');
         });
@@ -119,16 +112,16 @@ export const OneSignalButton: React.FC = () => {
   };
 
   const handleDebugInfo = () => {
-    if (window.OneSignal && oneSignalReady) {
+    if ((window as any).OneSignal && oneSignalReady) {
       console.log('=== OneSignal Debug Info ===');
-      console.log('OneSignal loaded:', !!window.OneSignal);
+      console.log('OneSignal loaded:', !!(window as any).OneSignal);
       
-      window.OneSignal.push(function() {
-        window.OneSignal.getUserId(function(userId: string) {
+      (window as any).OneSignal.push(function() {
+        (window as any).OneSignal.getUserId(function(userId: string) {
           console.log('User ID:', userId);
         });
         
-        window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+        (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
           console.log('Subscribed:', isEnabled);
         });
       });
