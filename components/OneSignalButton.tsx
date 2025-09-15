@@ -7,20 +7,42 @@ export const OneSignalButton: React.FC = () => {
   const [message, setMessage] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [oneSignalReady, setOneSignalReady] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+  const addDebugInfo = (info: string) => {
+    console.log(info);
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
+  };
 
   useEffect(() => {
+    addDebugInfo('Component mounted');
+    
+    // 環境チェック
+    addDebugInfo(`HTTPS: ${window.location.protocol === 'https:'}`);
+    addDebugInfo(`Notification API: ${'Notification' in window}`);
+    addDebugInfo(`Service Worker: ${'serviceWorker' in navigator}`);
+    
     // OneSignalの準備状態を確認
     const checkOneSignalReady = () => {
-      if ((window as any).OneSignal && typeof (window as any).OneSignal.push === 'function') {
-        setOneSignalReady(true);
+      if ((window as any).OneSignal) {
+        addDebugInfo('OneSignal object found');
         
-        // 購読状態を確認
-        (window as any).OneSignal.push(function() {
-          (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
-            setIsSubscribed(isEnabled);
-            console.log('Subscription status checked:', isEnabled);
+        if (typeof (window as any).OneSignal.push === 'function') {
+          addDebugInfo('OneSignal.push is function - Ready!');
+          setOneSignalReady(true);
+          
+          // 購読状態を確認
+          (window as any).OneSignal.push(function() {
+            (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+              setIsSubscribed(isEnabled);
+              addDebugInfo(`Subscription status: ${isEnabled}`);
+            });
           });
-        });
+        } else {
+          addDebugInfo(`OneSignal.push type: ${typeof (window as any).OneSignal.push}`);
+        }
+      } else {
+        addDebugInfo('OneSignal object not found');
       }
     };
 
@@ -36,7 +58,7 @@ export const OneSignalButton: React.FC = () => {
     const timeout = setTimeout(() => {
       clearInterval(interval);
       if (!oneSignalReady) {
-        console.warn('OneSignal not ready after 10 seconds');
+        addDebugInfo('OneSignal timeout after 10 seconds');
         setMessage('⚠️ OneSignalの読み込みに時間がかかっています。');
       }
     }, 10000);
@@ -48,21 +70,35 @@ export const OneSignalButton: React.FC = () => {
   }, [oneSignalReady]);
 
   const handleSubscribe = async () => {
+    addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
     setMessage('');
     
     try {
+      // まずブラウザの通知許可を確認
+      if (!('Notification' in window)) {
+        addDebugInfo('Notification API not supported');
+        setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
+        setIsLoading(false);
+        return;
+      }
+
+      addDebugInfo(`Current permission: ${Notification.permission}`);
+
       if ((window as any).OneSignal && oneSignalReady) {
-        console.log('Using OneSignal for subscription...');
+        addDebugInfo('Using OneSignal for subscription');
         
         (window as any).OneSignal.push(function() {
+          addDebugInfo('Inside OneSignal.push');
+          
           // プッシュ通知を要求
           (window as any).OneSignal.showNativePrompt().then(function() {
-            console.log('Native prompt shown');
+            addDebugInfo('showNativePrompt resolved');
             
             // 購読状態を再確認
             setTimeout(() => {
               (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+                addDebugInfo(`Post-prompt subscription status: ${isEnabled}`);
                 setIsSubscribed(isEnabled);
                 
                 if (isEnabled) {
@@ -70,7 +106,7 @@ export const OneSignalButton: React.FC = () => {
                   
                   // ユーザーIDを表示
                   (window as any).OneSignal.getUserId(function(userId: string) {
-                    console.log('OneSignal User ID:', userId);
+                    addDebugInfo(`OneSignal User ID: ${userId}`);
                   });
                 } else {
                   setMessage('⚠️ プッシュ通知の許可が必要です。');
@@ -78,14 +114,17 @@ export const OneSignalButton: React.FC = () => {
               });
             }, 2000);
           }).catch(function(error: any) {
-            console.error('Native prompt error:', error);
+            addDebugInfo(`showNativePrompt error: ${error}`);
             setMessage('❌ プッシュ通知の設定に失敗しました。');
           });
         });
       } else {
-        console.log('OneSignal not available, using browser API...');
+        addDebugInfo('OneSignal not available, using browser API');
+        
         // フォールバック: ブラウザ標準API
         const permission = await Notification.requestPermission();
+        addDebugInfo(`Browser permission result: ${permission}`);
+        
         if (permission === 'granted') {
           setMessage('✅ ブラウザの通知は許可されましたが、OneSignalとの連携を確認してください。');
         } else {
@@ -93,7 +132,7 @@ export const OneSignalButton: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Notification permission request failed:', error);
+      addDebugInfo(`Subscribe error: ${error}`);
       setMessage('❌ プッシュ通知の設定に失敗しました。');
     } finally {
       setIsLoading(false);
@@ -101,33 +140,38 @@ export const OneSignalButton: React.FC = () => {
   };
 
   const handleUnsubscribe = () => {
+    addDebugInfo('Unsubscribe button clicked');
     if ((window as any).OneSignal && oneSignalReady) {
       (window as any).OneSignal.push(function() {
         (window as any).OneSignal.setSubscription(false).then(function() {
           setIsSubscribed(false);
           setMessage('🔕 プッシュ通知を無効にしました。');
+          addDebugInfo('Unsubscribed successfully');
         });
       });
     }
   };
 
-  const handleDebugInfo = () => {
-    if ((window as any).OneSignal && oneSignalReady) {
-      console.log('=== OneSignal Debug Info ===');
-      console.log('OneSignal loaded:', !!(window as any).OneSignal);
+  const handleTestBrowserNotification = async () => {
+    addDebugInfo('Testing browser notification');
+    try {
+      const permission = await Notification.requestPermission();
+      addDebugInfo(`Browser permission: ${permission}`);
       
-      (window as any).OneSignal.push(function() {
-        (window as any).OneSignal.getUserId(function(userId: string) {
-          console.log('User ID:', userId);
+      if (permission === 'granted') {
+        new Notification('テスト通知', {
+          body: 'ブラウザの通知機能は正常に動作しています。',
+          icon: '/icon-192x192.png'
         });
-        
-        (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
-          console.log('Subscribed:', isEnabled);
-        });
-      });
-    } else {
-      console.log('OneSignal not ready');
+        addDebugInfo('Test notification sent');
+      }
+    } catch (error) {
+      addDebugInfo(`Browser notification error: ${error}`);
     }
+  };
+
+  const clearDebugInfo = () => {
+    setDebugInfo([]);
   };
 
   return (
@@ -167,15 +211,35 @@ export const OneSignalButton: React.FC = () => {
         </div>
       )}
       
-      {/* デバッグボタン（開発時のみ表示） */}
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          onClick={handleDebugInfo}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs"
-        >
-          Debug Info
-        </button>
-      )}
+      {/* デバッグセクション */}
+      <div className="w-full max-w-md border-t pt-4">
+        <h4 className="text-sm font-semibold mb-2">デバッグ情報</h4>
+        
+        <div className="flex flex-wrap gap-2 mb-3">
+          <button
+            onClick={handleTestBrowserNotification}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs"
+          >
+            ブラウザ通知テスト
+          </button>
+          <button
+            onClick={clearDebugInfo}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs"
+          >
+            ログクリア
+          </button>
+        </div>
+        
+        <div className="bg-gray-100 p-2 rounded text-xs max-h-40 overflow-y-auto">
+          {debugInfo.length === 0 ? (
+            <div className="text-gray-500">デバッグ情報はここに表示されます</div>
+          ) : (
+            debugInfo.map((info, index) => (
+              <div key={index} className="mb-1">{info}</div>
+            ))
+          )}
+        </div>
+      </div>
       
       <div className="text-xs text-gray-500 text-center max-w-xs">
         <p>📱 <strong>携帯端末をご利用の場合：</strong></p>
