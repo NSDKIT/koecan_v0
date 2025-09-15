@@ -1,35 +1,33 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import OneSignal from 'react-onesignal';
+import React, { useState } from 'react';
 
 export const OneSignalButton: React.FC = () => {
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    // OneSignalの購読状態をチェック
-    const checkSubscription = async () => {
-      try {
-        if (window.OneSignal) {
-          const permission = await OneSignal.Notifications.permission;
-          setIsSubscribed(permission === 'granted');
-        }
-      } catch (error) {
-        console.error('OneSignal subscription check failed:', error);
-      }
-    };
-
-    checkSubscription();
-  }, []);
+  const [message, setMessage] = useState('');
 
   const handleSubscribe = async () => {
     setIsLoading(true);
+    setMessage('');
+    
     try {
-      const result = await OneSignal.Notifications.requestPermission();
-      setIsSubscribed(result === true);
+      // ブラウザの通知許可を直接要求
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+          setMessage('✓ プッシュ通知が有効になりました！');
+        } else if (permission === 'denied') {
+          setMessage('❌ プッシュ通知が拒否されました。ブラウザの設定から許可してください。');
+        } else {
+          setMessage('⚠️ プッシュ通知の設定が保留中です。');
+        }
+      } else {
+        setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
+      }
     } catch (error) {
-      console.error('OneSignal subscription failed:', error);
+      console.error('Notification permission request failed:', error);
+      setMessage('❌ プッシュ通知の設定に失敗しました。');
     } finally {
       setIsLoading(false);
     }
@@ -42,18 +40,18 @@ export const OneSignalButton: React.FC = () => {
         重要なお知らせやアンケートの通知を受け取るために、プッシュ通知を有効にしてください。
       </p>
       
-      {isSubscribed ? (
-        <div className="text-green-600 font-semibold">
-          ✓ プッシュ通知が有効になっています
+      <button
+        onClick={handleSubscribe}
+        disabled={isLoading}
+        className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
+      >
+        {isLoading ? '設定中...' : 'プッシュ通知を許可する'}
+      </button>
+      
+      {message && (
+        <div className="text-sm text-center max-w-xs">
+          {message}
         </div>
-      ) : (
-        <button
-          onClick={handleSubscribe}
-          disabled={isLoading}
-          className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
-        >
-          {isLoading ? '設定中...' : 'プッシュ通知を許可する'}
-        </button>
       )}
       
       <div className='onesignal-customlink-container'></div>
