@@ -1,0 +1,2 @@
+importScripts('/OneSignalSDKWorker.js');
+
