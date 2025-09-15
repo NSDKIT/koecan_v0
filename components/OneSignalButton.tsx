@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 
+// OneSignalの型定義
+declare global {
+  interface Window {
+    OneSignal?: any[];
+  }
+}
+
 export const OneSignalButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -9,24 +16,25 @@ export const OneSignalButton: React.FC = () => {
   const [oneSignalReady, setOneSignalReady] = useState(false);
 
   useEffect(() => {
-    // OneSignalの購読状態を確認
-    const checkSubscriptionStatus = async () => {
-      try {
-        if ((window as any).OneSignal) {
-          setOneSignalReady(true);
-          const subscribed = await (window as any).OneSignal.User.PushSubscription.optedIn;
-          setIsSubscribed(subscribed);
-          console.log('Subscription status checked:', subscribed);
-        }
-      } catch (error) {
-        console.error('Failed to check subscription status:', error);
+    // OneSignalの準備状態を確認
+    const checkOneSignalReady = () => {
+      if (window.OneSignal && typeof window.OneSignal.push === 'function') {
+        setOneSignalReady(true);
+        
+        // 購読状態を確認
+        window.OneSignal.push(function() {
+          window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+            setIsSubscribed(isEnabled);
+            console.log('Subscription status checked:', isEnabled);
+          });
+        });
       }
     };
 
-    // OneSignalが初期化されるまで待機
+    // OneSignalが準備できるまで待機
     const interval = setInterval(() => {
-      if ((window as any).OneSignal) {
-        checkSubscriptionStatus();
+      checkOneSignalReady();
+      if (oneSignalReady) {
         clearInterval(interval);
       }
     }, 1000);
@@ -34,8 +42,9 @@ export const OneSignalButton: React.FC = () => {
     // 10秒後にタイムアウト
     const timeout = setTimeout(() => {
       clearInterval(interval);
-      if (!(window as any).OneSignal) {
-        console.warn('OneSignal not loaded after 10 seconds');
+      if (!oneSignalReady) {
+        console.warn('OneSignal not ready after 10 seconds');
+        setMessage('⚠️ OneSignalの読み込みに時間がかかっています。');
       }
     }, 10000);
 
@@ -43,48 +52,43 @@ export const OneSignalButton: React.FC = () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [oneSignalReady]);
 
   const handleSubscribe = async () => {
     setIsLoading(true);
     setMessage('');
     
     try {
-      if ((window as any).OneSignal) {
+      if (window.OneSignal && oneSignalReady) {
         console.log('Using OneSignal for subscription...');
         
-        // OneSignalを使用してプッシュ通知を要求
-        const permission = await (window as any).OneSignal.Notifications.requestPermission();
-        console.log('Permission result:', permission);
-        
-        if (permission) {
-          // 購読を確実に行う
-          await (window as any).OneSignal.User.PushSubscription.optIn();
-          console.log('OptIn completed');
-          
-          // 少し待ってから購読状態を再確認
-          setTimeout(async () => {
-            try {
-              const isNowSubscribed = await (window as any).OneSignal.User.PushSubscription.optedIn;
-              setIsSubscribed(isNowSubscribed);
-              
-              if (isNowSubscribed) {
-                setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
+        window.OneSignal.push(function() {
+          // プッシュ通知を要求
+          window.OneSignal.showNativePrompt().then(function() {
+            console.log('Native prompt shown');
+            
+            // 購読状態を再確認
+            setTimeout(() => {
+              window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+                setIsSubscribed(isEnabled);
                 
-                // ユーザーIDを表示（デバッグ用）
-                const userId = (window as any).OneSignal.User.onesignalId;
-                console.log('OneSignal User ID:', userId);
-              } else {
-                setMessage('⚠️ 購読に失敗しました。再度お試しください。');
-              }
-            } catch (error) {
-              console.error('Error checking subscription after opt-in:', error);
-              setMessage('⚠️ 購読状態の確認に失敗しました。');
-            }
-          }, 2000);
-        } else {
-          setMessage('❌ プッシュ通知が拒否されました。ブラウザの設定から許可してください。');
-        }
+                if (isEnabled) {
+                  setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
+                  
+                  // ユーザーIDを表示
+                  window.OneSignal.getUserId(function(userId: string) {
+                    console.log('OneSignal User ID:', userId);
+                  });
+                } else {
+                  setMessage('⚠️ プッシュ通知の許可が必要です。');
+                }
+              });
+            }, 2000);
+          }).catch(function(error: any) {
+            console.error('Native prompt error:', error);
+            setMessage('❌ プッシュ通知の設定に失敗しました。');
+          });
+        });
       } else {
         console.log('OneSignal not available, using browser API...');
         // フォールバック: ブラウザ標準API
@@ -103,28 +107,33 @@ export const OneSignalButton: React.FC = () => {
     }
   };
 
-  const handleUnsubscribe = async () => {
-    try {
-      if ((window as any).OneSignal) {
-        await (window as any).OneSignal.User.PushSubscription.optOut();
-        setIsSubscribed(false);
-        setMessage('🔕 プッシュ通知を無効にしました。');
-      }
-    } catch (error) {
-      console.error('Unsubscribe failed:', error);
+  const handleUnsubscribe = () => {
+    if (window.OneSignal && oneSignalReady) {
+      window.OneSignal.push(function() {
+        window.OneSignal.setSubscription(false).then(function() {
+          setIsSubscribed(false);
+          setMessage('🔕 プッシュ通知を無効にしました。');
+        });
+      });
     }
   };
 
   const handleDebugInfo = () => {
-    if ((window as any).OneSignal) {
+    if (window.OneSignal && oneSignalReady) {
       console.log('=== OneSignal Debug Info ===');
-      console.log('OneSignal loaded:', !!(window as any).OneSignal);
-      console.log('User ID:', (window as any).OneSignal.User?.onesignalId);
-      (window as any).OneSignal.User.PushSubscription.optedIn.then((subscribed: boolean) => {
-        console.log('Subscribed:', subscribed);
+      console.log('OneSignal loaded:', !!window.OneSignal);
+      
+      window.OneSignal.push(function() {
+        window.OneSignal.getUserId(function(userId: string) {
+          console.log('User ID:', userId);
+        });
+        
+        window.OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+          console.log('Subscribed:', isEnabled);
+        });
       });
     } else {
-      console.log('OneSignal not loaded');
+      console.log('OneSignal not ready');
     }
   };
 
@@ -180,8 +189,6 @@ export const OneSignalButton: React.FC = () => {
         <p>• <strong>Android:</strong> Chrome、Firefox、Edgeをご使用ください</p>
         <p>• <strong>iPhone:</strong> Safariでホーム画面に追加後、PWAとして起動してください</p>
       </div>
-      
-      <div className='onesignal-customlink-container'></div>
     </div>
   );
 };
