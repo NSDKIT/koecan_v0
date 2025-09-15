@@ -2,13 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// OneSignalの型定義を追加
-declare global {
-  interface Window {
-    OneSignal?: any;
-  }
-}
-
 export const OneSignalButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -19,9 +12,9 @@ export const OneSignalButton: React.FC = () => {
     // OneSignalの購読状態を確認
     const checkSubscriptionStatus = async () => {
       try {
-        if (window.OneSignal) {
+        if ((window as any).OneSignal) {
           setOneSignalReady(true);
-          const subscribed = await window.OneSignal.User.PushSubscription.optedIn;
+          const subscribed = await (window as any).OneSignal.User.PushSubscription.optedIn;
           setIsSubscribed(subscribed);
           console.log('Subscription status checked:', subscribed);
         }
@@ -32,7 +25,7 @@ export const OneSignalButton: React.FC = () => {
 
     // OneSignalが初期化されるまで待機
     const interval = setInterval(() => {
-      if (window.OneSignal) {
+      if ((window as any).OneSignal) {
         checkSubscriptionStatus();
         clearInterval(interval);
       }
@@ -41,7 +34,7 @@ export const OneSignalButton: React.FC = () => {
     // 10秒後にタイムアウト
     const timeout = setTimeout(() => {
       clearInterval(interval);
-      if (!window.OneSignal) {
+      if (!(window as any).OneSignal) {
         console.warn('OneSignal not loaded after 10 seconds');
       }
     }, 10000);
@@ -57,29 +50,29 @@ export const OneSignalButton: React.FC = () => {
     setMessage('');
     
     try {
-      if (window.OneSignal) {
+      if ((window as any).OneSignal) {
         console.log('Using OneSignal for subscription...');
         
         // OneSignalを使用してプッシュ通知を要求
-        const permission = await window.OneSignal.Notifications.requestPermission();
+        const permission = await (window as any).OneSignal.Notifications.requestPermission();
         console.log('Permission result:', permission);
         
         if (permission) {
           // 購読を確実に行う
-          await window.OneSignal.User.PushSubscription.optIn();
+          await (window as any).OneSignal.User.PushSubscription.optIn();
           console.log('OptIn completed');
           
           // 少し待ってから購読状態を再確認
           setTimeout(async () => {
             try {
-              const isNowSubscribed = await window.OneSignal.User.PushSubscription.optedIn;
+              const isNowSubscribed = await (window as any).OneSignal.User.PushSubscription.optedIn;
               setIsSubscribed(isNowSubscribed);
               
               if (isNowSubscribed) {
                 setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
                 
                 // ユーザーIDを表示（デバッグ用）
-                const userId = window.OneSignal.User.onesignalId;
+                const userId = (window as any).OneSignal.User.onesignalId;
                 console.log('OneSignal User ID:', userId);
               } else {
                 setMessage('⚠️ 購読に失敗しました。再度お試しください。');
@@ -112,8 +105,8 @@ export const OneSignalButton: React.FC = () => {
 
   const handleUnsubscribe = async () => {
     try {
-      if (window.OneSignal) {
-        await window.OneSignal.User.PushSubscription.optOut();
+      if ((window as any).OneSignal) {
+        await (window as any).OneSignal.User.PushSubscription.optOut();
         setIsSubscribed(false);
         setMessage('🔕 プッシュ通知を無効にしました。');
       }
@@ -123,11 +116,11 @@ export const OneSignalButton: React.FC = () => {
   };
 
   const handleDebugInfo = () => {
-    if (window.OneSignal) {
+    if ((window as any).OneSignal) {
       console.log('=== OneSignal Debug Info ===');
-      console.log('OneSignal loaded:', !!window.OneSignal);
-      console.log('User ID:', window.OneSignal.User?.onesignalId);
-      window.OneSignal.User.PushSubscription.optedIn.then((subscribed: boolean) => {
+      console.log('OneSignal loaded:', !!(window as any).OneSignal);
+      console.log('User ID:', (window as any).OneSignal.User?.onesignalId);
+      (window as any).OneSignal.User.PushSubscription.optedIn.then((subscribed: boolean) => {
         console.log('Subscribed:', subscribed);
       });
     } else {
