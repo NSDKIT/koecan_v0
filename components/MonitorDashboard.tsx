@@ -18,7 +18,9 @@ import {
   Target,
   Award,
   Users,
-  Menu // Hamburger icon
+  Menu, // Hamburger icon
+  ExternalLink, // New icon for external link in ad detail modal
+  X // Close icon for modal
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -44,6 +46,9 @@ export default function MonitorDashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for hamburger menu
   const menuRef = useRef<HTMLDivElement>(null); // Ref for closing menu on outside click
+
+  // State for showing advertisement detail modal
+  const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -160,11 +165,8 @@ export default function MonitorDashboard() {
     if (!selectedSurvey || !user) return;
 
     try {
-      // For mock purposes, let's assume 5 questions for every survey if not fetched
-      // In a real app, you would fetch the actual number of questions for the current survey or store it.
       const questionCount = surveyQuestions.length > 0 ? surveyQuestions.length : 5; 
 
-      // Basic validation: ensure all required questions have an answer
       const allRequiredAnswered = surveyQuestions.every(q => !q.required || answers.some(a => a.question_id === q.id && a.answer.trim() !== ''));
 
       if (!allRequiredAnswered) {
@@ -528,7 +530,7 @@ export default function MonitorDashboard() {
                       <div
                         key={ad.id}
                         className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                        onClick={() => ad.link_url && window.open(ad.link_url, '_blank')}
+                        onClick={() => setSelectedAdvertisement(ad)} // Open modal on click
                       >
                         {ad.image_url && (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
@@ -630,6 +632,55 @@ export default function MonitorDashboard() {
           user={user}
           onClose={() => setShowChatModal(false)}
         />
+      )}
+
+      {/* Advertisement Detail Modal */}
+      {selectedAdvertisement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center">
+                <h2 className="text-2xl font-bold text-gray-800">{selectedAdvertisement.title}</h2>
+              </div>
+              <button
+                onClick={() => setSelectedAdvertisement(null)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {selectedAdvertisement.image_url && (
+                <div className="mb-6 rounded-lg overflow-hidden">
+                  <img
+                    src={selectedAdvertisement.image_url}
+                    alt={selectedAdvertisement.title}
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              )}
+              {selectedAdvertisement.description && (
+                <p className="text-gray-700 mb-6 whitespace-pre-line">
+                  {selectedAdvertisement.description}
+                </p>
+              )}
+
+              {selectedAdvertisement.link_url && (
+                <a
+                  href={selectedAdvertisement.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  詳細を見る <ExternalLink className="w-4 h-4 ml-2" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
