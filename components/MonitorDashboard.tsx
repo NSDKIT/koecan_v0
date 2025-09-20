@@ -521,14 +521,61 @@ export default function MonitorDashboard() {
             )}
 
             {activeTab === 'services' && (
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">サービス一覧</h2>
-                <p className="text-gray-600">現在、公開されているサービス情報はありません。</p>
-              </div>
+              <>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">サービス一覧</h2>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* キャリア相談 */}
+                  <button
+                    onClick={() => setShowCareerModal(true)}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
+                    <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
+                  </button>
+
+                  {/* チャット */}
+                  <button
+                    onClick={() => setShowChatModal(true)}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform">
+                        <MessageCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
+                    <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
+                  </button>
+
+                  {/* プロフィール (これはサービス一覧には含めず、ヘッダー近くのアイコンクリックで開く形が適切かと思いますが、
+                      元のQuick Actionsグリッドにあったので一旦ここに移動させます。必要であれば再検討ください。) */}
+                   <button
+                    onClick={() => setShowProfileModal(true)}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3 group-hover:scale-110 transition-transform">
+                        <UserIcon className="w-6 h-6 text-white" />
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール</h3>
+                    <p className="text-gray-600 text-sm">情報を更新・確認</p>
+                  </button>
+                </div>
+              </>
             )}
           </div>
 
-          {/* Quick Actions (moved from top for better flow with points/tabs) */}
+          {/* Quick Actions (Removed from here as requested to move to Services tab) */}
+          {/*
           <div className="grid md:grid-cols-3 gap-6 mt-8">
             <button
               onClick={() => setShowCareerModal(true)}
@@ -572,6 +619,7 @@ export default function MonitorDashboard() {
               <p className="text-gray-600 text-sm">情報を更新・確認</p>
             </button>
           </div>
+          */}
         </main>
       </div>
 
