@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey, Question, Answer, User, MonitorProfile, Advertisement } from '@/types';
+import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; // Import Response as UserResponse to avoid name collision
 import { 
   Star, 
   Gift, 
@@ -20,21 +20,23 @@ import {
   Users,
   Menu, // Hamburger icon
   ExternalLink, // New icon for external link in ad detail modal
-  X // Close icon for modal
+  X, // Close icon for modal
+  History, // Icon for answered surveys
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
-import { PointExchangeModal } from '@/components/PointExchangeModal'; // Import the new modal
+import { PointExchangeModal } from '@/components/PointExchangeModal';
 
 // Define types for active tab
-type ActiveTab = 'surveys' | 'recruitment' | 'services'; // Changed 'recruitment' to 'job_info' internally, but kept for clarity in the file
+type ActiveTab = 'surveys' | 'recruitment' | 'services';
 
 export default function MonitorDashboard() {
   const { user, signOut } = useAuth();
-  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); // 未回答のアンケート
+  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   // 回答済みのアンケート
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -48,21 +50,18 @@ export default function MonitorDashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for hamburger menu
   const menuRef = useRef<HTMLDivElement>(null); // Ref for closing menu on outside click
 
-  // State for showing advertisement detail modal
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
-  // State for showing point exchange modal
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
 
 
   useEffect(() => {
     if (user) {
       fetchProfile();
-      fetchSurveys();
+      fetchSurveysAndResponses(); // Modified to fetch both available and answered
       fetchAdvertisements();
     }
   }, [user]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -91,22 +90,50 @@ export default function MonitorDashboard() {
     }
   };
 
-  const fetchSurveys = async () => {
+  const fetchSurveysAndResponses = async () => {
+    if (!user?.id) return;
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. Fetch all active surveys
+      const { data: allActiveSurveys, error: surveysError } = await supabase
         .from('surveys')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSurveys(data || []);
+      if (surveysError) throw surveysError;
+
+      // 2. Fetch all responses by the current user
+      const { data: userResponses, error: responsesError } = await supabase
+        .from('responses')
+        .select('survey_id')
+        .eq('monitor_id', user.id);
+
+      if (responsesError) throw responsesError;
+
+      const answeredSurveyIds = new Set(userResponses?.map(res => res.survey_id));
+
+      const newAvailableSurveys: Survey[] = [];
+      const newAnsweredSurveys: Survey[] = [];
+
+      allActiveSurveys?.forEach(survey => {
+        if (answeredSurveyIds.has(survey.id)) {
+          newAnsweredSurveys.push(survey);
+        } else {
+          newAvailableSurveys.push(survey);
+        }
+      });
+
+      setAvailableSurveys(newAvailableSurveys);
+      setAnsweredSurveys(newAnsweredSurveys);
+
     } catch (error) {
-      console.error('Error fetching surveys:', error);
+      console.error('Error fetching surveys and responses:', error);
     } finally {
       setLoading(false);
     }
   };
+
 
   const fetchAdvertisements = async () => {
     try {
@@ -126,7 +153,7 @@ export default function MonitorDashboard() {
 
   const handleSurveyClick = async (survey: Survey) => {
     try {
-      // Check if already completed
+      // Re-check if already completed (redundant due to fetchSurveysAndResponses but good for immediate UX)
       const { data: existingResponse } = await supabase
         .from('responses')
         .select('id')
@@ -136,10 +163,10 @@ export default function MonitorDashboard() {
 
       if (existingResponse) {
         alert('このアンケートは既に回答済みです。');
+        // Optionally, redirect to answered surveys tab or simply close modal
         return;
       }
 
-      // Fetch questions
       const { data: questions, error } = await supabase
         .from('questions')
         .select('*')
@@ -195,6 +222,7 @@ export default function MonitorDashboard() {
       setSurveyQuestions([]);
       setAnswers([]);
       fetchProfile(); // Refresh profile to update points
+      fetchSurveysAndResponses(); // Re-fetch surveys to update available/answered lists
     } catch (error) {
       console.error('Error submitting survey:', error);
       alert('アンケートの送信に失敗しました。');
@@ -471,8 +499,8 @@ export default function MonitorDashboard() {
             {activeTab === 'surveys' && (
               <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
-                {surveys.length === 0 ? (
-                  <div className="text-center py-12">
+                {availableSurveys.length === 0 ? (
+                  <div className="text-center py-12 mb-8">
                     <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                       <CheckCircle className="w-8 h-8 text-gray-400" />
                     </div>
@@ -480,8 +508,8 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケートが追加されるまでお待ちください。</p>
                   </div>
                 ) : (
-                  <div className="grid gap-6">
-                    {surveys.map((survey) => (
+                  <div className="grid gap-6 mb-8">
+                    {availableSurveys.map((survey) => (
                       <div
                         key={survey.id}
                         className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
@@ -494,13 +522,12 @@ export default function MonitorDashboard() {
                             <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
                               <div className="flex items-center">
-                                {/* Using Users icon as a placeholder for "people" icon */}
                                 <Users className="w-4 h-4 mr-1" />
-                                <span>対象者: 学生</span> {/* Placeholder for target audience */}
+                                <span>対象者: 学生</span>
                               </div>
                               <div className="flex items-center">
                                 <Clock className="w-4 h-4 mr-1" />
-                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span> {/* Placeholder for question count */}
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
                               </div>
                             </div>
                           </div>
@@ -521,10 +548,56 @@ export default function MonitorDashboard() {
                     ))}
                   </div>
                 )}
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8">回答済みアンケート</h2>
+                {answeredSurveys.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <History className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">まだ回答したアンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {answeredSurveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" // Visually distinguish answered surveys
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-500 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt 獲得済み</span>
+                            </div>
+                            {/* 回答済みアンケートには「回答する」ボタンは不要、必要なら「結果を見る」などに変更 */}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
 
-            {activeTab === 'recruitment' && ( // Tab key is still 'recruitment' for internal logic
+            {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">就職情報</h2> {/* Display text changed to 就職情報 */}
                 {advertisements.length === 0 ? (
@@ -537,7 +610,7 @@ export default function MonitorDashboard() {
                       <div
                         key={ad.id}
                         className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                        onClick={() => setSelectedAdvertisement(ad)} // Open modal on click
+                        onClick={() => setSelectedAdvertisement(ad)} 
                       >
                         {ad.image_url && (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
@@ -573,7 +646,7 @@ export default function MonitorDashboard() {
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
-                       <MessageCircle className="w-6 h-6 text-white" /> {/* アイコンを復活させる、または別のアイコンを設定 */}
+                       <MessageCircle className="w-6 h-6 text-white" /> 
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
                     <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
@@ -585,7 +658,7 @@ export default function MonitorDashboard() {
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
-                       <MessageCircle className="w-6 h-6 text-white" /> {/* アイコンを復活させる、または別のアイコンを設定 */}
+                       <MessageCircle className="w-6 h-6 text-white" /> 
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
                     <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
