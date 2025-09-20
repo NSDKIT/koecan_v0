@@ -54,7 +54,7 @@ export default function MonitorDashboard() {
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
-  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); // New state for profile survey modal
+  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
 
 
   useEffect(() => {
@@ -143,9 +143,28 @@ export default function MonitorDashboard() {
 
   const fetchAdvertisements = async () => {
     try {
+      // Fetch all new advertisement fields
       const { data, error } = await supabase
         .from('advertisements')
-        .select('*')
+        .select(`
+          *,
+          company_name,
+          location_info,
+          establishment_year,
+          employee_count,
+          employee_gender_ratio,
+          employee_age_composition,
+          recommended_points,
+          salary_info,
+          paid_leave_rate,
+          long_holidays,
+          training_support,
+          busy_season_intensity,
+          youtube_short_url,
+          recruitment_roles,
+          application_qualifications,
+          selection_flow
+        `)
         .eq('is_active', true)
         .order('priority', { ascending: false })
         .order('display_order', { ascending: true });
@@ -426,7 +445,8 @@ export default function MonitorDashboard() {
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
-            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-[1000] border border-gray-100" // z-[1000] ensures it's on top
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-[1000] border border-gray-100" 
+            style={{ zIndex: 1000 }} 
           >
             <button
               onClick={() => {
@@ -713,7 +733,8 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <h2 className="text-2xl font-bold text-gray-800">{selectedAdvertisement.title}</h2>
@@ -726,6 +747,7 @@ export default function MonitorDashboard() {
               </button>
             </div>
 
+            {/* Modal Content */}
             <div className="p-6">
               {selectedAdvertisement.image_url && (
                 <div className="mb-6 rounded-lg overflow-hidden">
@@ -736,11 +758,127 @@ export default function MonitorDashboard() {
                   />
                 </div>
               )}
-              {selectedAdvertisement.description && (
-                <p className="text-gray-700 mb-6 whitespace-pre-line">
-                  {selectedAdvertisement.description}
-                </p>
+              
+              <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">基本情報</h3>
+              <dl className="mb-6 space-y-2 text-gray-700">
+                {selectedAdvertisement.company_name && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">会社名:</dt>
+                    <dd>{selectedAdvertisement.company_name}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.location_info && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">所在地:</dt>
+                    <dd>{selectedAdvertisement.location_info}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.establishment_year && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">設立年:</dt>
+                    <dd>{selectedAdvertisement.establishment_year}年</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.employee_count && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">従業員数:</dt>
+                    <dd>{selectedAdvertisement.employee_count}名</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.employee_gender_ratio && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">男女比:</dt>
+                    <dd>{selectedAdvertisement.employee_gender_ratio}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.employee_age_composition && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">年齢構成比:</dt>
+                    <dd>{selectedAdvertisement.employee_age_composition}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {selectedAdvertisement.recommended_points && selectedAdvertisement.recommended_points.length > 0 && (
+                <>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">おすすめポイント</h3>
+                  <ul className="list-disc list-inside mb-6 space-y-1 text-gray-700">
+                    {selectedAdvertisement.recommended_points.map((point, index) => (
+                      <li key={index}>{point}</li>
+                    ))}
+                  </ul>
+                </>
               )}
+
+              <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">仕事のリアル</h3>
+              <dl className="mb-6 space-y-2 text-gray-700">
+                {selectedAdvertisement.salary_info && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">給与・賞与:</dt>
+                    <dd>{selectedAdvertisement.salary_info}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.paid_leave_rate && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">有給取得率:</dt>
+                    <dd>{selectedAdvertisement.paid_leave_rate}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.long_holidays && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">長期休暇:</dt>
+                    <dd>{selectedAdvertisement.long_holidays}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.training_support && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">研修・成長支援:</dt>
+                    <dd>{selectedAdvertisement.training_support}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.busy_season_intensity && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">繁忙期の忙しさ:</dt>
+                    <dd>{selectedAdvertisement.busy_season_intensity}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {selectedAdvertisement.youtube_short_url && (
+                <>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">会社の雰囲気・文化</h3>
+                  <a
+                    href={selectedAdvertisement.youtube_short_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold mb-6"
+                  >
+                    YouTubeショートを見る <ExternalLink className="w-4 h-4 ml-2" />
+                  </a>
+                </>
+              )}
+
+              <h3 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">応募・選考</h3>
+              <dl className="mb-6 space-y-2 text-gray-700">
+                {selectedAdvertisement.recruitment_roles && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">募集職種・人数:</dt>
+                    <dd>{selectedAdvertisement.recruitment_roles}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.application_qualifications && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">応募資格:</dt>
+                    <dd>{selectedAdvertisement.application_qualifications}</dd>
+                  </div>
+                )}
+                {selectedAdvertisement.selection_flow && (
+                  <div className="flex">
+                    <dt className="w-32 font-semibold">選考フロー:</dt>
+                    <dd>{selectedAdvertisement.selection_flow}</dd>
+                  </div>
+                )}
+              </dl>
 
               {selectedAdvertisement.link_url && (
                 <a
@@ -749,7 +887,7 @@ export default function MonitorDashboard() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                 >
-                  詳細を見る <ExternalLink className="w-4 h-4 ml-2" />
+                  企業の詳細を見る <ExternalLink className="w-4 h-4 ml-2" />
                 </a>
               )}
             </div>
