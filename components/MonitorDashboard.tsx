@@ -7,13 +7,13 @@ import { Survey, Question, Answer, User, MonitorProfile, Advertisement } from '@
 import { 
   Star, 
   Gift, 
-  MessageCircle, // Keep MessageCircle for modal header, but remove from quick action
+  MessageCircle, 
   LogOut, 
   User as UserIcon, 
   Trophy, 
   Clock, 
   CheckCircle,
-  ArrowRight, // Keep ArrowRight for other uses, but remove from quick action
+  ArrowRight,
   Sparkles,
   Target,
   Award,
@@ -27,9 +27,10 @@ import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
+import { PointExchangeModal } from '@/components/PointExchangeModal'; // Import the new modal
 
 // Define types for active tab
-type ActiveTab = 'surveys' | 'recruitment' | 'services';
+type ActiveTab = 'surveys' | 'recruitment' | 'services'; // Changed 'recruitment' to 'job_info' internally, but kept for clarity in the file
 
 export default function MonitorDashboard() {
   const { user, signOut } = useAuth();
@@ -49,6 +50,9 @@ export default function MonitorDashboard() {
 
   // State for showing advertisement detail modal
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
+  // State for showing point exchange modal
+  const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
+
 
   useEffect(() => {
     if (user) {
@@ -413,7 +417,10 @@ export default function MonitorDashboard() {
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 獲得ポイントカード */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4">
+          <div
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4 cursor-pointer hover:shadow-2xl transition-shadow"
+            onClick={() => setShowPointExchangeModal(true)} // Add onClick to open PointExchangeModal
+          >
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
               <Star className="w-10 h-10 text-white" />
             </div>
@@ -437,14 +444,14 @@ export default function MonitorDashboard() {
                 アンケート
               </button>
               <button
-                onClick={() => setActiveTab('recruitment')}
+                onClick={() => setActiveTab('recruitment')} // Tab key is still 'recruitment' for internal logic
                 className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
                   activeTab === 'recruitment'
                     ? 'text-orange-600 border-b-2 border-orange-600'
                     : 'text-gray-600 hover:text-orange-500'
                 }`}
               >
-                採用情報
+                就職情報 {/* Display text changed to 就職情報 */}
               </button>
               <button
                 onClick={() => setActiveTab('services')}
@@ -517,12 +524,12 @@ export default function MonitorDashboard() {
               </>
             )}
 
-            {activeTab === 'recruitment' && (
+            {activeTab === 'recruitment' && ( // Tab key is still 'recruitment' for internal logic
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">採用情報</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">就職情報</h2> {/* Display text changed to 就職情報 */}
                 {advertisements.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">現在、公開されている採用情報はありません。</p>
+                    <p className="text-gray-600">現在、公開されている就職情報はありません。</p>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -565,12 +572,8 @@ export default function MonitorDashboard() {
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      {/* アイコン削除 */}
-                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 flex items-center justify-center">
-                        {/* <MessageCircle className="w-6 h-6 text-white" /> */}
-                      </div>
-                      {/* <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" /> */}
+                    <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
+                       <MessageCircle className="w-6 h-6 text-white" /> {/* アイコンを復活させる、または別のアイコンを設定 */}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
                     <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
@@ -581,12 +584,8 @@ export default function MonitorDashboard() {
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      {/* アイコン削除 */}
-                      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 flex items-center justify-center">
-                        {/* <MessageCircle className="w-6 h-6 text-white" /> */}
-                      </div>
-                      {/* <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" /> */}
+                    <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
+                       <MessageCircle className="w-6 h-6 text-white" /> {/* アイコンを復活させる、または別のアイコンを設定 */}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
                     <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
@@ -621,11 +620,9 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {/* Advertisement Detail Modal */}
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <h2 className="text-2xl font-bold text-gray-800">{selectedAdvertisement.title}</h2>
@@ -638,7 +635,6 @@ export default function MonitorDashboard() {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
               {selectedAdvertisement.image_url && (
                 <div className="mb-6 rounded-lg overflow-hidden">
@@ -668,6 +664,15 @@ export default function MonitorDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Point Exchange Modal */}
+      {showPointExchangeModal && profile && (
+        <PointExchangeModal
+          currentPoints={profile.points}
+          onClose={() => setShowPointExchangeModal(false)}
+          onExchangeSuccess={fetchProfile} // Refresh points after successful exchange
+        />
       )}
     </div>
   );
