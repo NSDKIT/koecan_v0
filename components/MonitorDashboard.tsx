@@ -7,13 +7,13 @@ import { Survey, Question, Answer, User, MonitorProfile, Advertisement } from '@
 import { 
   Star, 
   Gift, 
-  MessageCircle, 
+  MessageCircle, // Keep MessageCircle for modal header, but remove from quick action
   LogOut, 
   User as UserIcon, 
   Trophy, 
   Clock, 
   CheckCircle,
-  ArrowRight,
+  ArrowRight, // Keep ArrowRight for other uses, but remove from quick action
   Sparkles,
   Target,
   Award,
@@ -566,10 +566,11 @@ export default function MonitorDashboard() {
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                        <MessageCircle className="w-6 h-6 text-white" />
+                      {/* アイコン削除 */}
+                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 flex items-center justify-center">
+                        {/* <MessageCircle className="w-6 h-6 text-white" /> */}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                      {/* <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" /> */}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
                     <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
@@ -581,10 +582,11 @@ export default function MonitorDashboard() {
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                        <MessageCircle className="w-6 h-6 text-white" />
+                      {/* アイコン削除 */}
+                      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 flex items-center justify-center">
+                        {/* <MessageCircle className="w-6 h-6 text-white" /> */}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" />
+                      {/* <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" /> */}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
                     <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
