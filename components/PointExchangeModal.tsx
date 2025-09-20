@@ -13,6 +13,7 @@ interface PointExchangeModalProps {
 
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
   const { user } = useAuth(); // useAuthからuserを取得
+  // 修正: useStateの型を明示的に指定
   const [exchangeType, setExchangeType] = useState<'' | 'paypay' | 'amazon' | 'starbucks'>('');
   const [pointsAmount, setPointsAmount] = useState<number>(0);
   const [contactInfo, setContactInfo] = useState('');
@@ -20,7 +21,13 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const availableExchangeOptions = [
+  // 修正: availableExchangeOptionsのtypeプロパティの型を明示的に指定
+  const availableExchangeOptions: {
+    type: 'paypay' | 'amazon' | 'starbucks'; // 明示的に型を指定
+    name: string;
+    minPoints: number;
+    maxPoints: number;
+  }[] = [
     { type: 'paypay', name: 'PayPayポイント', minPoints: 500, maxPoints: currentPoints },
     { type: 'amazon', name: 'Amazonギフトカード', minPoints: 1000, maxPoints: currentPoints },
     { type: 'starbucks', name: 'スターバックス eGift', minPoints: 300, maxPoints: currentPoints },
