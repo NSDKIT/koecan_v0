@@ -17,11 +17,6 @@ interface Message {
   sender_name?: string;
 }
 
-// TODO: Replace with an actual admin/support user ID from your Supabase 'users' table.
-// This is crucial for the chat to function correctly as a 'support' room.
-// You might need to query your 'users' table to find a user with role 'admin' or 'support'.
-const SUPABASE_ADMIN_USER_ID = 'your-admin-or-support-user-id-here'; 
-
 export function ChatModal({ user, onClose }: ChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -31,12 +26,8 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user && user.id) {
+    if (user) {
       initializeChat();
-    } else {
-      setLoading(false);
-      // Optionally show a message that user is not logged in or user ID is missing
-      console.warn('ChatModal: User or user.id is not available. Cannot initialize chat.');
     }
   }, [user]);
 
@@ -49,30 +40,18 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
   };
 
   const initializeChat = async () => {
-    console.log('ChatModal: Initializing chat for user:', user.id);
-    setLoading(true); // Ensure loading is true at the start of initialization
     try {
       // Find or create a support chat room for this user
-      // The participants array should include the current user AND a support user (e.g., an admin)
-      const participantsArray = [user.id, SUPABASE_ADMIN_USER_ID].sort(); // Sort to ensure consistent array for query
-
-      let { data: existingRoom, error: fetchRoomError } = await supabase
+      let { data: existingRoom } = await supabase
         .from('chat_rooms')
         .select('id')
         .eq('room_type', 'support')
-        .contains('participants', participantsArray) // Check if both users are in participants
+        .contains('participants', [user.id])
         .single();
 
-      if (fetchRoomError && fetchRoomError.code !== 'PGRST116') { // PGRST116 is "No rows found"
-        console.error('ChatModal: Error fetching existing room:', fetchRoomError);
-        throw fetchRoomError;
-      }
-      
       let currentRoomId = existingRoom?.id;
-      console.log('ChatModal: Existing room found:', currentRoomId);
 
       if (!currentRoomId) {
-        console.log('ChatModal: No existing room found, creating new one...');
         // Create a new support room
         const { data: newRoom, error: roomError } = await supabase
           .from('chat_rooms')
@@ -80,70 +59,27 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
             {
               name: `サポート - ${user.name}`,
               room_type: 'support',
-              participants: participantsArray, // Include both user and support
-              created_by: user.id // The user initiating the chat
+              participants: [user.id],
+              created_by: user.id
             }
           ])
           .select('id')
           .single();
 
-        if (roomError) {
-          console.error('ChatModal: Error creating new room:', roomError);
-          throw roomError;
-        }
+        if (roomError) throw roomError;
         currentRoomId = newRoom.id;
-        console.log('ChatModal: New room created with ID:', currentRoomId);
       }
 
       setRoomId(currentRoomId);
       await fetchMessages(currentRoomId);
-
-      // Setup real-time subscription for new messages
-      supabase
-        .channel(`chat_room_${currentRoomId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'chat_messages',
-            filter: `room_id=eq.${currentRoomId}`,
-          },
-          async (payload) => {
-            console.log('ChatModal: Realtime message received:', payload);
-            const newMessageData = payload.new as Message;
-            // Fetch sender name for the new message
-            const { data: senderData, error: senderError } = await supabase
-                .from('users')
-                .select('name')
-                .eq('id', newMessageData.sender_id)
-                .single();
-
-            if (senderError) {
-                console.error('ChatModal: Error fetching sender name in realtime:', senderError);
-            }
-            const senderName = senderData?.name || 'Unknown';
-
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              { ...newMessageData, sender_name: senderName }
-            ]);
-            scrollToBottom();
-          }
-        )
-        .subscribe();
-
     } catch (error) {
-      console.error('ChatModal: Error initializing chat:', error);
-      alert('チャットの初期化に失敗しました。');
+      console.error('Error initializing chat:', error);
     } finally {
       setLoading(false);
-      console.log('ChatModal: Initialization finished, loading set to false.');
     }
   };
 
   const fetchMessages = async (roomId: string) => {
-    console.log('ChatModal: Fetching messages for room:', roomId);
     try {
       const { data, error } = await supabase
         .from('chat_messages')
@@ -161,13 +97,12 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
 
       const messagesWithNames = data.map(msg => ({
         ...msg,
-        sender_name: (msg.users as any)?.name || (msg.sender_id === SUPABASE_ADMIN_USER_ID ? 'サポート' : 'Unknown')
+        sender_name: (msg.users as any)?.name || 'Unknown'
       }));
 
       setMessages(messagesWithNames);
-      console.log('ChatModal: Messages fetched:', messagesWithNames.length);
     } catch (error) {
-      console.error('ChatModal: Error fetching messages:', error);
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -176,7 +111,6 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
     if (!newMessage.trim() || !roomId || sending) return;
 
     setSending(true);
-    console.log('ChatModal: Sending message:', newMessage);
     try {
       const { error } = await supabase
         .from('chat_messages')
@@ -191,10 +125,9 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
       if (error) throw error;
 
       setNewMessage('');
-      // Messages are now updated via real-time subscription, no need to re-fetch manually
-      console.log('ChatModal: Message sent successfully.');
+      await fetchMessages(roomId);
     } catch (error) {
-      console.error('ChatModal: Error sending message:', error);
+      console.error('Error sending message:', error);
       alert('メッセージの送信に失敗しました。');
     } finally {
       setSending(false);
