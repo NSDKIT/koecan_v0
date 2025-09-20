@@ -356,13 +356,6 @@ export default function MonitorDashboard() {
               
               <div className="flex items-center space-x-4">
                 <NotificationButton />
-                {/* Original points display - kept for reference, but new one will be below */}
-                {/*
-                <div className="flex items-center bg-gradient-to-r from-orange-100 to-orange-200 rounded-full px-4 py-2">
-                  <Trophy className="w-4 h-4 text-orange-600 mr-2" />
-                  <span className="text-orange-800 font-semibold">{profile?.points || 0}pt</span>
-                </div>
-                */}
                 <button
                   onClick={() => setShowProfileModal(true)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors"
@@ -489,9 +482,41 @@ export default function MonitorDashboard() {
             )}
 
             {activeTab === 'recruitment' && (
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">採用情報</h2>
-                <p className="text-gray-600">現在、公開されている採用情報はありません。</p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0"> {/* Adjusted padding as it's now inside another padded div */}
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">採用情報</h2>
+                {advertisements.length === 0 ? (
+                  <div className="text-center py-8"> {/* Reduced padding slightly */}
+                    <p className="text-gray-600">現在、公開されている採用情報はありません。</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {advertisements.map((ad) => (
+                      <div
+                        key={ad.id}
+                        className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                        onClick={() => ad.link_url && window.open(ad.link_url, '_blank')}
+                      >
+                        {ad.image_url && (
+                          <div className="aspect-video bg-gray-100 overflow-hidden">
+                            <img
+                              src={ad.image_url}
+                              alt={ad.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        )}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">
+                            {ad.title}
+                          </h3>
+                          {ad.description && (
+                            <p className="text-gray-600 text-sm line-clamp-2">{ad.description}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -547,40 +572,6 @@ export default function MonitorDashboard() {
               <p className="text-gray-600 text-sm">情報を更新・確認</p>
             </button>
           </div>
-
-          {/* Advertisements */}
-          {advertisements.length > 0 && (
-            <div className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">おすすめ情報</h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {advertisements.map((ad) => (
-                  <div
-                    key={ad.id}
-                    className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                    onClick={() => ad.link_url && window.open(ad.link_url, '_blank')}
-                  >
-                    {ad.image_url && (
-                      <div className="aspect-video bg-gray-100 overflow-hidden">
-                        <img
-                          src={ad.image_url}
-                          alt={ad.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">
-                        {ad.title}
-                      </h3>
-                      {ad.description && (
-                        <p className="text-gray-600 text-sm line-clamp-2">{ad.description}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </main>
       </div>
 
