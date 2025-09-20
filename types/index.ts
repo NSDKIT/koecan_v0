@@ -92,7 +92,7 @@ export interface Advertisement {
   title: string;
   description?: string;
   image_url?: string;
-  link_url?: string;
+  link_url?: string; // YouTubeショートなどへのリンクに使用
   is_active: boolean;
   display_order: number;
   created_at: string;
@@ -100,6 +100,28 @@ export interface Advertisement {
   created_by?: string;
   target_regions?: string[];
   priority: number;
+
+  // 新しい就職情報関連のフィールドを追加
+  company_name?: string;
+  location_info?: string; // 所在地（本社／支社）
+  establishment_year?: number; // 設立年
+  employee_count?: number; // 従業員数
+  employee_gender_ratio?: string; // 男女比
+  employee_age_composition?: string; // 年齢構成比
+  
+  recommended_points?: string[]; // おすすめポイント３つ
+  
+  salary_info?: string; // 給与・昇給・賞与：モデル年収例など
+  paid_leave_rate?: string; // 有給取得率
+  long_holidays?: string; // 長期休暇
+  training_support?: string; // 研修・成長支援
+  busy_season_intensity?: string; // 繁忙期の忙しさ
+  
+  youtube_short_url?: string; // 会社の雰囲気・文化 (YouTubeショートに飛ばすための専用URL)
+  
+  recruitment_roles?: string; // 募集職種と人数
+  application_qualifications?: string; // 応募資格
+  selection_flow?: string; // 選考フロー
 }
 
 export interface ChatRoom {
