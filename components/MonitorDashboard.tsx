@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; // Import Response as UserResponse to avoid name collision
+import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
 import { 
   Star, 
   Gift, 
@@ -22,21 +22,23 @@ import {
   ExternalLink, // New icon for external link in ad detail modal
   X, // Close icon for modal
   History, // Icon for answered surveys
+  FileText // Icon for profile survey
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
-import { PointExchangeModal } from '@/components/PointExchangeModal'; // Import the new modal
+import { PointExchangeModal } from '@/components/PointExchangeModal'; 
+import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; // Import new modal
 
 // Define types for active tab
-type ActiveTab = 'surveys' | 'recruitment' | 'services'; // Changed 'recruitment' to 'job_info' internally, but kept for clarity in the file
+type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
 export default function MonitorDashboard() {
   const { user, signOut } = useAuth();
-  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); // 未回答のアンケート
-  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   // 回答済みのアンケート
+  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
+  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -47,32 +49,27 @@ export default function MonitorDashboard() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for hamburger menu
-  const menuButtonRef = useRef<HTMLButtonElement>(null); // Ref for hamburger menu button
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
-  // State for showing advertisement detail modal
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
-  // State for showing point exchange modal
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
+  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); // New state for profile survey modal
 
 
   useEffect(() => {
     if (user) {
       fetchProfile();
-      fetchSurveysAndResponses(); // Modified to fetch both available and answered
+      fetchSurveysAndResponses(); 
       fetchAdvertisements();
     }
   }, [user]);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // menuButtonRefはボタン自体、メニューが開いているdivではない
       if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
-        // クリックがメニューボタンの場合は何もしない (メニューの開閉はボタンのonClickで処理)
         return;
       }
-      // メニュー自体がDOMに存在しない場合は何もしない
       const menuElement = document.getElementById('hamburger-menu-dropdown');
       if (menuElement && !menuElement.contains(event.target as Node)) {
         setIsMenuOpen(false);
@@ -83,7 +80,7 @@ export default function MonitorDashboard() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []); // []でマウント時のみ実行
+  }, []); 
 
 
   const fetchProfile = async () => {
@@ -105,7 +102,6 @@ export default function MonitorDashboard() {
     if (!user?.id) return;
     setLoading(true);
     try {
-      // 1. Fetch all active surveys
       const { data: allActiveSurveys, error: surveysError } = await supabase
         .from('surveys')
         .select('*')
@@ -114,7 +110,6 @@ export default function MonitorDashboard() {
 
       if (surveysError) throw surveysError;
 
-      // 2. Fetch all responses by the current user
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -164,7 +159,6 @@ export default function MonitorDashboard() {
 
   const handleSurveyClick = async (survey: Survey) => {
     try {
-      // Re-check if already completed (redundant due to fetchSurveysAndResponses but good for immediate UX)
       const { data: existingResponse } = await supabase
         .from('responses')
         .select('id')
@@ -174,7 +168,6 @@ export default function MonitorDashboard() {
 
       if (existingResponse) {
         alert('このアンケートは既に回答済みです。');
-        // Optionally, redirect to answered surveys tab or simply close modal
         return;
       }
 
@@ -232,8 +225,8 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); // Refresh profile to update points
-      fetchSurveysAndResponses(); // Re-fetch surveys to update available/answered lists
+      fetchProfile(); 
+      fetchSurveysAndResponses(); 
     } catch (error) {
       console.error('Error submitting survey:', error);
       alert('アンケートの送信に失敗しました。');
@@ -415,10 +408,10 @@ export default function MonitorDashboard() {
                 </span>
               </div>
               
-              <div className="flex items-center space-x-4"> {/* Removed ref={menuRef} from here */}
+              <div className="flex items-center space-x-4">
                 <NotificationButton />
                 <button
-                  ref={menuButtonRef} // Reference the button directly
+                  ref={menuButtonRef}
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="text-gray-700 hover:text-orange-600 transition-colors"
                 >
@@ -429,12 +422,12 @@ export default function MonitorDashboard() {
           </div>
         </header>
 
-        {/* Hamburger Menu Dropdown (outside the header for z-index) */}
+        {/* Hamburger Menu Dropdown */}
         {isMenuOpen && (
           <div
-            id="hamburger-menu-dropdown" // Add an ID for outside click detection
-            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100" // Use fixed positioning
-            style={{ zIndex: 1000 }} // Ensure it's on top
+            id="hamburger-menu-dropdown" 
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100" 
+            style={{ zIndex: 1000 }} 
           >
             <button
               onClick={() => {
@@ -445,6 +438,16 @@ export default function MonitorDashboard() {
             >
               <UserIcon className="w-5 h-5 mr-2" />
               プロフィール設定
+            </button>
+            <button
+              onClick={() => {
+                setShowProfileSurveyModal(true); // Open the new profile survey modal
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <FileText className="w-5 h-5 mr-2" /> {/* Icon for the survey */}
+              プロフィールアンケート
             </button>
             <button
               onClick={() => {
@@ -464,7 +467,7 @@ export default function MonitorDashboard() {
           {/* 獲得ポイントカード */}
           <div
             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4 cursor-pointer hover:shadow-2xl transition-shadow"
-            onClick={() => setShowPointExchangeModal(true)} // Add onClick to open PointExchangeModal
+            onClick={() => setShowPointExchangeModal(true)} 
           >
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
               <Star className="w-10 h-10 text-white" />
@@ -489,14 +492,14 @@ export default function MonitorDashboard() {
                 アンケート
               </button>
               <button
-                onClick={() => setActiveTab('recruitment')} // Tab key is still 'recruitment' for internal logic
+                onClick={() => setActiveTab('recruitment')} 
                 className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
                   activeTab === 'recruitment'
                     ? 'text-orange-600 border-b-2 border-orange-600'
                     : 'text-gray-600 hover:text-orange-500'
                 }`}
               >
-                就職情報 {/* Display text changed to 就職情報 */}
+                就職情報 
               </button>
               <button
                 onClick={() => setActiveTab('services')}
@@ -580,7 +583,7 @@ export default function MonitorDashboard() {
                     {answeredSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" // Visually distinguish answered surveys
+                        className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" 
                       >
                         <div className="flex flex-col md:flex-row items-start justify-between">
                           <div className="flex-1 mb-4 md:mb-0">
@@ -604,7 +607,6 @@ export default function MonitorDashboard() {
                               <Gift className="w-5 h-5 mr-2" />
                               <span>{survey.points_reward}pt 獲得済み</span>
                             </div>
-                            {/* 回答済みアンケートには「回答する」ボタンは不要、必要なら「結果を見る」などに変更 */}
                           </div>
                         </div>
                       </div>
@@ -616,7 +618,7 @@ export default function MonitorDashboard() {
 
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">就職情報</h2> {/* Display text changed to 就職情報 */}
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">就職情報</h2> 
                 {advertisements.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-600">現在、公開されている就職情報はありません。</p>
@@ -762,6 +764,14 @@ export default function MonitorDashboard() {
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
           onExchangeSuccess={fetchProfile} // Refresh points after successful exchange
+        />
+      )}
+
+      {/* Monitor Profile Survey Modal */}
+      {showProfileSurveyModal && (
+        <MonitorProfileSurveyModal
+          onClose={() => setShowProfileSurveyModal(false)}
+          onSaveSuccess={() => { /* 何か保存後の処理があればここに記述 */ }}
         />
       )}
     </div>
