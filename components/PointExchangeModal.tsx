@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Gift, Send, Loader2 } from 'lucide-react';
 import { supabase } from '@/config/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
 
 interface PointExchangeModalProps {
   currentPoints: number;
@@ -12,7 +12,7 @@ interface PointExchangeModalProps {
 }
 
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
-  // 修正: useStateの型を明示的に指定
+  const { user } = useAuth(); // useAuthからuserを取得
   const [exchangeType, setExchangeType] = useState<'' | 'paypay' | 'amazon' | 'starbucks'>('');
   const [pointsAmount, setPointsAmount] = useState<number>(0);
   const [contactInfo, setContactInfo] = useState('');
@@ -27,7 +27,13 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   ];
 
   const handleExchange = async () => {
-    if (!user || !exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || contactInfo.trim() === '') {
+    // userが存在しない場合はエラーを出す
+    if (!user) {
+      setError('ユーザー情報が取得できません。再度ログインしてください。');
+      return;
+    }
+
+    if (!exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || contactInfo.trim() === '') {
       setError('全ての必須項目を入力し、有効なポイント数を指定してください。');
       return;
     }
