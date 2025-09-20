@@ -589,21 +589,6 @@ export default function MonitorDashboard() {
                     <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
                     <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
                   </button>
-
-                  {/* プロフィール設定への直接リンク（ハンバーガーメニューと重複しないように、必要であれば調整） */}
-                   <button
-                    onClick={() => { setShowProfileModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                        <UserIcon className="w-6 h-6 text-white" />
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール設定</h3>
-                    <p className="text-gray-600 text-sm">情報を更新・確認</p>
-                  </button>
                 </div>
               </>
             )}
