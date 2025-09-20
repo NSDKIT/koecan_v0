@@ -426,8 +426,7 @@ export default function MonitorDashboard() {
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
-            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100" 
-            style={{ zIndex: 1000 }} 
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-[1000] border border-gray-100" // z-[1000] ensures it's on top
           >
             <button
               onClick={() => {
@@ -763,7 +762,7 @@ export default function MonitorDashboard() {
         <PointExchangeModal
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
-          onExchangeSuccess={fetchProfile} // Refresh points after successful exchange
+          onExchangeSuccess={fetchProfile} 
         />
       )}
 
@@ -771,7 +770,7 @@ export default function MonitorDashboard() {
       {showProfileSurveyModal && (
         <MonitorProfileSurveyModal
           onClose={() => setShowProfileSurveyModal(false)}
-          onSaveSuccess={() => { /* 何か保存後の処理があればここに記述 */ }}
+          onSaveSuccess={() => { /* Handle success if needed, e.g., show a toast */ }}
         />
       )}
     </div>
