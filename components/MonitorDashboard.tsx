@@ -28,10 +28,10 @@ import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
-import { PointExchangeModal } from '@/components/PointExchangeModal';
+import { PointExchangeModal } from '@/components/PointExchangeModal'; // Import the new modal
 
 // Define types for active tab
-type ActiveTab = 'surveys' | 'recruitment' | 'services';
+type ActiveTab = 'surveys' | 'recruitment' | 'services'; // Changed 'recruitment' to 'job_info' internally, but kept for clarity in the file
 
 export default function MonitorDashboard() {
   const { user, signOut } = useAuth();
@@ -48,9 +48,11 @@ export default function MonitorDashboard() {
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for hamburger menu
-  const menuRef = useRef<HTMLDivElement>(null); // Ref for closing menu on outside click
+  const menuButtonRef = useRef<HTMLButtonElement>(null); // Ref for hamburger menu button
 
+  // State for showing advertisement detail modal
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
+  // State for showing point exchange modal
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
 
 
@@ -62,9 +64,17 @@ export default function MonitorDashboard() {
     }
   }, [user]);
 
+  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      // menuButtonRefはボタン自体、メニューが開いているdivではない
+      if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
+        // クリックがメニューボタンの場合は何もしない (メニューの開閉はボタンのonClickで処理)
+        return;
+      }
+      // メニュー自体がDOMに存在しない場合は何もしない
+      const menuElement = document.getElementById('hamburger-menu-dropdown');
+      if (menuElement && !menuElement.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
     };
@@ -73,7 +83,8 @@ export default function MonitorDashboard() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [menuRef]);
+  }, []); // []でマウント時のみ実行
+
 
   const fetchProfile = async () => {
     try {
@@ -404,43 +415,49 @@ export default function MonitorDashboard() {
                 </span>
               </div>
               
-              <div className="flex items-center space-x-4" ref={menuRef}>
+              <div className="flex items-center space-x-4"> {/* Removed ref={menuRef} from here */}
                 <NotificationButton />
                 <button
+                  ref={menuButtonRef} // Reference the button directly
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="text-gray-700 hover:text-orange-600 transition-colors relative"
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
                 >
                   <Menu className="w-6 h-6" />
                 </button>
-
-                {isMenuOpen && (
-                  <div className="absolute right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100">
-                    <button
-                      onClick={() => {
-                        setShowProfileModal(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-                    >
-                      <UserIcon className="w-5 h-5 mr-2" />
-                      プロフィール設定
-                    </button>
-                    <button
-                      onClick={() => {
-                        signOut();
-                        setIsMenuOpen(false);
-                      }}
-                      className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
-                    >
-                      <LogOut className="w-5 h-5 mr-2" />
-                      ログアウト
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </header>
+
+        {/* Hamburger Menu Dropdown (outside the header for z-index) */}
+        {isMenuOpen && (
+          <div
+            id="hamburger-menu-dropdown" // Add an ID for outside click detection
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100" // Use fixed positioning
+            style={{ zIndex: 1000 }} // Ensure it's on top
+          >
+            <button
+              onClick={() => {
+                setShowProfileModal(true);
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <UserIcon className="w-5 h-5 mr-2" />
+              プロフィール設定
+            </button>
+            <button
+              onClick={() => {
+                signOut();
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+            >
+              <LogOut className="w-5 h-5 mr-2" />
+              ログアウト
+            </button>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
