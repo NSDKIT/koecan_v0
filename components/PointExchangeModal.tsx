@@ -12,8 +12,8 @@ interface PointExchangeModalProps {
 }
 
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
-  const { user } = useAuth();
-  const [exchangeType, setExchangeType] = useState<'paypay' | 'amazon' | 'starbucks' | ''>('');
+  // 修正: useStateの型を明示的に指定
+  const [exchangeType, setExchangeType] = useState<'' | 'paypay' | 'amazon' | 'starbucks'>('');
   const [pointsAmount, setPointsAmount] = useState<number>(0);
   const [contactInfo, setContactInfo] = useState('');
   const [notes, setNotes] = useState('');
