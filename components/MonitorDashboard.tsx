@@ -1,23 +1,24 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
 import { Survey, Question, Answer, User, MonitorProfile, Advertisement } from '@/types';
 import { 
-  Star, // Used for "獲得ポイント" card icon
-  Gift, // Used for points reward in survey cards
+  Star, 
+  Gift, 
   MessageCircle, 
   LogOut, 
   User as UserIcon, 
-  Trophy, // Replaced by Star for the large points card, but kept for general use if needed
-  Clock, // Used for question count in survey cards
+  Trophy, 
+  Clock, 
   CheckCircle,
   ArrowRight,
   Sparkles,
   Target,
   Award,
-  Users // Used for general info in survey cards (people icon)
+  Users,
+  Menu // Hamburger icon
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -40,8 +41,9 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  // State for tab navigation
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for hamburger menu
+  const menuRef = useRef<HTMLDivElement>(null); // Ref for closing menu on outside click
 
   useEffect(() => {
     if (user) {
@@ -50,6 +52,20 @@ export default function MonitorDashboard() {
       fetchAdvertisements();
     }
   }, [user]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuRef]);
 
   const fetchProfile = async () => {
     try {
@@ -354,21 +370,39 @@ export default function MonitorDashboard() {
                 </span>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4" ref={menuRef}>
                 <NotificationButton />
                 <button
-                  onClick={() => setShowProfileModal(true)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="text-gray-700 hover:text-orange-600 transition-colors relative"
                 >
-                  <UserIcon className="w-5 h-5" />
-                  <span>{user?.name}</span>
+                  <Menu className="w-6 h-6" />
                 </button>
-                <button
-                  onClick={signOut}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
+
+                {isMenuOpen && (
+                  <div className="absolute right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100">
+                    <button
+                      onClick={() => {
+                        setShowProfileModal(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <UserIcon className="w-5 h-5 mr-2" />
+                      プロフィール設定
+                    </button>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+                    >
+                      <LogOut className="w-5 h-5 mr-2" />
+                      ログアウト
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -482,10 +516,10 @@ export default function MonitorDashboard() {
             )}
 
             {activeTab === 'recruitment' && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0"> {/* Adjusted padding as it's now inside another padded div */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">採用情報</h2>
                 {advertisements.length === 0 ? (
-                  <div className="text-center py-8"> {/* Reduced padding slightly */}
+                  <div className="text-center py-8">
                     <p className="text-gray-600">現在、公開されている採用情報はありません。</p>
                   </div>
                 ) : (
@@ -526,7 +560,7 @@ export default function MonitorDashboard() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* キャリア相談 */}
                   <button
-                    onClick={() => setShowCareerModal(true)}
+                    onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -541,7 +575,7 @@ export default function MonitorDashboard() {
 
                   {/* チャット */}
                   <button
-                    onClick={() => setShowChatModal(true)}
+                    onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -554,10 +588,9 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
                   </button>
 
-                  {/* プロフィール (これはサービス一覧には含めず、ヘッダー近くのアイコンクリックで開く形が適切かと思いますが、
-                      元のQuick Actionsグリッドにあったので一旦ここに移動させます。必要であれば再検討ください。) */}
+                  {/* プロフィール設定への直接リンク（ハンバーガーメニューと重複しないように、必要であれば調整） */}
                    <button
-                    onClick={() => setShowProfileModal(true)}
+                    onClick={() => { setShowProfileModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -566,60 +599,13 @@ export default function MonitorDashboard() {
                       </div>
                       <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール設定</h3>
                     <p className="text-gray-600 text-sm">情報を更新・確認</p>
                   </button>
                 </div>
               </>
             )}
           </div>
-
-          {/* Quick Actions (Removed from here as requested to move to Services tab) */}
-          {/*
-          <div className="grid md:grid-cols-3 gap-6 mt-8">
-            <button
-              onClick={() => setShowCareerModal(true)}
-              className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                  <MessageCircle className="w-6 h-6 text-white" />
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
-              <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
-            </button>
-
-            <button
-              onClick={() => setShowChatModal(true)}
-              className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                  <MessageCircle className="w-6 h-6 text-white" />
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-500 transition-colors" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
-              <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
-            </button>
-
-            <button
-              onClick={() => setShowProfileModal(true)}
-              className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3 group-hover:scale-110 transition-transform">
-                  <UserIcon className="w-6 h-6 text-white" />
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-500 transition-colors" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール</h3>
-              <p className="text-gray-600 text-sm">情報を更新・確認</p>
-            </button>
-          </div>
-          */}
         </main>
       </div>
 
