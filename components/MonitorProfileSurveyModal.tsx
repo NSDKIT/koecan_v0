@@ -223,7 +223,8 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
         const optionValue = getOptionValue(option);
         const isOther = option.includes('その他');
         const isChecked = formData[name]?.includes(optionValue);
-        const isDisabled = maxSelections && formData[name].length >= maxSelections && !isChecked;
+        // 修正: isDisabled の値を明示的に boolean に変換
+        const isDisabled = !!(maxSelections && formData[name].length >= maxSelections && !isChecked);
 
         return (
           <label key={index} className="flex items-center mb-1">
