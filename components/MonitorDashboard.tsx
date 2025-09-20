@@ -5,24 +5,28 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
 import { Survey, Question, Answer, User, MonitorProfile, Advertisement } from '@/types';
 import { 
-  Star, 
-  Gift, 
+  Star, // Used for "獲得ポイント" card icon
+  Gift, // Used for points reward in survey cards
   MessageCircle, 
   LogOut, 
   User as UserIcon, 
-  Trophy,
-  Clock,
+  Trophy, // Replaced by Star for the large points card, but kept for general use if needed
+  Clock, // Used for question count in survey cards
   CheckCircle,
   ArrowRight,
   Sparkles,
   Target,
-  Award
+  Award,
+  Users // Used for general info in survey cards (people icon)
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
+
+// Define types for active tab
+type ActiveTab = 'surveys' | 'recruitment' | 'services';
 
 export default function MonitorDashboard() {
   const { user, signOut } = useAuth();
@@ -36,6 +40,8 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
+  // State for tab navigation
+  const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
 
   useEffect(() => {
     if (user) {
@@ -138,6 +144,18 @@ export default function MonitorDashboard() {
     if (!selectedSurvey || !user) return;
 
     try {
+      // For mock purposes, let's assume 5 questions for every survey if not fetched
+      // In a real app, you would fetch the actual number of questions for the current survey or store it.
+      const questionCount = surveyQuestions.length > 0 ? surveyQuestions.length : 5; 
+
+      // Basic validation: ensure all required questions have an answer
+      const allRequiredAnswered = surveyQuestions.every(q => !q.required || answers.some(a => a.question_id === q.id && a.answer.trim() !== ''));
+
+      if (!allRequiredAnswered) {
+          alert('全ての必須質問に回答してください。');
+          return;
+      }
+
       const { error } = await supabase
         .from('responses')
         .insert([
@@ -338,10 +356,13 @@ export default function MonitorDashboard() {
               
               <div className="flex items-center space-x-4">
                 <NotificationButton />
+                {/* Original points display - kept for reference, but new one will be below */}
+                {/*
                 <div className="flex items-center bg-gradient-to-r from-orange-100 to-orange-200 rounded-full px-4 py-2">
                   <Trophy className="w-4 h-4 text-orange-600 mr-2" />
                   <span className="text-orange-800 font-semibold">{profile?.points || 0}pt</span>
                 </div>
+                */}
                 <button
                   onClick={() => setShowProfileModal(true)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors"
@@ -362,37 +383,128 @@ export default function MonitorDashboard() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8 border border-orange-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  おかえりなさい、{user?.name}さん！
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  今日もアンケートに答えてポイントを貯めましょう
-                </p>
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center">
-                    <Star className="w-5 h-5 text-yellow-500 mr-2" />
-                    <span className="text-gray-700">現在のポイント: <strong>{profile?.points || 0}pt</strong></span>
-                  </div>
-                  <div className="flex items-center">
-                    <Target className="w-5 h-5 text-green-500 mr-2" />
-                    <span className="text-gray-700">利用可能なアンケート: <strong>{surveys.length}件</strong></span>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden md:block">
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 shadow-lg">
-                  <Sparkles className="w-12 h-12 text-white" />
-                </div>
-              </div>
+          {/* 獲得ポイントカード */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4">
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+              <Star className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <p className="text-gray-600 text-lg">獲得ポイント</p>
+              <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {/* Tab Navigation */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border border-orange-100 border-b-0">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('surveys')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'surveys'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-600 hover:text-orange-500'
+                }`}
+              >
+                アンケート
+              </button>
+              <button
+                onClick={() => setActiveTab('recruitment')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'recruitment'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-600 hover:text-orange-500'
+                }`}
+              >
+                採用情報
+              </button>
+              <button
+                onClick={() => setActiveTab('services')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'services'
+                    ? 'text-orange-600 border-b-2 border-orange-600'
+                    : 'text-gray-600 hover:text-orange-500'
+                }`}
+              >
+                サービス一覧
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-b-2xl shadow-xl p-8 border border-orange-100">
+            {activeTab === 'surveys' && (
+              <>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
+                {surveys.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能なアンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートが追加されるまでお待ちください。</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {surveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                {/* Using Users icon as a placeholder for "people" icon */}
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span> {/* Placeholder for target audience */}
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span> {/* Placeholder for question count */}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-orange-50 rounded-full px-4 py-2 text-orange-700 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt</span>
+                            </div>
+                            <button
+                              onClick={() => handleSurveyClick(survey)}
+                              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-base font-semibold"
+                            >
+                              回答する
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'recruitment' && (
+              <div className="text-center py-12">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">採用情報</h2>
+                <p className="text-gray-600">現在、公開されている採用情報はありません。</p>
+              </div>
+            )}
+
+            {activeTab === 'services' && (
+              <div className="text-center py-12">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">サービス一覧</h2>
+                <p className="text-gray-600">現在、公開されているサービス情報はありません。</p>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions (moved from top for better flow with points/tabs) */}
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
             <button
               onClick={() => setShowCareerModal(true)}
               className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
@@ -434,62 +546,6 @@ export default function MonitorDashboard() {
               <h3 className="text-lg font-semibold text-gray-800 mb-2">プロフィール</h3>
               <p className="text-gray-600 text-sm">情報を更新・確認</p>
             </button>
-          </div>
-
-          {/* Available Surveys */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">利用可能なアンケート</h2>
-              <div className="flex items-center text-gray-600">
-                <Clock className="w-5 h-5 mr-2" />
-                <span>{surveys.length}件のアンケート</span>
-              </div>
-            </div>
-
-            {surveys.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能なアンケートはありません</h3>
-                <p className="text-gray-600">新しいアンケートが追加されるまでお待ちください。</p>
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                {surveys.map((survey) => (
-                  <div
-                    key={survey.id}
-                    className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group hover:border-orange-300"
-                    onClick={() => handleSurveyClick(survey)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors">
-                          {survey.title}
-                        </h3>
-                        <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>約5-10分</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Award className="w-4 h-4 mr-1" />
-                            <span>{survey.points_reward}ポイント</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-6 flex flex-col items-end">
-                        <div className="bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 px-4 py-2 rounded-full font-semibold mb-2">
-                          {survey.points_reward}pt
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-500 transition-colors" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Advertisements */}
