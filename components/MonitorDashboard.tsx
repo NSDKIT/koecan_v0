@@ -7,7 +7,7 @@ import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response
 import { 
   Star, 
   Gift, 
-  MessageCircle, 
+  MessageCircle, // サービス一覧のアイコン
   LogOut, 
   User as UserIcon, 
   Trophy, 
@@ -17,16 +17,18 @@ import {
   Sparkles,
   Target,
   Award,
-  Users,
+  Users, // アンケートの対象者アイコン
   Menu, // ハンバーガーアイコン
   ExternalLink, // 外部リンクアイコン
   X, // 閉じるアイコン
   History, // 回答済みアンケートのアイコン
-  FileText // プロフィールアンケートのアイコン
+  FileText, // プロフィールアンケートのアイコン
+  Briefcase, // 就職情報のアイコン
+  ClipboardList // アンケートのアイコン
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
-import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
+import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
@@ -52,7 +54,7 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('surveys'); // アクティブなタブの状態
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
@@ -550,7 +552,8 @@ export default function MonitorDashboard() {
         )}
 
         {/* メインコンテンツ */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
           {/* 獲得ポイントカード */}
           <div
             className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4 cursor-pointer hover:shadow-2xl transition-shadow"
@@ -565,44 +568,8 @@ export default function MonitorDashboard() {
             </div>
           </div>
 
-          {/* タブナビゲーション */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border border-orange-100 border-b-0">
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setActiveTab('surveys')}
-                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
-                  activeTab === 'surveys'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-orange-500'
-                }`}
-              >
-                アンケート
-              </button>
-              <button
-                onClick={() => setActiveTab('recruitment')} 
-                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
-                  activeTab === 'recruitment'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-orange-500'
-                }`}
-              >
-                就職情報 
-              </button>
-              <button
-                onClick={() => setActiveTab('services')}
-                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
-                  activeTab === 'services'
-                    ? 'text-orange-600 border-b-2 border-orange-600'
-                    : 'text-gray-600 hover:text-orange-500'
-                }`}
-              >
-                サービス一覧
-              </button>
-            </div>
-          </div>
-
           {/* タブコンテンツ */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-b-2xl shadow-xl p-8 border border-orange-100">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
             {activeTab === 'surveys' && (
               <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
@@ -776,6 +743,40 @@ export default function MonitorDashboard() {
         </main>
       </div>
 
+      {/* ボトムタブバー */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+        <div className="max-w-7xl mx-auto flex justify-around h-16">
+          <button
+            onClick={() => setActiveTab('surveys')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <ClipboardList className="w-6 h-6 mb-1" />
+            アンケート
+          </button>
+          <button
+            onClick={() => setActiveTab('recruitment')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Briefcase className="w-6 h-6 mb-1" />
+            就職情報
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'services' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <MessageCircle className="w-6 h-6 mb-1" />
+            サービス
+          </button>
+        </div>
+      </div>
+
+
       {/* モーダル群 */}
       {showProfileModal && (
         <ProfileModal
@@ -794,7 +795,7 @@ export default function MonitorDashboard() {
 
       {/* Chat Modal - モニターからサポートへのチャット */}
       {/* 修正: SUPABASE_SUPPORT_USER_ID が有効なIDであるかどうかのチェックを簡素化 */}
-      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( // 'your-zenryoku-gmail-com-user-id-here'との比較を削除
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
           user={user}
           otherUserId={SUPABASE_SUPPORT_USER_ID} // モニターからサポート担当者のIDを渡す
@@ -825,7 +826,7 @@ export default function MonitorDashboard() {
                   <img
                     src={selectedAdvertisement.image_url}
                     alt={selectedAdvertisement.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto object-cover"
                   />
                 </div>
               )}
