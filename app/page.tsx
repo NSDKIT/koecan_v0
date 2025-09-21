@@ -96,8 +96,12 @@ export default function Home() {
     case 'client':
       return <ClientDashboard />;
     case 'admin':
-      return <AdminDashboard />;
+      return <AdminDashboard />; // 管理者ダッシュボードはAdminDashboardのまま
     case 'support':
+      // admin@example.comとzenryoku@gmail.comが両方ともSupportDashboardを利用したい場合、
+      // ユーザーロールを'support'としてログインするように設定し、SupportDashboardを表示させます。
+      // AdminDashboardとSupportDashboardの役割を明確にするため、adminはAdminDashboard、supportはSupportDashboardとします。
+      // もしadminがSupportDashboardを使いたい場合は、Supabaseのusersテーブルでroleを'support'に変更してください。
       return <SupportDashboard />;
     default:
       return (
