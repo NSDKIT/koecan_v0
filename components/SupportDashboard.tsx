@@ -13,7 +13,8 @@ import {
   Loader2, // ローディングアイコン
   CheckCircle, // ユーザーが見つからない場合のアイコン
   PhoneCall, // キャリア相談リクエストのアイコン（仮）
-  Mail // キャリア相談リクエストのアイコン（仮）
+  Mail, // キャリア相談リクエストのアイコン（仮）
+  X // モーダルを閉じるアイコン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
@@ -42,7 +43,7 @@ export default function SupportDashboard() {
       // public.users テーブルから role が 'monitor' のユーザーを全て取得
       const { data, error } = await supabase
         .from('users')
-        .select('id, name, email')
+        .select('id, name, email, role, created_at, updated_at') // 修正: Userインターフェースの全プロパティを選択
         .eq('role', 'monitor')
         .order('created_at', { ascending: false });
 
