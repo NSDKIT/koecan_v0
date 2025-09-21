@@ -5,7 +5,8 @@ import { X, Send, MessageCircle, User } from 'lucide-react';
 import { supabase } from '@/config/supabase';
 
 interface ChatModalProps {
-  user: any;
+  user: any; // ログイン中のユーザー（モニターまたはサポート担当者）
+  otherUserId: string; // チャット相手のユーザーID
   onClose: () => void;
 }
 
@@ -17,7 +18,7 @@ interface Message {
   sender_name?: string;
 }
 
-export function ChatModal({ user, onClose }: ChatModalProps) {
+export function ChatModal({ user, otherUserId, onClose }: ChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -26,10 +27,24 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user) {
-      initializeChat();
+    let unsubscribe: () => void;
+    if (user && user.id && otherUserId) {
+      // ChatModalがマウントされるたびに新しいチャットを初期化し、クリーンアップ関数を返す
+      const setupChat = async () => {
+        unsubscribe = await initializeChat();
+      };
+      setupChat();
+    } else {
+      setLoading(false);
+      console.warn('ChatModal: User, user.id, or otherUserId is not available/configured. Cannot initialize chat.');
     }
-  }, [user]);
+    return () => {
+      // コンポーネントがアンマウントされるときに購読を解除
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [user, user.id, otherUserId]); // userとotherUserIdが変更されたら再実行
 
   useEffect(() => {
     scrollToBottom();
@@ -39,47 +54,130 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const initializeChat = async () => {
+  const initializeChat = async (): Promise<() => void> => {
+    console.log('ChatModal: Initializing chat between user:', user.id, 'and otherUser:', otherUserId);
+    setLoading(true); 
+    setError(null); // エラーをリセット
+    setRoomId(null); // ルームIDをリセットして再設定に備える
+
     try {
-      // Find or create a support chat room for this user
-      let { data: existingRoom } = await supabase
+      if (!user.id || !otherUserId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(otherUserId)) {
+          console.error('ChatModal: Invalid user ID or otherUserId provided.');
+          setError('チャット初期化エラー: ユーザーIDまたは相手のユーザーIDが不正です。');
+          setLoading(false);
+          return () => {}; // クリーンアップ関数を返す
+      }
+
+      const participantsArray = [user.id, otherUserId].sort(); // ソートして一貫性を保つ
+
+      let { data: existingRoom, error: fetchRoomError } = await supabase
         .from('chat_rooms')
-        .select('id')
-        .eq('room_type', 'support')
-        .contains('participants', [user.id])
+        .select('id, name') // nameも取得
+        .eq('room_type', 'support') // 'support'ルームに限定
+        .contains('participants', participantsArray) // 両者が参加しているルーム
         .single();
 
+      if (fetchRoomError && fetchRoomError.code !== 'PGRST116') { // PGRST116 is "No rows found"
+        console.error('ChatModal: Error fetching existing room:', fetchRoomError);
+        throw fetchRoomError;
+      }
+      
       let currentRoomId = existingRoom?.id;
+      console.log('ChatModal: Existing room found:', currentRoomId);
 
       if (!currentRoomId) {
-        // Create a new support room
+        console.log('ChatModal: No existing room found, creating new one...');
+        // チャットルームの名前は相手のユーザー名で設定
+        const { data: otherUserData, error: otherUserError } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', otherUserId)
+            .single();
+        if (otherUserError) {
+            console.error('ChatModal: Error fetching other user name:', otherUserError);
+        }
+        const otherUserName = otherUserData?.name || 'Unknown User';
+        const roomName = `${otherUserName}とのチャット`;
+
         const { data: newRoom, error: roomError } = await supabase
           .from('chat_rooms')
           .insert([
             {
-              name: `サポート - ${user.name}`,
+              name: roomName,
               room_type: 'support',
-              participants: [user.id],
-              created_by: user.id
+              participants: participantsArray,
+              created_by: user.id 
             }
           ])
           .select('id')
           .single();
 
-        if (roomError) throw roomError;
+        if (roomError) {
+          console.error('ChatModal: Error creating new room:', roomError);
+          throw roomError;
+        }
         currentRoomId = newRoom.id;
+        console.log('ChatModal: New room created with ID:', currentRoomId);
       }
 
       setRoomId(currentRoomId);
       await fetchMessages(currentRoomId);
-    } catch (error) {
-      console.error('Error initializing chat:', error);
-    } finally {
+
+      // リアルタイム購読の設定
+      const channelName = `chat_room_${currentRoomId}_${user.id}`; // ユーザーごとに一意なチャンネル名
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `room_id=eq.${currentRoomId}`,
+          },
+          async (payload) => {
+            console.log('ChatModal: Realtime message received:', payload);
+            const newMessageData = payload.new as Message;
+            // 送信者名をフェッチ
+            const { data: senderData, error: senderError } = await supabase
+                .from('users')
+                .select('name')
+                .eq('id', newMessageData.sender_id)
+                .single();
+
+            if (senderError) {
+                console.error('ChatModal: Error fetching sender name in realtime:', senderError);
+            }
+            const senderName = senderData?.name || 'Unknown';
+
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              { ...newMessageData, sender_name: senderName }
+            ]);
+            scrollToBottom();
+          }
+        )
+        .subscribe();
+
       setLoading(false);
+      console.log('ChatModal: Initialization finished, loading set to false.');
+
+      // クリーンアップ関数を返す
+      return () => {
+        console.log('ChatModal: Unsubscribing from channel:', channelName);
+        supabase.removeChannel(channel);
+      };
+
+    } catch (error: any) {
+      console.error('ChatModal: Error initializing chat:', error);
+      setError(`チャットの初期化に失敗しました: ${error.message || String(error)}`);
+      setLoading(false);
+      return () => {}; // クリーンアップ関数を返す
     }
   };
 
   const fetchMessages = async (roomId: string) => {
+    console.log('ChatModal: Fetching messages for room:', roomId);
     try {
       const { data, error } = await supabase
         .from('chat_messages')
@@ -101,8 +199,10 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
       }));
 
       setMessages(messagesWithNames);
+      console.log('ChatModal: Messages fetched:', messagesWithNames.length);
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error('ChatModal: Error fetching messages:', error);
+      setError(`メッセージの取得に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -111,6 +211,7 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
     if (!newMessage.trim() || !roomId || sending) return;
 
     setSending(true);
+    console.log('ChatModal: Sending message:', newMessage);
     try {
       const { error } = await supabase
         .from('chat_messages')
@@ -125,10 +226,10 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
       if (error) throw error;
 
       setNewMessage('');
-      await fetchMessages(roomId);
+      console.log('ChatModal: Message sent successfully.');
     } catch (error) {
-      console.error('Error sending message:', error);
-      alert('メッセージの送信に失敗しました。');
+      console.error('ChatModal: Error sending message:', error);
+      setError(`メッセージの送信に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setSending(false);
     }
@@ -139,6 +240,13 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const getSenderDisplayName = (senderId: string, senderName?: string) => {
+    if (senderId === user.id) {
+        return 'あなた';
+    }
+    return senderName || '相手';
   };
 
   if (loading) {
@@ -176,7 +284,13 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.length === 0 ? (
+          {error && ( // エラー表示
+            <div className="text-center py-8 bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-800 font-semibold mb-2">エラーが発生しました</p>
+                <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+          {!error && messages.length === 0 ? (
             <div className="text-center py-8">
               <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <MessageCircle className="w-8 h-8 text-gray-400" />
@@ -197,12 +311,10 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
                       : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  {message.sender_id !== user.id && (
-                    <div className="flex items-center mb-1">
-                      <User className="w-3 h-3 mr-1" />
-                      <span className="text-xs font-medium">サポート</span>
-                    </div>
-                  )}
+                  <div className="flex items-center mb-1">
+                    <User className="w-3 h-3 mr-1" />
+                    <span className="text-xs font-medium">{getSenderDisplayName(message.sender_id, message.sender_name)}</span>
+                  </div>
                   <p className="text-sm">{message.message}</p>
                   <p className={`text-xs mt-1 ${
                     message.sender_id === user.id ? 'text-blue-100' : 'text-gray-500'
@@ -225,11 +337,11 @@ export function ChatModal({ user, onClose }: ChatModalProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="メッセージを入力..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={sending}
+              disabled={sending || !!error} // エラーがある場合も無効化
             />
             <button
               type="submit"
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim() || sending || !!error} // エラーがある場合も無効化
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               {sending ? (
