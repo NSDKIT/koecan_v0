@@ -92,7 +92,7 @@ export interface Advertisement {
   title: string;
   description?: string;
   image_url?: string;
-  link_url?: string; // YouTubeショートなどへのリンクに使用
+  link_url?: string; // 企業の詳細ページなどへの汎用リンク
   is_active: boolean;
   display_order: number;
   created_at: string;
@@ -109,7 +109,7 @@ export interface Advertisement {
   employee_gender_ratio?: string; // 男女比
   employee_age_composition?: string; // 年齢構成比
   
-  recommended_points?: string[]; // おすすめポイント３つ
+  recommended_points?: string[]; // おすすめポイント３つ (配列)
   
   salary_info?: string; // 給与・昇給・賞与：モデル年収例など
   paid_leave_rate?: string; // 有給取得率
