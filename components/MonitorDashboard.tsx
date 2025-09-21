@@ -35,7 +35,9 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 // アクティブなタブの型定義
 type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
-const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; 
+// TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
+// このIDは、Supabase Studioの「Authentication」→「Users」タブで確認できるサポート担当者のユーザーIDです。
+const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; // 例: 実際のIDに置き換えてください。
 
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); 
@@ -790,7 +792,9 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID !== 'your-zenryoku-gmail-com-user-id-here' && (
+      {/* Chat Modal - モニターからサポートへのチャット */}
+      {/* 修正: SUPABASE_SUPPORT_USER_ID が未設定の場合のチェックを追加し、他の条件とAND結合 */}
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && SUPABASE_SUPPORT_USER_ID !== 'your-zenryoku-gmail-com-user-id-here' && (
         <ChatModal
           user={user}
           otherUserId={SUPABASE_SUPPORT_USER_ID} // モニターからサポート担当者のIDを渡す
