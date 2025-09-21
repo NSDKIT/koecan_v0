@@ -25,26 +25,27 @@ export function ChatModal({ user, otherUserId, onClose }: ChatModalProps) {
   const [sending, setSending] = useState(false);
   const [roomId, setRoomId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null); // 修正: errorステートを追加
 
   useEffect(() => {
     let unsubscribe: () => void;
     if (user && user.id && otherUserId) {
-      // ChatModalがマウントされるたびに新しいチャットを初期化し、クリーンアップ関数を返す
       const setupChat = async () => {
         unsubscribe = await initializeChat();
       };
       setupChat();
     } else {
       setLoading(false);
+      // userやotherUserIdがない場合のエラーメッセージを設定
+      setError('チャットの初期化に必要なユーザー情報が不足しています。');
       console.warn('ChatModal: User, user.id, or otherUserId is not available/configured. Cannot initialize chat.');
     }
     return () => {
-      // コンポーネントがアンマウントされるときに購読を解除
       if (unsubscribe) {
         unsubscribe();
       }
     };
-  }, [user, user.id, otherUserId]); // userとotherUserIdが変更されたら再実行
+  }, [user, user.id, otherUserId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -337,11 +338,11 @@ export function ChatModal({ user, otherUserId, onClose }: ChatModalProps) {
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="メッセージを入力..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={sending || !!error} // エラーがある場合も無効化
+              disabled={sending || !!error} 
             />
             <button
               type="submit"
-              disabled={!newMessage.trim() || sending || !!error} // エラーがある場合も無効化
+              disabled={!newMessage.trim() || sending || !!error} 
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               {sending ? (
