@@ -187,7 +187,7 @@ export function AdminDashboard() {
           {/* タブコンテンツ */}
           <div className="bg-white/80 backdrop-blur-sm rounded-b-2xl shadow-xl p-8 border border-purple-100">
             {activeTab === 'overview' && (
-              <>
+              <> {/* ここでJSXフラグメントで囲む */}
                 {/* Stats Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
@@ -289,7 +289,7 @@ export function AdminDashboard() {
                     </div>
                   </div>
                 </div>
-              </>
+              </> {/* JSXフラグメントの閉じタグ */}
             )}
 
             {activeTab === 'job_info_manager' && (
