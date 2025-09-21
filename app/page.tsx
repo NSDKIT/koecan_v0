@@ -10,7 +10,9 @@ import MonitorDashboard from '@/components/MonitorDashboard';
 import { ClientDashboard } from '@/components/ClientDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import SupportDashboard from '@/components/SupportDashboard';
-import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react'; // Settings, MessageCircle, ArrowLeftを追加
+// 新しい閲覧用コンポーネントをインポート
+import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer'; 
+import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
   const { user, loading, error } = useAuth();
@@ -125,7 +127,9 @@ export default function Home() {
     if (user.role === 'admin' && selectedAdminPanel === 'admin') {
       return <AdminDashboard />;
     } else if (user.role === 'admin' && selectedAdminPanel === 'support') {
-      return <SupportDashboard />;
+      // SupportDashboardの代わりに、新しい閲覧用コンポーネントを表示
+      // onBackプロパティを渡して、選択画面に戻れるようにする
+      return <AdminSupportChatViewer onBack={() => setSelectedAdminPanel(null)} />;
     } else if (user.role === 'support') {
       return <SupportDashboard />;
     }
