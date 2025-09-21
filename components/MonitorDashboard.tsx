@@ -36,11 +36,11 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
 export default function MonitorDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth(); // useAuthからauthLoadingも取得
   const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
   const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dashboardDataLoading, setDashboardDataLoading] = useState(true); // ダッシュボードデータ取得用のローディング状態
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCareerModal, setShowCareerModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -57,18 +57,11 @@ export default function MonitorDashboard() {
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
 
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchSurveysAndResponses(); 
-      fetchAdvertisements();
-    }
-  }, [user]);
-
+  // ヘッダー以外の場所をクリックしたらメニューを閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
-        return;
+        return; // メニューボタン自体のクリックは無視
       }
       const menuElement = document.getElementById('hamburger-menu-dropdown');
       if (menuElement && !menuElement.contains(event.target as Node)) {
@@ -82,7 +75,7 @@ export default function MonitorDashboard() {
     };
   }, []); 
 
-
+  // データフェッチ関数 (setLoadingの管理は親のuseEffectに任せる)
   const fetchProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -95,12 +88,15 @@ export default function MonitorDashboard() {
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // エラーはここでthrowし、親のuseEffectでキャッチさせる
+      throw error;
     }
   };
 
   const fetchSurveysAndResponses = async () => {
-    if (!user?.id) return;
-    setLoading(true);
+    if (!user?.id) {
+        throw new Error("User ID is not available.");
+    }
     try {
       const { data: allActiveSurveys, error: surveysError } = await supabase
         .from('surveys')
@@ -135,15 +131,12 @@ export default function MonitorDashboard() {
 
     } catch (error) {
       console.error('Error fetching surveys and responses:', error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
   };
 
-
   const fetchAdvertisements = async () => {
     try {
-      // Fetch all new advertisement fields
       const { data, error } = await supabase
         .from('advertisements')
         .select(`
@@ -173,8 +166,56 @@ export default function MonitorDashboard() {
       setAdvertisements(data || []);
     } catch (error) {
       console.error('Error fetching advertisements:', error);
+      throw error;
     }
   };
+
+  // ダッシュボードの全データを一括でフェッチするuseEffect
+  useEffect(() => {
+    let isMounted = true; // クリーンアップのためのフラグ
+
+    const loadAllDashboardData = async () => {
+      // 認証が完了し、かつユーザーが存在する場合のみデータをロード
+      if (!user || authLoading) {
+        setDashboardDataLoading(true); // ユーザー認証中またはユーザーが存在しない場合はローディング状態に
+        return;
+      }
+
+      setDashboardDataLoading(true); // ダッシュボードデータ取得を開始
+      try {
+        await Promise.all([
+          fetchProfile(),
+          fetchSurveysAndResponses(),
+          fetchAdvertisements()
+        ]);
+        if (isMounted) {
+          setDashboardDataLoading(false); // 全てのデータ取得が完了
+        }
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+        if (isMounted) {
+          // エラーが発生した場合もローディング状態を解除
+          setDashboardDataLoading(false);
+          // 必要であれば、ユーザーに表示するエラーメッセージを設定することもできます
+          // setError("ダッシュボードデータの読み込みに失敗しました。");
+        }
+      }
+    };
+
+    // userが確定し、authLoadingがfalseになったらデータをロードする
+    if (user && !authLoading) {
+      loadAllDashboardData();
+    } else if (!user && !authLoading) {
+      // authLoadingがfalseでuserがいない場合 (ログアウト状態など)
+      // ダッシュボードのローディングもfalseにする
+      setDashboardDataLoading(false);
+    }
+    
+    return () => {
+      isMounted = false; // クリーンアップ
+    };
+  }, [user, authLoading]); // userとauthLoadingが変更されたら再実行
+
 
   const handleSurveyClick = async (survey: Survey) => {
     try {
@@ -252,7 +293,8 @@ export default function MonitorDashboard() {
     }
   };
 
-  if (loading) {
+  // ダッシュボード全体のローディング状態
+  if (authLoading || dashboardDataLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -460,12 +502,12 @@ export default function MonitorDashboard() {
             </button>
             <button
               onClick={() => {
-                setShowProfileSurveyModal(true); // Open the new profile survey modal
+                setShowProfileSurveyModal(true); 
                 setIsMenuOpen(false);
               }}
               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
             >
-              <FileText className="w-5 h-5 mr-2" /> {/* Icon for the survey */}
+              <FileText className="w-5 h-5 mr-2" /> 
               プロフィールアンケート
             </button>
             <button
@@ -734,7 +776,6 @@ export default function MonitorDashboard() {
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <h2 className="text-2xl font-bold text-gray-800">{selectedAdvertisement.title}</h2>
@@ -747,7 +788,6 @@ export default function MonitorDashboard() {
               </button>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
               {selectedAdvertisement.image_url && (
                 <div className="mb-6 rounded-lg overflow-hidden">
