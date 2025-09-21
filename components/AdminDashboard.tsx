@@ -15,9 +15,13 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Briefcase // 就職情報管理のアイコンとして追加
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
+import { AdminJobInfoManager } from '@/components/AdminJobInfoManager'; // 新しいコンポーネントをインポート
+
+type AdminDashboardTab = 'overview' | 'job_info_manager'; // タブの型を定義
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
@@ -28,6 +32,7 @@ export function AdminDashboard() {
     activeUsers: 0
   });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminDashboardTab>('overview'); // アクティブなタブの状態
 
   useEffect(() => {
     if (user) {
@@ -38,25 +43,28 @@ export function AdminDashboard() {
   const fetchStats = async () => {
     try {
       // Fetch user count
-      const { count: userCount } = await supabase
+      const { count: userCount, error: userCountError } = await supabase
         .from('users')
         .select('*', { count: 'exact', head: true });
+      if (userCountError) throw userCountError;
 
       // Fetch survey count
-      const { count: surveyCount } = await supabase
+      const { count: surveyCount, error: surveyCountError } = await supabase
         .from('surveys')
         .select('*', { count: 'exact', head: true });
+      if (surveyCountError) throw surveyCountError;
 
       // Fetch response count
-      const { count: responseCount } = await supabase
+      const { count: responseCount, error: responseCountError } = await supabase
         .from('responses')
         .select('*', { count: 'exact', head: true });
+      if (responseCountError) throw responseCountError;
 
       setStats({
         totalUsers: userCount || 0,
         totalSurveys: surveyCount || 0,
         totalResponses: responseCount || 0,
-        activeUsers: userCount || 0
+        activeUsers: userCount || 0 // アクティブユーザーは総ユーザー数と同じと仮定
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -150,106 +158,143 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">総ユーザー数</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-                </div>
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">総アンケート数</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalSurveys}</p>
-                </div>
-                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">総回答数</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalResponses}</p>
-                </div>
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">アクティブユーザー</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeUsers}</p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-              </div>
+          {/* タブナビゲーション */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border border-purple-100 border-b-0">
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'overview'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                概要
+              </button>
+              <button
+                onClick={() => setActiveTab('job_info_manager')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'job_info_manager'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                就職情報管理
+              </button>
             </div>
           </div>
 
-          {/* Management Sections */}
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* User Management */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
-              <div className="flex items-center mb-6">
-                <Users className="w-6 h-6 text-purple-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-800">ユーザー管理</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">アクティブユーザー</span>
+          {/* タブコンテンツ */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-b-2xl shadow-xl p-8 border border-purple-100">
+            {activeTab === 'overview' && (
+              <>
+                {/* Stats Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">総ユーザー数</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats.activeUsers}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <Clock className="w-5 h-5 text-yellow-500 mr-3" />
-                    <span className="text-gray-700">保留中のユーザー</span>
-                  </div>
-                  <span className="font-semibold text-gray-900">0</span>
-                </div>
-              </div>
-            </div>
 
-            {/* System Status */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
-              <div className="flex items-center mb-6">
-                <Database className="w-6 h-6 text-purple-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-800">システム状態</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">データベース</span>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">総アンケート数</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.totalSurveys}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3">
+                        <BarChart3 className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-green-600 font-semibold">正常</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">API</span>
+
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">総回答数</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.totalResponses}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3">
+                        <TrendingUp className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-green-600 font-semibold">正常</span>
+
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">アクティブユーザー</p>
+                        <p className="text-2xl font-bold text-gray-900">{stats.activeUsers}</p>
+                      </div>
+                      <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3">
+                        <Activity className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Management Sections */}
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* User Management */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
+                    <div className="flex items-center mb-6">
+                      <Users className="w-6 h-6 text-purple-600 mr-3" />
+                      <h3 className="text-xl font-bold text-gray-800">ユーザー管理</h3>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                          <span className="text-gray-700">アクティブユーザー</span>
+                        </div>
+                        <span className="font-semibold text-gray-900">{stats.activeUsers}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <Clock className="w-5 h-5 text-yellow-500 mr-3" />
+                          <span className="text-gray-700">保留中のユーザー</span>
+                        </div>
+                        <span className="font-semibold text-gray-900">0</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Status */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
+                    <div className="flex items-center mb-6">
+                      <Database className="w-6 h-6 text-purple-600 mr-3" />
+                      <h3 className="text-xl font-bold text-gray-800">システム状態</h3>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                          <span className="text-gray-700">データベース</span>
+                        </div>
+                        <span className="text-green-600 font-semibold">正常</span>
+                      </div>
+                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
+                          <span className="text-gray-700">API</span>
+                        </div>
+                        <span className="text-green-600 font-semibold">正常</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'job_info_manager' && (
+              <AdminJobInfoManager onDataChange={fetchStats} /> {/* 就職情報管理コンポーネントを配置 */}
+            )}
           </div>
         </main>
       </div>
