@@ -10,11 +10,13 @@ import MonitorDashboard from '@/components/MonitorDashboard';
 import { ClientDashboard } from '@/components/ClientDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import SupportDashboard from '@/components/SupportDashboard';
-import { Database, AlertCircle } from 'lucide-react';
+import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react'; // Settings, MessageCircle, ArrowLeftを追加
 
 export default function Home() {
   const { user, loading, error } = useAuth();
   const [showWelcome, setShowWelcome] = useState(true);
+  // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
+  const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -89,20 +91,53 @@ export default function Home() {
     return <AuthForm onBack={() => setShowWelcome(true)} />;
   }
 
-  // Route based on user role
+  // AdminまたはSupportロールの場合のルーティング
+  if (user.role === 'admin' || user.role === 'support') {
+    // admin@example.comがAdminDashboardとSupportDashboardのどちらかを選択
+    if (user.role === 'admin' && selectedAdminPanel === null) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-purple-200">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">どちらの管理パネルを利用しますか？</h2>
+            <div className="space-y-4">
+              <button
+                onClick={() => setSelectedAdminPanel('admin')}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                <Settings className="w-5 h-5 mr-2" />
+                システム管理者パネル
+              </button>
+              <button
+                onClick={() => setSelectedAdminPanel('support')}
+                className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                サポートパネル
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // パネルが選択された、またはsupportロールでログインした場合
+    // admin@example.comは選択したパネル、support@example.comはSupportDashboardへ
+    if (user.role === 'admin' && selectedAdminPanel === 'admin') {
+      return <AdminDashboard />;
+    } else if (user.role === 'admin' && selectedAdminPanel === 'support') {
+      return <SupportDashboard />;
+    } else if (user.role === 'support') {
+      return <SupportDashboard />;
+    }
+  }
+
+
+  // その他のユーザー役割のルーティング (monitor, client)
   switch (user.role) {
     case 'monitor':
       return <MonitorDashboard />;
     case 'client':
       return <ClientDashboard />;
-    case 'admin':
-      return <AdminDashboard />; // 管理者ダッシュボードはAdminDashboardのまま
-    case 'support':
-      // admin@example.comとzenryoku@gmail.comが両方ともSupportDashboardを利用したい場合、
-      // ユーザーロールを'support'としてログインするように設定し、SupportDashboardを表示させます。
-      // AdminDashboardとSupportDashboardの役割を明確にするため、adminはAdminDashboard、supportはSupportDashboardとします。
-      // もしadminがSupportDashboardを使いたい場合は、Supabaseのusersテーブルでroleを'support'に変更してください。
-      return <SupportDashboard />;
     default:
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
