@@ -106,7 +106,11 @@ export function AdminSupportChatViewer({ onBack }: AdminSupportChatViewerProps) 
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      setMessages(data as Message[] || []);
+      const formattedMessages = data?.map(msg => ({
+        ...msg,
+        sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
+      })) || [];
+      setMessages(formattedMessages as Message[]);
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
