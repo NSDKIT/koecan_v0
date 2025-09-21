@@ -18,11 +18,11 @@ import {
   Target,
   Award,
   Users,
-  Menu, // Hamburger icon
-  ExternalLink, // New icon for external link in ad detail modal
-  X, // Close icon for modal
-  History, // Icon for answered surveys
-  FileText // Icon for profile survey
+  Menu, // ハンバーガーアイコン
+  ExternalLink, // 外部リンクアイコン
+  X, // 閉じるアイコン
+  History, // 回答済みアンケートのアイコン
+  FileText // プロフィールアンケートのアイコン
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -30,15 +30,15 @@ import { ChatModal } from '@/components/ChatModal';
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
-import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; // Import new modal
+import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
 
-// Define types for active tab
+// アクティブなタブの型定義
 type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
 export default function MonitorDashboard() {
-  const { user, signOut, loading: authLoading } = useAuth(); // useAuthからauthLoadingも取得
-  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
-  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
+  const { user, signOut, loading: authLoading } = useAuth(); // useAuthから認証ローディング状態も取得
+  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); // 未回答のアンケート
+  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   // 回答済みのアンケート
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
   const [dashboardDataLoading, setDashboardDataLoading] = useState(true); // ダッシュボードデータ取得用のローディング状態
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -49,13 +49,21 @@ export default function MonitorDashboard() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
-  const menuButtonRef = useRef<HTMLButtonElement>(null); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // ハンバーガーメニューの状態
+  const menuButtonRef = useRef<HTMLButtonElement>(null); // ハンバーガーメニューボタンのRef
 
-  const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
-  const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
-  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
+  const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null); // 選択された広告の詳細表示用
+  const [showPointExchangeModal, setShowPointExchangeModal] = useState(false); // ポイント交換モーダルの表示状態
+  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); // プロフィールアンケートモーダルの表示状態
 
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchSurveysAndResponses(); 
+      fetchAdvertisements();
+    }
+  }, [user]);
 
   // ヘッダー以外の場所をクリックしたらメニューを閉じる
   useEffect(() => {
@@ -87,15 +95,14 @@ export default function MonitorDashboard() {
       if (error) throw error;
       setProfile(data);
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      // エラーはここでthrowし、親のuseEffectでキャッチさせる
-      throw error;
+      console.error('プロフィール取得エラー:', error);
+      throw error; // エラーはここでthrowし、親のuseEffectでキャッチさせる
     }
   };
 
   const fetchSurveysAndResponses = async () => {
     if (!user?.id) {
-        throw new Error("User ID is not available.");
+        throw new Error("ユーザーIDが利用できません。");
     }
     try {
       const { data: allActiveSurveys, error: surveysError } = await supabase
@@ -130,13 +137,14 @@ export default function MonitorDashboard() {
       setAnsweredSurveys(newAnsweredSurveys);
 
     } catch (error) {
-      console.error('Error fetching surveys and responses:', error);
+      console.error('アンケートと回答の取得エラー:', error);
       throw error;
     }
   };
 
   const fetchAdvertisements = async () => {
     try {
+      // 広告の全新しいフィールドを取得
       const { data, error } = await supabase
         .from('advertisements')
         .select(`
@@ -165,58 +173,12 @@ export default function MonitorDashboard() {
       if (error) throw error;
       setAdvertisements(data || []);
     } catch (error) {
-      console.error('Error fetching advertisements:', error);
+      console.error('広告の取得エラー:', error);
       throw error;
     }
   };
 
-  // ダッシュボードの全データを一括でフェッチするuseEffect
-  useEffect(() => {
-    let isMounted = true; // クリーンアップのためのフラグ
-
-    const loadAllDashboardData = async () => {
-      // 認証が完了し、かつユーザーが存在する場合のみデータをロード
-      if (!user || authLoading) {
-        setDashboardDataLoading(true); // ユーザー認証中またはユーザーが存在しない場合はローディング状態に
-        return;
-      }
-
-      setDashboardDataLoading(true); // ダッシュボードデータ取得を開始
-      try {
-        await Promise.all([
-          fetchProfile(),
-          fetchSurveysAndResponses(),
-          fetchAdvertisements()
-        ]);
-        if (isMounted) {
-          setDashboardDataLoading(false); // 全てのデータ取得が完了
-        }
-      } catch (err) {
-        console.error("Failed to load dashboard data:", err);
-        if (isMounted) {
-          // エラーが発生した場合もローディング状態を解除
-          setDashboardDataLoading(false);
-          // 必要であれば、ユーザーに表示するエラーメッセージを設定することもできます
-          // setError("ダッシュボードデータの読み込みに失敗しました。");
-        }
-      }
-    };
-
-    // userが確定し、authLoadingがfalseになったらデータをロードする
-    if (user && !authLoading) {
-      loadAllDashboardData();
-    } else if (!user && !authLoading) {
-      // authLoadingがfalseでuserがいない場合 (ログアウト状態など)
-      // ダッシュボードのローディングもfalseにする
-      setDashboardDataLoading(false);
-    }
-    
-    return () => {
-      isMounted = false; // クリーンアップ
-    };
-  }, [user, authLoading]); // userとauthLoadingが変更されたら再実行
-
-
+  // アンケートクリックハンドラ
   const handleSurveyClick = async (survey: Survey) => {
     try {
       const { data: existingResponse } = await supabase
@@ -243,11 +205,12 @@ export default function MonitorDashboard() {
       setSurveyQuestions(questions || []);
       setAnswers(questions?.map(q => ({ question_id: q.id, answer: '' })) || []);
     } catch (error) {
-      console.error('Error fetching survey questions:', error);
+      console.error('アンケート質問の取得エラー:', error);
       alert('アンケートの読み込みに失敗しました。');
     }
   };
 
+  // 回答変更ハンドラ
   const handleAnswerChange = (questionId: string, answer: string) => {
     setAnswers(prev => 
       prev.map(a => 
@@ -256,12 +219,15 @@ export default function MonitorDashboard() {
     );
   };
 
+  // アンケート送信ハンドラ
   const handleSurveySubmit = async () => {
     if (!selectedSurvey || !user) return;
 
     try {
+      // 質問数を仮で5に設定 (実際にはsurveyQuestions.lengthを使用)
       const questionCount = surveyQuestions.length > 0 ? surveyQuestions.length : 5; 
 
+      // 全ての必須質問が回答されているかチェック
       const allRequiredAnswered = surveyQuestions.every(q => !q.required || answers.some(a => a.question_id === q.id && a.answer.trim() !== ''));
 
       if (!allRequiredAnswered) {
@@ -285,10 +251,10 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); 
-      fetchSurveysAndResponses(); 
+      fetchProfile(); // ポイント更新のためプロフィールを再取得
+      fetchSurveysAndResponses(); // 回答済みリスト更新のためアンケートを再取得
     } catch (error) {
-      console.error('Error submitting survey:', error);
+      console.error('アンケート送信エラー:', error);
       alert('アンケートの送信に失敗しました。');
     }
   };
@@ -305,6 +271,7 @@ export default function MonitorDashboard() {
     );
   }
 
+  // 特定のアンケートに回答中のUI
   if (selectedSurvey) {
     return (
       <div className="min-h-screen bg-gray-50 p-4">
@@ -483,7 +450,7 @@ export default function MonitorDashboard() {
           </div>
         </header>
 
-        {/* Hamburger Menu Dropdown */}
+        {/* ハンバーガーメニュー ドロップダウン */}
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
@@ -523,7 +490,7 @@ export default function MonitorDashboard() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* メインコンテンツ */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* 獲得ポイントカード */}
           <div
@@ -539,7 +506,7 @@ export default function MonitorDashboard() {
             </div>
           </div>
 
-          {/* Tab Navigation */}
+          {/* タブナビゲーション */}
           <div className="bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border border-orange-100 border-b-0">
             <div className="flex border-b border-gray-200">
               <button
@@ -575,7 +542,7 @@ export default function MonitorDashboard() {
             </div>
           </div>
 
-          {/* Tab Content */}
+          {/* タブコンテンツ */}
           <div className="bg-white/80 backdrop-blur-sm rounded-b-2xl shadow-xl p-8 border border-orange-100">
             {activeTab === 'surveys' && (
               <>
@@ -586,7 +553,7 @@ export default function MonitorDashboard() {
                       <CheckCircle className="w-8 h-8 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能なアンケートはありません</h3>
-                    <p className="text-gray-600">新しいアンケートが追加されるまでお待ちください。</p>
+                    <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
                   </div>
                 ) : (
                   <div className="grid gap-6 mb-8">
@@ -750,7 +717,7 @@ export default function MonitorDashboard() {
         </main>
       </div>
 
-      {/* Modals */}
+      {/* モーダル群 */}
       {showProfileModal && (
         <ProfileModal
           user={user}
@@ -773,9 +740,11 @@ export default function MonitorDashboard() {
         />
       )}
 
+      {/* 広告詳細モーダル（就職情報） */}
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <h2 className="text-2xl font-bold text-gray-800">{selectedAdvertisement.title}</h2>
@@ -788,6 +757,7 @@ export default function MonitorDashboard() {
               </button>
             </div>
 
+            {/* モーダルコンテンツ */}
             <div className="p-6">
               {selectedAdvertisement.image_url && (
                 <div className="mb-6 rounded-lg overflow-hidden">
@@ -935,7 +905,7 @@ export default function MonitorDashboard() {
         </div>
       )}
 
-      {/* Point Exchange Modal */}
+      {/* ポイント交換モーダル */}
       {showPointExchangeModal && profile && (
         <PointExchangeModal
           currentPoints={profile.points}
@@ -944,11 +914,11 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {/* Monitor Profile Survey Modal */}
+      {/* モニタープロフィールアンケートモーダル */}
       {showProfileSurveyModal && (
         <MonitorProfileSurveyModal
           onClose={() => setShowProfileSurveyModal(false)}
-          onSaveSuccess={() => { /* Handle success if needed, e.g., show a toast */ }}
+          onSaveSuccess={() => { /* 保存成功時の処理があればここに記述 */ }}
         />
       )}
     </div>
