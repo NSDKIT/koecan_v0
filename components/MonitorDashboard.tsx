@@ -35,7 +35,6 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 // アクティブなタブの型定義
 type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
-// TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
 const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; 
 
 export default function MonitorDashboard() {
