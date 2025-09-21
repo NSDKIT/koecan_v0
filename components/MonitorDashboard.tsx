@@ -37,8 +37,8 @@ type ActiveTab = 'surveys' | 'recruitment' | 'services';
 
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); // useAuthから認証ローディング状態も取得
-  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); // 未回答のアンケート
-  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   // 回答済みのアンケート
+  const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
+  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
   const [dashboardDataLoading, setDashboardDataLoading] = useState(true); // ダッシュボードデータ取得用のローディング状態
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -56,14 +56,6 @@ export default function MonitorDashboard() {
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false); // ポイント交換モーダルの表示状態
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); // プロフィールアンケートモーダルの表示状態
 
-
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchSurveysAndResponses(); 
-      fetchAdvertisements();
-    }
-  }, [user]);
 
   // ヘッダー以外の場所をクリックしたらメニューを閉じる
   useEffect(() => {
@@ -85,6 +77,7 @@ export default function MonitorDashboard() {
 
   // データフェッチ関数 (setLoadingの管理は親のuseEffectに任せる)
   const fetchProfile = async () => {
+    console.log("MonitorDashboard: fetchProfile started.");
     try {
       const { data, error } = await supabase
         .from('monitor_profiles')
@@ -92,17 +85,24 @@ export default function MonitorDashboard() {
         .eq('user_id', user?.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('プロフィール取得エラー:', error);
+        throw error;
+      }
       setProfile(data);
+      console.log("MonitorDashboard: fetchProfile completed.");
+      return data; // Promise.allで利用するためデータを返す
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
-      throw error; // エラーはここでthrowし、親のuseEffectでキャッチさせる
+      throw error;
     }
   };
 
   const fetchSurveysAndResponses = async () => {
+    console.log("MonitorDashboard: fetchSurveysAndResponses started.");
     if (!user?.id) {
-        throw new Error("ユーザーIDが利用できません。");
+        console.error("fetchSurveysAndResponses: User ID is not available.");
+        throw new Error("User ID is not available.");
     }
     try {
       const { data: allActiveSurveys, error: surveysError } = await supabase
@@ -111,14 +111,20 @@ export default function MonitorDashboard() {
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (surveysError) throw surveysError;
+      if (surveysError) {
+        console.error('アンケート取得エラー:', surveysError);
+        throw surveysError;
+      }
 
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
         .eq('monitor_id', user.id);
 
-      if (responsesError) throw responsesError;
+      if (responsesError) {
+        console.error('回答履歴取得エラー:', responsesError);
+        throw responsesError;
+      }
 
       const answeredSurveyIds = new Set(userResponses?.map(res => res.survey_id));
 
@@ -135,7 +141,8 @@ export default function MonitorDashboard() {
 
       setAvailableSurveys(newAvailableSurveys);
       setAnsweredSurveys(newAnsweredSurveys);
-
+      console.log("MonitorDashboard: fetchSurveysAndResponses completed.");
+      return { available: newAvailableSurveys, answered: newAnsweredSurveys };
     } catch (error) {
       console.error('アンケートと回答の取得エラー:', error);
       throw error;
@@ -143,8 +150,8 @@ export default function MonitorDashboard() {
   };
 
   const fetchAdvertisements = async () => {
+    console.log("MonitorDashboard: fetchAdvertisements started.");
     try {
-      // 広告の全新しいフィールドを取得
       const { data, error } = await supabase
         .from('advertisements')
         .select(`
@@ -170,15 +177,73 @@ export default function MonitorDashboard() {
         .order('priority', { ascending: false })
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('広告取得エラー:', error);
+        throw error;
+      }
       setAdvertisements(data || []);
+      console.log("MonitorDashboard: fetchAdvertisements completed.");
+      return data;
     } catch (error) {
-      console.error('広告の取得エラー:', error);
+      console.error('広告取得エラー:', error);
       throw error;
     }
   };
 
-  // アンケートクリックハンドラ
+  // ダッシュボードの全データを一括でフェッチするuseEffect
+  useEffect(() => {
+    let isMounted = true; // クリーンアップのためのフラグ
+
+    const loadAllDashboardData = async () => {
+      console.log("MonitorDashboard: loadAllDashboardData initiated. Current user:", user?.id, "authLoading:", authLoading);
+      
+      // ユーザー認証中またはユーザーが存在しない場合はローディング状態に留まる
+      if (!user || authLoading) {
+        console.log("MonitorDashboard: Skipping dashboard data load as user is not ready or auth is loading.");
+        setDashboardDataLoading(true); 
+        return;
+      }
+
+      setDashboardDataLoading(true); // ダッシュボードデータ取得を開始
+      try {
+        console.log("MonitorDashboard: Starting concurrent data fetches...");
+        await Promise.all([
+          fetchProfile(),
+          fetchSurveysAndResponses(),
+          fetchAdvertisements()
+        ]);
+        if (isMounted) {
+          setDashboardDataLoading(false); // 全てのデータ取得が完了
+          console.log("MonitorDashboard: All dashboard data loaded successfully.");
+        }
+      } catch (err) {
+        console.error("MonitorDashboard: Failed to load dashboard data in Promise.all:", err);
+        if (isMounted) {
+          setDashboardDataLoading(false); // エラーが発生した場合もローディング状態を解除
+          // 必要であれば、ユーザーに表示するエラーメッセージを設定することもできます
+          // setError("ダッシュボードデータの読み込みに失敗しました。");
+        }
+      }
+    };
+
+    // userが確定し、authLoadingがfalseになったらデータをロードする
+    if (user && !authLoading) {
+      console.log("MonitorDashboard: Auth complete, user present. Triggering loadAllDashboardData.");
+      loadAllDashboardData();
+    } else if (!user && !authLoading) {
+      // authLoadingがfalseでuserがいない場合 (ログアウト状態など)
+      // ダッシュボードのローディングもfalseにする
+      console.log("MonitorDashboard: Auth complete, no user present. Setting dashboardDataLoading to false.");
+      setDashboardDataLoading(false);
+    }
+    
+    return () => {
+      isMounted = false; // クリーンアップ
+      console.log("MonitorDashboard: useEffect cleanup.");
+    };
+  }, [user, authLoading]); // userとauthLoadingが変更されたら再実行
+
+
   const handleSurveyClick = async (survey: Survey) => {
     try {
       const { data: existingResponse } = await supabase
@@ -210,7 +275,6 @@ export default function MonitorDashboard() {
     }
   };
 
-  // 回答変更ハンドラ
   const handleAnswerChange = (questionId: string, answer: string) => {
     setAnswers(prev => 
       prev.map(a => 
@@ -219,15 +283,12 @@ export default function MonitorDashboard() {
     );
   };
 
-  // アンケート送信ハンドラ
   const handleSurveySubmit = async () => {
     if (!selectedSurvey || !user) return;
 
     try {
-      // 質問数を仮で5に設定 (実際にはsurveyQuestions.lengthを使用)
       const questionCount = surveyQuestions.length > 0 ? surveyQuestions.length : 5; 
 
-      // 全ての必須質問が回答されているかチェック
       const allRequiredAnswered = surveyQuestions.every(q => !q.required || answers.some(a => a.question_id === q.id && a.answer.trim() !== ''));
 
       if (!allRequiredAnswered) {
@@ -251,8 +312,8 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); // ポイント更新のためプロフィールを再取得
-      fetchSurveysAndResponses(); // 回答済みリスト更新のためアンケートを再取得
+      fetchProfile(); 
+      fetchSurveysAndResponses(); 
     } catch (error) {
       console.error('アンケート送信エラー:', error);
       alert('アンケートの送信に失敗しました。');
@@ -423,7 +484,7 @@ export default function MonitorDashboard() {
       <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
       <div className="relative z-20">
-        {/* Header */}
+        {/* ヘッダー */}
         <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-orange-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
