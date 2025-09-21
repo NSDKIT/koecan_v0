@@ -20,16 +20,20 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
-import { ChatModal } from '@/components/ChatModal';
+import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
+
+// TODO: ここに、クライアントがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
+// モニター用ダッシュボードのSUPABASE_SUPPORT_USER_IDと同じIDであるべきです。
+const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; 
 
 export function ClientDashboard() {
   const { user, signOut } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showChatModal, setShowChatModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false); // ChatModal表示用のステート
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -204,7 +208,7 @@ export function ClientDashboard() {
               <div className="flex items-center space-x-4">
                 <NotificationButton />
                 <button
-                  onClick={() => setShowChatModal(true)}
+                  onClick={() => setShowChatModal(true)} // チャットモーダルを開くボタン
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
                 >
                   <Users className="w-5 h-5" />
@@ -528,6 +532,7 @@ export function ClientDashboard() {
       {showChatModal && (
         <ChatModal
           user={user}
+          otherUserId={SUPABASE_SUPPORT_USER_ID} // otherUserIdを渡す
           onClose={() => setShowChatModal(false)}
         />
       )}
