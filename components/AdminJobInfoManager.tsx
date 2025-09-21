@@ -123,8 +123,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    // 修正: 'checked' をデストラクチャリングから外し、typeがcheckboxの場合のみアクセス
+    const { name, value, type } = e.target; 
+    
     if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked; // checkedプロパティに明示的にアクセス
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (name === 'recommended_points') {
       // カンマ区切りで入力された文字列を配列に変換
