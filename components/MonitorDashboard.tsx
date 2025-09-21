@@ -793,8 +793,8 @@ export default function MonitorDashboard() {
       )}
 
       {/* Chat Modal - モニターからサポートへのチャット */}
-      {/* 修正: SUPABASE_SUPPORT_USER_ID が未設定の場合のチェックを追加し、他の条件とAND結合 */}
-      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && SUPABASE_SUPPORT_USER_ID !== 'e6f087a8-5494-450a-97ad-7d5003445e88' && (
+      {/* 修正: SUPABASE_SUPPORT_USER_ID が有効なIDであるかどうかのチェックを簡素化 */}
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( // 'your-zenryoku-gmail-com-user-id-here'との比較を削除
         <ChatModal
           user={user}
           otherUserId={SUPABASE_SUPPORT_USER_ID} // モニターからサポート担当者のIDを渡す
@@ -825,7 +825,7 @@ export default function MonitorDashboard() {
                   <img
                     src={selectedAdvertisement.image_url}
                     alt={selectedAdvertisement.title}
-                    className="w-full h-auto object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
