@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
-import { ChatModal } from '@/components/ChatModal';
+import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
 import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
@@ -35,12 +35,15 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 // アクティブなタブの型定義
 type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
 
+// TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
+const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; 
+
 export default function MonitorDashboard() {
-  const { user, signOut, loading: authLoading } = useAuth(); // useAuthから認証ローディング状態も取得
+  const { user, signOut, loading: authLoading } = useAuth(); 
   const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
   const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
-  const [dashboardDataLoading, setDashboardDataLoading] = useState(true); // ダッシュボードデータ取得用のローディング状態
+  const [dashboardDataLoading, setDashboardDataLoading] = useState(true); 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCareerModal, setShowCareerModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
@@ -49,19 +52,26 @@ export default function MonitorDashboard() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // ハンバーガーメニューの状態
-  const menuButtonRef = useRef<HTMLButtonElement>(null); // ハンバーガーメニューボタンのRef
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
-  const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null); // 選択された広告の詳細表示用
-  const [showPointExchangeModal, setShowPointExchangeModal] = useState(false); // ポイント交換モーダルの表示状態
-  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); // プロフィールアンケートモーダルの表示状態
+  const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
+  const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
+  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
 
 
-  // ヘッダー以外の場所をクリックしたらメニューを閉じる
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchSurveysAndResponses(); 
+      fetchAdvertisements();
+    }
+  }, [user]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
-        return; // メニューボタン自体のクリックは無視
+        return; 
       }
       const menuElement = document.getElementById('hamburger-menu-dropdown');
       if (menuElement && !menuElement.contains(event.target as Node)) {
@@ -75,7 +85,6 @@ export default function MonitorDashboard() {
     };
   }, []); 
 
-  // データフェッチ関数 (setLoadingの管理は親のuseEffectに任せる)
   const fetchProfile = async () => {
     console.log("MonitorDashboard: fetchProfile started.");
     try {
@@ -85,13 +94,10 @@ export default function MonitorDashboard() {
         .eq('user_id', user?.id)
         .single();
 
-      if (error) {
-        console.error('プロフィール取得エラー:', error);
-        throw error;
-      }
+      if (error) throw error;
       setProfile(data);
       console.log("MonitorDashboard: fetchProfile completed.");
-      return data; // Promise.allで利用するためデータを返す
+      return data; 
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
       throw error;
@@ -190,21 +196,19 @@ export default function MonitorDashboard() {
     }
   };
 
-  // ダッシュボードの全データを一括でフェッチするuseEffect
   useEffect(() => {
-    let isMounted = true; // クリーンアップのためのフラグ
+    let isMounted = true; 
 
     const loadAllDashboardData = async () => {
       console.log("MonitorDashboard: loadAllDashboardData initiated. Current user:", user?.id, "authLoading:", authLoading);
       
-      // ユーザー認証中またはユーザーが存在しない場合はローディング状態に留まる
       if (!user || authLoading) {
         console.log("MonitorDashboard: Skipping dashboard data load as user is not ready or auth is loading.");
         setDashboardDataLoading(true); 
         return;
       }
 
-      setDashboardDataLoading(true); // ダッシュボードデータ取得を開始
+      setDashboardDataLoading(true); 
       try {
         console.log("MonitorDashboard: Starting concurrent data fetches...");
         await Promise.all([
@@ -213,35 +217,30 @@ export default function MonitorDashboard() {
           fetchAdvertisements()
         ]);
         if (isMounted) {
-          setDashboardDataLoading(false); // 全てのデータ取得が完了
+          setDashboardDataLoading(false); 
           console.log("MonitorDashboard: All dashboard data loaded successfully.");
         }
       } catch (err) {
         console.error("MonitorDashboard: Failed to load dashboard data in Promise.all:", err);
         if (isMounted) {
-          setDashboardDataLoading(false); // エラーが発生した場合もローディング状態を解除
-          // 必要であれば、ユーザーに表示するエラーメッセージを設定することもできます
-          // setError("ダッシュボードデータの読み込みに失敗しました。");
+          setDashboardDataLoading(false); 
         }
       }
     };
 
-    // userが確定し、authLoadingがfalseになったらデータをロードする
     if (user && !authLoading) {
       console.log("MonitorDashboard: Auth complete, user present. Triggering loadAllDashboardData.");
       loadAllDashboardData();
     } else if (!user && !authLoading) {
-      // authLoadingがfalseでuserがいない場合 (ログアウト状態など)
-      // ダッシュボードのローディングもfalseにする
       console.log("MonitorDashboard: Auth complete, no user present. Setting dashboardDataLoading to false.");
       setDashboardDataLoading(false);
     }
     
     return () => {
-      isMounted = false; // クリーンアップ
+      isMounted = false; 
       console.log("MonitorDashboard: useEffect cleanup.");
     };
-  }, [user, authLoading]); // userとauthLoadingが変更されたら再実行
+  }, [user, authLoading]); 
 
 
   const handleSurveyClick = async (survey: Survey) => {
@@ -320,7 +319,6 @@ export default function MonitorDashboard() {
     }
   };
 
-  // ダッシュボード全体のローディング状態
   if (authLoading || dashboardDataLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -332,7 +330,6 @@ export default function MonitorDashboard() {
     );
   }
 
-  // 特定のアンケートに回答中のUI
   if (selectedSurvey) {
     return (
       <div className="min-h-screen bg-gray-50 p-4">
@@ -794,14 +791,14 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {showChatModal && (
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID !== 'your-zenryoku-gmail-com-user-id-here' && (
         <ChatModal
           user={user}
+          otherUserId={SUPABASE_SUPPORT_USER_ID} // モニターからサポート担当者のIDを渡す
           onClose={() => setShowChatModal(false)}
         />
       )}
 
-      {/* 広告詳細モーダル（就職情報） */}
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
