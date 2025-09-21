@@ -718,11 +718,15 @@ export default function MonitorDashboard() {
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
-                       <MessageCircle className="w-6 h-6 text-white" /> 
+                    <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
+                       <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
+                           <MessageCircle className="w-6 h-6 text-white" /> 
+                       </div>
+                       <div> {/* テキストコンテナ */}
+                           <h3 className="text-lg font-semibold text-gray-800">キャリア相談</h3> {/* 修正: mb-2 削除 */}
+                           <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
+                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">キャリア相談</h3>
-                    <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
                   </button>
 
                   {/* チャット */}
@@ -730,11 +734,15 @@ export default function MonitorDashboard() {
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
                     className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mb-4">
-                       <MessageCircle className="w-6 h-6 text-white" /> 
+                    <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
+                       <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
+                           <MessageCircle className="w-6 h-6 text-white" /> 
+                       </div>
+                       <div> {/* テキストコンテナ */}
+                           <h3 className="text-lg font-semibold text-gray-800">チャット</h3> {/* 修正: mb-2 削除 */}
+                           <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
+                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">チャット</h3>
-                    <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
                   </button>
                 </div>
               </>
