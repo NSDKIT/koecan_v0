@@ -572,7 +572,6 @@ export default function MonitorDashboard() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8"> {/* border border-orange-100 削除 */}
             {activeTab === 'surveys' && (
               <>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
                 {availableSurveys.length === 0 ? (
                   <div className="text-center py-12 mb-8">
                     <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -672,7 +671,6 @@ export default function MonitorDashboard() {
 
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">就職情報</h2> 
                 {advertisements.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-600">現在、公開されている就職情報はありません。</p>
@@ -711,7 +709,6 @@ export default function MonitorDashboard() {
 
             {activeTab === 'services' && (
               <>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">サービス一覧</h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* キャリア相談 */}
                   <button
