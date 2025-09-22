@@ -556,7 +556,7 @@ export default function MonitorDashboard() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
           {/* 獲得ポイントカード */}
           <div
-            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer transition-shadow"
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
             onClick={() => setShowPointExchangeModal(true)} 
           >
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
@@ -569,7 +569,7 @@ export default function MonitorDashboard() {
           </div>
 
           {/* タブコンテンツ */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-orange-100">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8"> {/* border border-orange-100 削除 */}
             {activeTab === 'surveys' && (
               <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
@@ -586,7 +586,7 @@ export default function MonitorDashboard() {
                     {availableSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-6 transition-all duration-300"
+                        className="border border-gray-200 rounded-xl p-6" // transition-all duration-300 hover:shadow-lg 削除
                       >
                         <div className="flex flex-col md:flex-row items-start justify-between">
                           <div className="flex-1 mb-4 md:mb-0">
@@ -682,7 +682,7 @@ export default function MonitorDashboard() {
                     {advertisements.map((ad) => (
                       <div
                         key={ad.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer group"
+                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group" // transition-all duration-300 hover:shadow-lg 削除
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
                         {ad.image_url && (
@@ -716,7 +716,7 @@ export default function MonitorDashboard() {
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -732,7 +732,7 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -752,7 +752,7 @@ export default function MonitorDashboard() {
       </div>
 
       {/* ボトムタブバー */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
         <div className="max-w-7xl mx-auto flex justify-around h-16">
           <button
             onClick={() => setActiveTab('surveys')}
@@ -812,7 +812,7 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"> {/* shadow-xl 削除 */}
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
@@ -930,7 +930,7 @@ export default function MonitorDashboard() {
                     href={selectedAdvertisement.youtube_short_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold mb-6"
+                    className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold mb-6"
                   >
                     YouTubeショートを見る <ExternalLink className="w-4 h-4 ml-2" />
                   </a>
@@ -964,7 +964,7 @@ export default function MonitorDashboard() {
                   href={selectedAdvertisement.link_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
                 >
                   企業の詳細を見る <ExternalLink className="w-4 h-4 ml-2" />
                 </a>
