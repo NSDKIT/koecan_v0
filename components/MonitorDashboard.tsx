@@ -569,7 +569,7 @@ export default function MonitorDashboard() {
           </div>
 
           {/* タブコンテンツ */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-orange-100">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-orange-100">
             {activeTab === 'surveys' && (
               <>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">回答できるアンケート</h2>
@@ -586,7 +586,7 @@ export default function MonitorDashboard() {
                     {availableSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                        className="border border-gray-200 rounded-xl p-6 transition-all duration-300"
                       >
                         <div className="flex flex-col md:flex-row items-start justify-between">
                           <div className="flex-1 mb-4 md:mb-0">
@@ -682,7 +682,7 @@ export default function MonitorDashboard() {
                     {advertisements.map((ad) => (
                       <div
                         key={ad.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
+                        className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 cursor-pointer group"
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
                         {ad.image_url && (
@@ -716,7 +716,7 @@ export default function MonitorDashboard() {
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
                        <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
@@ -732,7 +732,7 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
                   >
                     <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
                        <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
@@ -813,7 +813,7 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
