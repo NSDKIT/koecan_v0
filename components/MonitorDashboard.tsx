@@ -7,7 +7,7 @@ import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response
 import { 
   Star, 
   Gift, 
-  MessageCircle, // サービス一覧のアイコン
+  MessageCircle, 
   LogOut, 
   User as UserIcon, 
   Trophy, 
@@ -556,7 +556,7 @@ export default function MonitorDashboard() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
           {/* 獲得ポイントカード */}
           <div
-            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-orange-100 flex items-center space-x-4 cursor-pointer hover:shadow-2xl transition-shadow"
+            className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 flex items-center space-x-4 cursor-pointer hover:shadow-2xl transition-shadow"
             onClick={() => setShowPointExchangeModal(true)} 
           >
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
@@ -834,7 +834,7 @@ export default function MonitorDashboard() {
                   <img
                     src={selectedAdvertisement.image_url}
                     alt={selectedAdvertisement.title}
-                    className="w-full h-auto object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
