@@ -337,7 +337,7 @@ export default function MonitorDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 p-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="bg-white rounded-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-gray-800">{selectedSurvey.title}</h1>
               <button
@@ -485,7 +485,7 @@ export default function MonitorDashboard() {
 
       <div className="relative z-20">
         {/* ヘッダー */}
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-orange-100">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
@@ -515,7 +515,7 @@ export default function MonitorDashboard() {
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
-            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-[1000] border border-gray-100" 
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg py-2 z-[1000] border border-gray-100" 
             style={{ zIndex: 1000 }} 
           >
             <button
@@ -716,14 +716,14 @@ export default function MonitorDashboard() {
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
-                       <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
+                    <div className="flex items-center justify-start w-full"> 
+                       <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
                            <MessageCircle className="w-6 h-6 text-white" /> 
                        </div>
-                       <div> {/* テキストコンテナ */}
-                           <h3 className="text-lg font-semibold text-gray-800">キャリア相談</h3> {/* 修正: mb-2 削除 */}
+                       <div> 
+                           <h3 className="text-lg font-semibold text-gray-800">キャリア相談</h3> 
                            <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
                        </div>
                     </div>
@@ -732,14 +732,14 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 transition-all duration-300 transform hover:scale-105 group"
                   >
-                    <div className="flex items-center justify-start w-full"> {/* 修正: flex items-center justify-start */}
-                       <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> {/* 修正: mr-4 と shrink-0 */}
+                    <div className="flex items-center justify-start w-full"> 
+                       <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
                            <MessageCircle className="w-6 h-6 text-white" /> 
                        </div>
-                       <div> {/* テキストコンテナ */}
-                           <h3 className="text-lg font-semibold text-gray-800">チャット</h3> {/* 修正: mb-2 削除 */}
+                       <div> 
+                           <h3 className="text-lg font-semibold text-gray-800">チャット</h3> 
                            <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
                        </div>
                     </div>
@@ -802,7 +802,6 @@ export default function MonitorDashboard() {
       )}
 
       {/* Chat Modal - モニターからサポートへのチャット */}
-      {/* 修正: SUPABASE_SUPPORT_USER_ID が有効なIDであるかどうかのチェックを簡素化 */}
       {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
           user={user}
