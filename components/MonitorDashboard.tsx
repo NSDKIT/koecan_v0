@@ -577,8 +577,8 @@ export default function MonitorDashboard() {
                     <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                       <CheckCircle className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能なアンケートはありません</h3>
-                    <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能な<br></br>アンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答して<br></br>ポイントを獲得しましょう。</p>
                   </div>
                 ) : (
                   <div className="grid gap-6 mb-8">
