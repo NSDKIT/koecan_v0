@@ -75,17 +75,17 @@ export default function Home() {
     );
   }
 
-  // 認証状態の初回チェック中はローディング画面を表示
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">認証情報を確認中...</p>
-        </div>
-      </div>
-    );
-  }
+  // // 認証状態の初回チェック中はローディング画面を表示
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">認証情報を確認中...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // 認証チェックが完了し、ユーザーがいない場合の処理
   if (!user) {
