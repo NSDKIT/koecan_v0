@@ -29,21 +29,26 @@ export function MatchingFeature() {
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // ユーザーが変更されたら、プロフィールの存在をチェック
     const checkProfile = async () => {
-      if (!user) return;
-      // .select() with `head: true` is more efficient for just checking existence
-      const { error, count } = await supabase
-        .from('monitor_profile_survey')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-      
-      if (error) {
-        console.error("Error checking profile existence:", error);
+      if (!user) {
         setProfileExists(false);
         return;
       }
-      
-      setProfileExists(count !== null && count > 0);
+      // 確実性のために、データを実際にselectして存在を確認
+      const { data, error } = await supabase
+        .from('monitor_profile_survey')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1) // 1件だけ取得すれば十分
+        .single(); // .single() はデータが1件もなければエラーを返す
+
+      if (error && error.code !== 'PGRST116') { // PGRST116は「行が見つからない」エラーなので無視
+        console.error("Error checking profile existence:", error);
+        setProfileExists(false); // エラー時は存在しないとみなす
+      } else {
+        setProfileExists(!!data); // dataがあればtrue, なければfalse
+      }
     };
     checkProfile();
   }, [user]);
@@ -58,6 +63,7 @@ export function MatchingFeature() {
       // Step 0: データの取得
       if (!user) throw new Error("ユーザー情報が見つかりません。");
 
+      setAnalysisSteps(prev => [...prev, 'あなたのプロフィールデータを読み込んでいます...']);
       const { data: studentProfile, error: profileError } = await supabase
         .from('monitor_profile_survey')
         .select('*')
@@ -68,6 +74,7 @@ export function MatchingFeature() {
         throw new Error("マッチングには、まずプロフィールアンケートへの回答が必要です。");
       }
       
+      setAnalysisSteps(prev => [...prev, '企業データベースを読み込んでいます...']);
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
         .select('*')
@@ -96,14 +103,15 @@ export function MatchingFeature() {
       setResults(finalRecommendations);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : '分析中に不明なエラーが発生しました。');
+      const errorMessage = err instanceof Error ? err.message : '分析中に不明なエラーが発生しました。';
+      setError(`エラー: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   if (profileExists === null) {
-    return <div className="text-center p-8"><Loader2 className="animate-spin mx-auto" /></div>;
+    return <div className="text-center p-8"><Loader2 className="animate-spin mx-auto text-orange-500" /></div>;
   }
 
   if (!profileExists) {
@@ -203,13 +211,12 @@ function simulateGeminiAnalysis(profile: StudentProfileSurvey) {
 }
 
 function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
-    return db.map(company => {
+    const scoredCompanies = db.map(company => {
         let scores = { growth: 5, culture: 5, wlb: 5 };
-        let analysis: string[] = []; // ★★★★★ ここを修正 ★★★★★
+        let analysis: string[] = [];
 
-        // Check for any match in locations and industries
-        const locationMatch = geminiOutput.hardConditions.locations.length === 0 || geminiOutput.hardConditions.locations.some((loc: string) => company.location_info?.includes(loc));
-        const industryMatch = geminiOutput.hardConditions.industries.length === 0 || geminiOutput.hardConditions.industries.some((ind: string) => company.industry?.includes(ind));
+        const locationMatch = geminiOutput.hardConditions.locations?.length === 0 || geminiOutput.hardConditions.locations?.some((loc: string) => company.location_info?.includes(loc));
+        const industryMatch = geminiOutput.hardConditions.industries?.length === 0 || geminiOutput.hardConditions.industries?.some((ind: string) => company.industry?.includes(ind));
 
         if (!locationMatch || !industryMatch) {
             return null;
@@ -233,7 +240,10 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
         Object.keys(scores).forEach(key => (scores as any)[key] = Math.max(0, Math.min(10, (scores as any)[key])));
 
         return { company, scores, analysis, totalScore: scores.growth + scores.culture + scores.wlb };
-    }).filter(Boolean).sort((a, b) => (b as any)!.totalScore - (a as any)!.totalScore);
+    });
+
+    // 確実にnullを除外してからソートする
+    return scoredCompanies.filter(Boolean).sort((a, b) => (b as any)!.totalScore - (a as any)!.totalScore);
 }
 
 function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurvey) {
