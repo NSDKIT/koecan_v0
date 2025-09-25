@@ -33,9 +33,10 @@ import { NotificationButton } from '@/components/NotificationButton';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
+import { MatchingFeature } from '@/components/MatchingFeature'; // これを追加
 
 // アクティブなタブの型定義
-type ActiveTab = 'surveys' | 'recruitment' | 'services'; 
+type ActiveTab = 'surveys' | 'recruitment' | 'services' | 'matching'; // 'matching' を追加
 
 // TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
 // このIDは、Supabase Studioの「Authentication」→「Users」タブで確認できるサポート担当者のユーザーIDです。
@@ -54,7 +55,7 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('surveys'); // アクティブなタブの状態
+  const [activeTab, setActiveTab] = useState<ActiveTab>('matching'); // 'surveys' から 'matching' に変更
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
@@ -669,6 +670,10 @@ export default function MonitorDashboard() {
               </>
             )}
 
+            {activeTab === 'matching' && (
+              <MatchingFeature />
+            )}
+
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {advertisements.length === 0 ? (
@@ -759,6 +764,15 @@ export default function MonitorDashboard() {
           >
             <ClipboardList className="w-6 h-6 mb-1" />
             アンケート
+          </button>
+          <button
+            onClick={() => setActiveTab('matching')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Sparkles className="w-6 h-6 mb-1" />
+            AIキャリア診断
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
