@@ -317,15 +317,18 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"> {/* モーダル全体がスクロール */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10"> {/* ヘッダーを固定 */}
+          {/* モーダルコンテナ: max-h-[90vh] と overflow-y-auto でスクロール */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"> {/* relative を追加 */}
+            {/* ヘッダー: sticky で上部に固定 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
+            
             {/* フォーム内容 */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6"> {/* ここはスクロールしません */}
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                   <strong className="font-bold">エラー:</strong>
@@ -447,9 +450,10 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   </div>
                 </div>
               </section>
-
-              {/* 送信ボタン（フォームの直後に配置） */}
-              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 mt-6 bg-white z-10">
+            </form>
+            
+            {/* フッター（ボタン群）をモーダル内に固定 */}
+            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 sticky bottom-0 bg-white z-10">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -467,7 +471,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   {editingAd ? '更新' : '掲載'}
                 </button>
               </div>
-            </form>
           </div>
         </div>
       )}
