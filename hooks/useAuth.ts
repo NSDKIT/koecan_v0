@@ -33,39 +33,41 @@ export function useAuth() {
     const fetchUserData = async (client: SupabaseClient, userId: string): Promise<AuthUser | null> => {
       console.log('fetchUserData: Fetching profile for user ID:', userId);
       try {
+        console.log('fetchUserData: Attempting to select from "users" table.');
         const { data: userProfile, error: profileError } = await client
           .from('users')
           .select('role, name')
           .eq('id', userId)
           .single();
-
+    
         if (profileError) {
-          console.error('fetchUserData: Error fetching user profile:', profileError);
+          console.error('fetchUserData: ERROR fetching user profile:', profileError.message, profileError.details, profileError.hint);
           throw profileError;
         }
+        console.log('fetchUserData: Successfully fetched user profile:', userProfile);
         
-        // auth.getUser() が既に呼び出されている場合でも、最新のユーザーオブジェクトを確保
+        console.log('fetchUserData: Attempting to get auth user data.');
         const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
         if (authUserError) {
-          console.error('fetchUserData: Error fetching auth user:', authUserError);
+          console.error('fetchUserData: ERROR fetching auth user:', authUserError.message, authUserError.details, authUserError.hint);
           throw authUserError;
         }
-
+    
         if (!authUser) {
           console.log('fetchUserData: No auth user found after profile fetch.');
           return null;
         }
         
-        console.log('fetchUserData: User data fetched successfully.');
+        console.log('fetchUserData: Auth user data fetched successfully. Returning combined user data.');
         return {
           ...authUser,
           role: userProfile.role,
           name: userProfile.name,
         };
       } catch (err) {
-        console.error('fetchUserData: Error fetching user data from DB (profile or auth):', err);
+        console.error('fetchUserData: CRITICAL ERROR during user data retrieval:', err);
         if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : 'ユーザープロファイル取得中にエラーが発生しました');
+          setError(err instanceof Error ? err.message : 'ユーザープロファイル取得中に致命的なエラーが発生しました');
         }
         return null;
       }
