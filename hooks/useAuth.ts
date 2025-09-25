@@ -27,38 +27,40 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
+    console.log('--- useAuth useEffect START ---');
     console.log('useAuth useEffect triggered. Supabase client:', supabase ? 'Available' : 'Null', 'Loading state:', loading);
 
     // ヘルパー関数: ユーザーデータとプロファイルを取得
     const fetchUserData = async (client: SupabaseClient, userId: string): Promise<AuthUser | null> => {
-      console.log('fetchUserData: Fetching profile for user ID:', userId);
+      console.log('fetchUserData: START for user ID:', userId);
       try {
-        console.log('fetchUserData: Attempting to select from "users" table.');
+        console.log('fetchUserData: Attempting to select from "users" table for ID:', userId);
         const { data: userProfile, error: profileError } = await client
           .from('users')
           .select('role, name')
           .eq('id', userId)
           .single();
-    
+
         if (profileError) {
-          console.error('fetchUserData: ERROR fetching user profile:', profileError.message, profileError.details, profileError.hint);
+          console.error('fetchUserData: ERROR fetching user profile:', profileError.message, profileError.details, profileError.hint, 'Status:', profileError.status);
           throw profileError;
         }
         console.log('fetchUserData: Successfully fetched user profile:', userProfile);
         
-        console.log('fetchUserData: Attempting to get auth user data.');
+        console.log('fetchUserData: Attempting to get auth user data using client.auth.getUser().');
         const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
         if (authUserError) {
           console.error('fetchUserData: ERROR fetching auth user:', authUserError.message, authUserError.details, authUserError.hint);
           throw authUserError;
         }
-    
+
         if (!authUser) {
-          console.log('fetchUserData: No auth user found after profile fetch.');
+          console.log('fetchUserData: No auth user found after profile fetch - this should not happen if session was active.');
           return null;
         }
         
         console.log('fetchUserData: Auth user data fetched successfully. Returning combined user data.');
+        console.log('fetchUserData: END successfully.');
         return {
           ...authUser,
           role: userProfile.role,
@@ -69,48 +71,48 @@ export function useAuth() {
         if (mountedRef.current) {
           setError(err instanceof Error ? err.message : 'ユーザープロファイル取得中に致命的なエラーが発生しました');
         }
+        console.log('fetchUserData: END with error.');
         return null;
       }
     };
 
     // 初期セッションを取得し、ローディング状態を設定するメイン関数
     const getInitialSession = async () => {
-      console.log('getInitialSession: Called. Supabase client status:', supabase ? 'Available' : 'Null');
+      console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
 
       if (!supabase) {
-        console.log('getInitialSession: Supabase client is null. Exiting early from getInitialSession.');
-        // supabaseがnullの場合、処理を続行できない。
-        // loadingをfalseにし、app/page.tsxにSupabase設定エラーを表示させるか、
-        // 一時的なレースコンディションであればuseEffectが再実行されるのを待つ。
+        console.log('getInitialSession: Supabase client is null. Cannot proceed with session check.');
         if (mountedRef.current) {
+          // Supabaseが利用できない場合、ローディングを停止しエラーを表示
           setLoading(false);
-          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。'); 
+          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
         }
+        console.log('getInitialSession: END early due to null Supabase client.');
         return;
       }
       
       try {
-        console.log('getInitialSession: Attempting to get session...');
+        console.log('getInitialSession: Attempting to get session using supabase.auth.getSession().');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-          console.error('getInitialSession: Error getting session:', sessionError);
+          console.error('getInitialSession: ERROR getting session:', sessionError.message, sessionError.details, sessionError.hint);
           throw sessionError;
         }
 
         if (session?.user) {
-          console.log('getInitialSession: Session found for user ID:', session.user.id);
+          console.log('getInitialSession: Active session found for user ID:', session.user.id);
           const userData = await fetchUserData(supabase, session.user.id);
           if (mountedRef.current) {
             setUser(userData);
           }
         } else {
-          console.log('getInitialSession: No active session found.');
+          console.log('getInitialSession: No active session found. User is not logged in.');
           if (mountedRef.current) {
             setUser(null);
           }
         }
       } catch (err) {
-        console.error('getInitialSession: Error during initial session check:', err);
+        console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
         if (mountedRef.current) {
           setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
         }
@@ -120,6 +122,7 @@ export function useAuth() {
           setLoading(false);
         }
       }
+      console.log('getInitialSession: END.');
     };
 
     // 初期セッションチェックを実行
@@ -132,32 +135,34 @@ export function useAuth() {
       const { data } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
           if (!mountedRef.current) return;
-          console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive');
+          console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
           try {
             if (session?.user) {
+              console.log('onAuthStateChange: Session user found. Fetching user data.');
               const userData = await fetchUserData(supabase, session.user.id);
               if (mountedRef.current) {
                 setUser(userData);
               }
             } else {
+              console.log('onAuthStateChange: No session user found. Setting user to null.');
               if (mountedRef.current) {
                 setUser(null);
               }
             }
           } catch(err) {
-              console.error('onAuthStateChange: Error during state change processing:', err);
+              console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
               if (mountedRef.current) {
                 setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
               }
           }
-          // Note: ここではsetLoading(false)は呼び出されない。初期ロードはgetInitialSessionで処理済み。
-          // このリスナーは初期ロード後の後続の変更用。
+          console.log('onAuthStateChange: END of event processing.');
         }
       );
       subscription = data.subscription;
     } else {
       console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
     }
+    console.log('--- useAuth useEffect END ---');
 
     return () => {
       // クリーンアップ
@@ -167,23 +172,24 @@ export function useAuth() {
       }
       console.log('useEffect: Cleanup complete.');
     };
-  }, [supabase, loading]); // supabaseまたはloadingが変更された場合に再実行（loadingを追加したのは、loadingがtrueに戻った際に再チェックさせるため）
+  }, [supabase]); // supabaseクライアントが変更された場合にのみ再実行
 
   const signOut = async () => {
     if (!supabase) {
       if (mountedRef.current) {
         setError('Supabaseクライアントが初期化されていません。ログアウトできません。');
       }
+      console.log('signOut: END early due to null Supabase client.');
       return;
     }
     try {
       if (mountedRef.current) {
         setLoading(true); // ログアウト処理中にローディングを表示
       }
-      console.log('signOut: Attempting to sign out.');
+      console.log('signOut: START. Attempting to sign out.');
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) {
-        console.error('signOut: Error during sign out:', signOutError);
+        console.error('signOut: ERROR during sign out:', signOutError);
         throw signOutError;
       }
       if (mountedRef.current) {
@@ -192,7 +198,7 @@ export function useAuth() {
       }
       console.log('signOut: Successfully signed out.');
     } catch (err) {
-      console.error('signOut: Sign out error:', err);
+      console.error('signOut: CRITICAL ERROR during sign out:', err);
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : 'Sign out error');
       }
@@ -200,6 +206,7 @@ export function useAuth() {
       if (mountedRef.current) {
         setLoading(false); // ログアウト処理完了後にローディングを非表示
       }
+      console.log('signOut: END.');
     }
   };
 
