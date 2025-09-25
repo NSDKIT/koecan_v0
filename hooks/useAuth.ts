@@ -42,7 +42,7 @@ export function useAuth() {
           .single();
 
         if (profileError) {
-          // Status プロパティは PostgrestError に直接ないため削除
+          // PostgrestError の詳細プロパティに注意
           console.error('fetchUserData: ERROR fetching user profile:', profileError.message, profileError.details, profileError.hint);
           throw profileError;
         }
@@ -51,8 +51,8 @@ export function useAuth() {
         console.log('fetchUserData: Attempting to get auth user data using client.auth.getUser().');
         const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
         if (authUserError) {
-          // Status プロパティは AuthError に直接ないため削除
-          console.error('fetchUserData: ERROR fetching auth user:', authUserError.message, authUserError.details, authUserError.hint);
+          // AuthError は message プロパティがメイン
+          console.error('fetchUserData: ERROR fetching auth user:', authUserError.message); // details, hint を削除
           throw authUserError;
         }
 
@@ -97,8 +97,8 @@ export function useAuth() {
         console.log('getInitialSession: Attempting to get session using supabase.auth.getSession().');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-          // Status プロパティは AuthError に直接ないため削除
-          console.error('getInitialSession: ERROR getting session:', sessionError.message, sessionError.details, sessionError.hint);
+          // AuthError は message プロパティがメイン
+          console.error('getInitialSession: ERROR getting session:', sessionError.message); // details, hint を削除
           throw sessionError;
         }
 
