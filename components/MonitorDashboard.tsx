@@ -678,7 +678,7 @@ export default function MonitorDashboard() {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {advertisements.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">現在、公開されている就職情報はありません。</p>
+                    <p className="text-gray-600">現在、公開されている企業情報はありません。</p>
                   </div>
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -781,7 +781,7 @@ export default function MonitorDashboard() {
             }`}
           >
             <Briefcase className="w-6 h-6 mb-1" />
-            就職情報
+            企業情報
           </button>
           <button
             onClick={() => setActiveTab('services')}
