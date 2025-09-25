@@ -51,30 +51,39 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   });
 
   useEffect(() => {
+    console.log('AdminJobInfoManager: useEffect triggered, calling fetchAdvertisements.');
     fetchAdvertisements();
   }, []);
 
   const fetchAdvertisements = async () => {
+    console.log('fetchAdvertisements: START. Setting loading to true.');
     setLoading(true);
     setError(null);
     try {
+      console.log('fetchAdvertisements: Attempting to select from "advertisements" table.');
       const { data, error } = await supabase
         .from('advertisements')
         .select('*') // 全てのカラムを取得
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('fetchAdvertisements: ERROR fetching advertisements:', error.message, error.details, error.hint);
+        throw error;
+      }
       setAdvertisements(data || []);
+      console.log('fetchAdvertisements: Successfully fetched advertisements:', data);
       onDataChange(); // 親コンポーネントにデータ変更を通知
     } catch (err) {
-      console.error('Error fetching advertisements:', err);
+      console.error('fetchAdvertisements: CRITICAL ERROR during advertisements fetch:', err);
       setError('就職情報の取得に失敗しました。');
     } finally {
+      console.log('fetchAdvertisements: FINALLY block. Setting loading to false.');
       setLoading(false);
     }
   };
 
   const openCreateModal = () => {
+    console.log('openCreateModal: Called.');
     setEditingAd(null); // 新規作成時はeditingAdをnullに
     setFormData({ // フォームを初期化
       title: '',
@@ -105,6 +114,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const openEditModal = (ad: Advertisement) => {
+    console.log('openEditModal: Called for AD ID:', ad.id);
     setEditingAd(ad);
     setFormData({
       ...ad,
@@ -118,6 +128,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const closeModal = () => {
+    console.log('closeModal: Called.');
     setIsModalOpen(false);
     setEditingAd(null);
     setFormData({}); // フォームデータをリセット
@@ -143,6 +154,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSubmit: START. Setting isSubmitting to true.');
     setIsSubmitting(true);
     setError(null);
 
@@ -150,11 +162,13 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     if (!formData.company_name || !formData.title || !formData.description) {
         setError('会社名、タイトル、説明は必須です。');
         setIsSubmitting(false);
+        console.log('handleSubmit: END early due to client-side validation error.');
         return;
     }
 
     try {
       if (editingAd) {
+        console.log('handleSubmit: Updating advertisement with ID:', editingAd.id);
         // 更新
         const { error } = await supabase
           .from('advertisements')
@@ -162,39 +176,49 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
           .eq('id', editingAd.id);
         if (error) throw error;
       } else {
+        console.log('handleSubmit: Inserting new advertisement.');
         // 新規作成
         const { error } = await supabase
           .from('advertisements')
           .insert(formData);
         if (error) throw error;
       }
+      console.log('handleSubmit: Advertisement saved successfully. Refetching list.');
       await fetchAdvertisements(); // リストを再取得
       closeModal();
     } catch (err) {
-      console.error('Error saving advertisement:', err);
+      console.error('handleSubmit: ERROR saving advertisement:', err);
       setError(`保存に失敗しました: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
+      console.log('handleSubmit: FINALLY block. Setting isSubmitting to false.');
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('この就職情報を削除してもよろしいですか？')) return;
+    console.log('handleDelete: Called for AD ID:', id);
+    if (!confirm('この就職情報を削除してもよろしいですか？')) {
+        console.log('handleDelete: Deletion cancelled by user.');
+        return;
+    }
 
     setLoading(true);
     setError(null);
     try {
+      console.log('handleDelete: Attempting to delete advertisement with ID:', id);
       const { error } = await supabase
         .from('advertisements')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+      console.log('handleDelete: Advertisement deleted successfully. Refetching list.');
       await fetchAdvertisements(); // リストを再取得
     } catch (err) {
-      console.error('Error deleting advertisement:', err);
+      console.error('handleDelete: ERROR deleting advertisement:', err);
       setError('削除に失敗しました。');
     } finally {
+      console.log('handleDelete: FINALLY block. Setting loading to false.');
       setLoading(false);
     }
   };
