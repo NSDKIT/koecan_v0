@@ -5,11 +5,28 @@ const nextConfig = {
   images: {
     domains: ['images.pexels.com'],
   },
-  env: {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    NEXT_PUBLIC_ONESIGNAL_APP_ID: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID,
-  },
-}
+  
+  // ★★★ 修正点1: 不要なenvブロックを削除 ★★★
+  // .env.localファイルがあれば、Next.jsが自動で環境変数を読み込みます。
+  // ここに記述する必要はありません。
 
-module.exports = nextConfig
+  // ★★★ 修正点2: キャッシュ制御ヘッダーを追加 ★★★
+  async headers() {
+    return [
+      {
+        // アプリケーションのすべてのパスに適用
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            // この設定はブラウザにファイルをキャッシュさせないように指示します。
+            // これにより、ユーザーは常に最新のコードを取得できます。
+            value: 'no-store, max-age=0',
+          },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
