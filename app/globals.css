@@ -1,3 +1,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* マッチング機能用のスタイル */
+.processing-container { text-align: center; padding: 50px; }
+.error-message { text-align: center; padding: 20px; background-color: #fff3f3; border: 1px solid #ffcccc; border-radius: 5px; }
+.company-card { border: 1px solid #ddd; border-radius: 10px; margin-bottom: 30px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; }
+.company-card header { padding: 20px 25px; background: #f9f9f9; border-bottom: 1px solid #eee; }
+.company-card h3 { margin: 0 0 15px 0; color: #005ab3; font-size: 24px; }
+.score-display div { font-size: 14px; color: #666; margin-bottom: 5px; display: flex; align-items: center; }
+.score-bar { display: inline-block; height: 10px; background-color: #ffc400; border-radius: 5px; margin: 0 10px; }
+.match-points { padding: 20px 25px; }
+.match-points h4 { margin-top: 0; font-size: 16px; color: #333; }
+.match-points p { line-height: 1.8; }
+.action-links { padding: 20px 25px; background: #f9f9f9; border-top: 1px solid #eee; text-align: right; }
+.primary-action { text-decoration: none; display: inline-block; padding: 12px 25px; border-radius: 6px; font-weight: bold; background-color: #00a0e9; color: white; transition: background-color 0.3s; }
+.primary-action:hover { background-color: #007bb5; }
