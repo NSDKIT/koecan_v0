@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, AlertCircle, CheckCircle, Sparkles, FileText } from 'lucide-react';
-import { Advertisement } from '@/types'; // Advertisement 型をインポート
 
 // 型定義
 interface Company {
@@ -81,15 +80,6 @@ export function MatchingFeature() {
       if (companiesError) throw companiesError;
       if (!companies || companies.length === 0) throw new Error("分析対象の企業データが見つかりません。");
 
-      setAnalysisSteps(prev => [...prev, '現在募集中の求人情報を取得しています...']);
-      const { data: allAds, error: adsError } = await supabase
-        .from('advertisements')
-        .select('*')
-        .eq('is_active', true);
-      if (adsError) throw adsError;
-
-      // --- マルチLLMパイプライン（シミュレーション） ---
-      
       await new Promise(resolve => setTimeout(resolve, 1500));
       const geminiResult = simulateGeminiAnalysis(studentProfile);
       setAnalysisSteps(prev => [...prev, 'あなたの価値観を解析しました [Gemini]']);
@@ -98,8 +88,13 @@ export function MatchingFeature() {
       const claudeResult = simulateClaudeScoring(geminiResult, companies);
       setAnalysisSteps(prev => [...prev, '企業文化との深層マッチングを実行しました [Claude 3]']);
 
+      // ★★★ 変更点: 結果が0件の場合のハンドリングを追加 ★★★
+      if (claudeResult.length === 0) {
+        throw new Error("あなたにマッチする企業が見つかりませんでした。プロフィールアンケートの希望条件を広げてみてください。");
+      }
+
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const finalRecommendations = claudeResult.map(res => simulateGpt4Copywriting(res, studentProfile, allAds || []));
+      const finalRecommendations = claudeResult.map(res => simulateGpt4Copywriting(res, studentProfile));
       setAnalysisSteps(prev => [...prev, 'パーソナライズ推薦文を作成しました [GPT-4]']);
 
       setResults(finalRecommendations);
@@ -119,9 +114,7 @@ export function MatchingFeature() {
   if (!profileExists) {
     return (
         <div className="text-center py-12">
-            <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <FileText className="w-8 h-8 text-gray-400" />
-            </div>
+            <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center"><FileText className="w-8 h-8 text-gray-400" /></div>
             <h3 className="text-lg font-medium text-gray-800 mb-2">はじめにプロフィールを登録しましょう</h3>
             <p className="text-gray-600 mb-4">AIによるキャリア診断には、詳細なプロフィールアンケートへの回答が必要です。</p>
             <p className="text-gray-500 text-sm">（右上のメニュー &gt; プロフィールアンケート から回答できます）</p>
@@ -135,10 +128,7 @@ export function MatchingFeature() {
         <div className="text-center p-8">
           <h3 className="text-xl font-bold text-gray-800 mb-2">AIキャリア診断</h3>
           <p className="text-gray-600 mb-6">あなたのプロフィールアンケートの回答を基に、AIが価値観に合った企業を推薦します。</p>
-          <button
-            onClick={handleStartAnalysis}
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center mx-auto"
-          >
+          <button onClick={handleStartAnalysis} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center mx-auto">
             <Sparkles className="w-5 h-5 mr-2" />
             診断を開始する
           </button>
@@ -151,17 +141,15 @@ export function MatchingFeature() {
           <h2 className="text-xl font-semibold mb-6">AIがあなたに最適な企業を分析中...</h2>
           <div className="steps space-y-3 text-left max-w-sm mx-auto">
             {analysisSteps.map((step, index) => (
-              <div key={index} className="step completed flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                <p>{step}</p>
-              </div>
+              <div key={index} className="step completed flex items-center"><CheckCircle className="w-5 h-5 text-green-500 mr-3" /><p>{step}</p></div>
             ))}
           </div>
         </div>
       )}
-
-      {error && (
-        <div className="error-message bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg flex items-center">
+      
+      {/* ★★★ 変更点: エラー表示を結果画面にも残すように修正 ★★★ */}
+      {error && !isLoading && (
+        <div className="error-message bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg flex items-center mt-6">
           <AlertCircle className="w-5 h-5 mr-2" /> {error}
         </div>
       )}
@@ -183,21 +171,6 @@ export function MatchingFeature() {
                     <h4>あなたへの推薦理由 [by GPT-4]</h4>
                     <p dangerouslySetInnerHTML={{ __html: rec.personalizedReason }} />
                     </section>
-                    
-                    {rec.activeAdvertisements && rec.activeAdvertisements.length > 0 && (
-                      <section className="p-6 border-t">
-                        <h4 className="text-md font-bold text-green-700 mb-2">現在募集中の求人</h4>
-                        <div className="space-y-2">
-                          {rec.activeAdvertisements.map((ad: Advertisement) => (
-                            <div key={ad.id} className="p-3 bg-green-50 rounded-lg">
-                              <p className="font-semibold text-green-800">{ad.title}</p>
-                              <p className="text-sm text-gray-600 line-clamp-2">{ad.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    )}
-
                     <div className="action-links">
                         <a href="#" className="primary-action">企業の詳細を見る</a>
                     </div>
@@ -210,7 +183,6 @@ export function MatchingFeature() {
   );
 }
 
-// ... (simulateGeminiAnalysis と simulateClaudeScoring は変更なし)
 function simulateGeminiAnalysis(profile: StudentProfileSurvey) {
     const coreValues = new Set(profile.important_points || []);
     const allText = (profile.lively_work_state || '') + (profile.job_satisfaction_moments || '');
@@ -221,7 +193,7 @@ function simulateGeminiAnalysis(profile: StudentProfileSurvey) {
     return {
         coreValues: Array.from(coreValues),
         welfarePriorities: profile.important_benefits || [],
-        hardConditions: { locations: profile.job_hunting_areas, industries: profile.interested_industries },
+        hardConditions: { locations: profile.job_hunting_areas ?? [], industries: profile.interested_industries ?? [] },
     };
 }
 
@@ -229,9 +201,17 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
     const scoredCompanies = db.map(company => {
         let scores = { growth: 5, culture: 5, wlb: 5 };
         let analysis: string[] = [];
-        const locationMatch = geminiOutput.hardConditions.locations?.length === 0 || geminiOutput.hardConditions.locations?.some((loc: string) => company.location_info?.includes(loc));
-        const industryMatch = geminiOutput.hardConditions.industries?.length === 0 || geminiOutput.hardConditions.industries?.some((ind: string) => company.industry?.includes(ind));
-        if (!locationMatch || !industryMatch) return null;
+
+        // ★★★ 変更点: 厳しいフィルタリングをスコア減点方式に変更 ★★★
+        const locations = geminiOutput.hardConditions.locations;
+        const industries = geminiOutput.hardConditions.industries;
+
+        const locationMatch = locations.length === 0 || locations.some((loc: string) => company.location_info?.includes(loc));
+        const industryMatch = industries.length === 0 || industries.some((ind: string) => company.industry?.includes(ind));
+
+        if (!locationMatch) scores.culture -= 5; // 希望と違うので文化フィットを大幅減点
+        if (!industryMatch) scores.growth -= 5; // 希望と違うので成長可能性を大幅減点
+
         geminiOutput.coreValues.forEach((value: string) => {
             if (company.recommended_points?.includes(value)) {
                 scores.culture += 2;
@@ -239,22 +219,27 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
             }
             if (value === '成長できる環境') scores.growth += 3;
         });
+
         geminiOutput.welfarePriorities.forEach((welfare: string) => {
             if (company.training_support?.includes(welfare) || company.long_holidays?.includes(welfare)) {
                 scores.wlb += 2;
                 analysis.push(`重視する福利厚生「${welfare}」が充実。`);
             }
         });
+        
         Object.keys(scores).forEach(key => (scores as any)[key] = Math.max(0, Math.min(10, (scores as any)[key])));
+
         return { company, scores, analysis, totalScore: scores.growth + scores.culture + scores.wlb };
     });
+
     return scoredCompanies.filter(Boolean).sort((a, b) => (b as any)!.totalScore - (a as any)!.totalScore);
 }
 
-function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurvey, allAds: Advertisement[]) {
+function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurvey) {
     if (!claudeResult) return null;
     const { company } = claudeResult;
     let reason = `**${company.company_name}**がおすすめです。<br>`;
+
     if (profile.job_satisfaction_moments && profile.job_satisfaction_moments.length > 0) {
         reason += `あなたが働きがいに感じる「${profile.job_satisfaction_moments[0]}」という想い。`;
         if (company.culture_description?.includes('挑戦')) {
@@ -263,6 +248,5 @@ function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurve
             reason += 'この会社のチームワークを重んじる文化なら、そのやりがいを日々感じられるでしょう。<br>';
         }
     }
-    const activeAds = allAds.filter(ad => ad.company_id === company.id && ad.is_active);
-    return { ...claudeResult, personalizedReason: reason, activeAdvertisements: activeAds };
+    return { ...claudeResult, personalizedReason: reason };
 }
