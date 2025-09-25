@@ -31,13 +31,18 @@ export function MatchingFeature() {
   useEffect(() => {
     const checkProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase
+      // .select() with `head: true` is more efficient for just checking existence
+      const { error, count } = await supabase
         .from('monitor_profile_survey')
-        .select('user_id', { count: 'exact', head: true }) // count on user_id to check existence
+        .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
       
-      // Check the count from the response header
-      const count = data ? 0 : (error && (error as any).count !== null) ? (error as any).count : null;
+      if (error) {
+        console.error("Error checking profile existence:", error);
+        setProfileExists(false);
+        return;
+      }
+      
       setProfileExists(count !== null && count > 0);
     };
     checkProfile();
@@ -200,7 +205,7 @@ function simulateGeminiAnalysis(profile: StudentProfileSurvey) {
 function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
     return db.map(company => {
         let scores = { growth: 5, culture: 5, wlb: 5 };
-        let analysis = [];
+        let analysis: string[] = []; // ★★★★★ ここを修正 ★★★★★
 
         // Check for any match in locations and industries
         const locationMatch = geminiOutput.hardConditions.locations.length === 0 || geminiOutput.hardConditions.locations.some((loc: string) => company.location_info?.includes(loc));
@@ -225,7 +230,7 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
             }
         });
         
-        Object.keys(scores).forEach(key => scores[key] = Math.max(0, Math.min(10, (scores as any)[key])));
+        Object.keys(scores).forEach(key => (scores as any)[key] = Math.max(0, Math.min(10, (scores as any)[key])));
 
         return { company, scores, analysis, totalScore: scores.growth + scores.culture + scores.wlb };
     }).filter(Boolean).sort((a, b) => (b as any)!.totalScore - (a as any)!.totalScore);
