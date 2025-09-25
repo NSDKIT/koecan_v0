@@ -490,7 +490,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </form>
             
             {/* フッター（ボタン群）をモーダル内に固定 */}
-            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 shrink-0 bg-white z-10">
+            <div className="flex justify-end space-x-4 p-4 border-t border-gray-200 shrink-0 bg-white z-10"> {/* p-4 に修正 */}
                 <button
                   type="button"
                   onClick={closeModal}
