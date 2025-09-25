@@ -5,8 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { Advertisement } from '@/types';
-import { 
-  Plus, Edit, Trash2, Loader2, Save, X, Eye, 
+import {
+  Plus, Edit, Trash2, Loader2, Save, X, Eye,
   Building, MapPin, Calendar, Users, DollarSign,
   Briefcase, Award, Youtube, BookOpen, Clock, CheckCircle
 } from 'lucide-react';
@@ -15,6 +15,9 @@ interface AdminJobInfoManagerProps {
   onDataChange: () => void; // 親コンポーネント（AdminDashboard）にデータ変更を通知するコールバック
 }
 
+// タブの型定義
+type ModalTab = 'basicInfo' | 'otherInfo';
+
 export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) {
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<Advertisement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState<ModalTab>('basicInfo'); // 新しいタブの状態
 
   // フォームデータ用ステート (新規作成・編集共通)
   const [formData, setFormData] = useState<Partial<Advertisement>>({
@@ -110,6 +114,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       application_qualifications: '',
       selection_flow: '',
     });
+    setActiveModalTab('basicInfo'); // モーダルを開く際に基本情報タブをアクティブにする
     setIsModalOpen(true);
   };
 
@@ -124,6 +129,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       // 配列型のフィールドは常に配列であることを保証
       recommended_points: ad.recommended_points ?? [],
     });
+    setActiveModalTab('basicInfo'); // モーダルを開く際に基本情報タブをアクティブにする
     setIsModalOpen(true);
   };
 
@@ -137,7 +143,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     // 修正: 'checked' をデストラクチャリングから外し、typeがcheckboxの場合のみアクセス
-    const { name, value, type } = e.target; 
+    const { name, value, type } = e.target;
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked; // checkedプロパティに明示的にアクセス
@@ -317,142 +323,174 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[90vh]"> {/* max-h-[90vh] は残し、Flexbox で内部を制御 */}
-            {/* ヘッダー */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[95vh]"> {/* max-hを95vhに調整 */}
+            {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
+
+            {/* タブナビゲーション */}
+            <div className="flex border-b border-gray-200 bg-gray-50 shrink-0">
+              <button
+                onClick={() => setActiveModalTab('basicInfo')}
+                className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
+                  activeModalTab === 'basicInfo'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                    : 'text-gray-600 hover:text-blue-500'
+                }`}
+              >
+                基本情報
+              </button>
+              <button
+                onClick={() => setActiveModalTab('otherInfo')}
+                className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
+                  activeModalTab === 'otherInfo'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                    : 'text-gray-600 hover:text-blue-500'
+                }`}
+              >
+                その他の情報
+              </button>
+            </div>
             
             {/* フォーム内容 - この部分がスクロールします */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
+            <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
               {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
                   <strong className="font-bold">エラー:</strong>
                   <span className="block sm:inline"> {error}</span>
                 </div>
               )}
 
-              {/* ... （フォームの各セクションは省略） ... */}
-              {/* 基本情報 */}
-              <section>
-                <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">基本情報</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">会社名 <span className="text-red-500">*</span></label>
-                    <input type="text" name="company_name" value={formData.company_name || ''} onChange={handleInputChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">タイトル <span className="text-red-500">*</span></label>
-                    <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">説明 <span className="text-red-500">*</span></label>
-                    <textarea name="description" value={formData.description || ''} onChange={handleInputChange} required rows={3} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">所在地（本社／支社）</label>
-                    <input type="text" name="location_info" value={formData.location_info || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">設立年</label>
-                    <input type="number" name="establishment_year" value={formData.establishment_year ?? ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">従業員数</label>
-                    <input type="number" name="employee_count" value={formData.employee_count ?? ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">男女比</label>
-                    <input type="text" name="employee_gender_ratio" value={formData.employee_gender_ratio || ''} onChange={handleInputChange} placeholder="例: 男性6割、女性4割" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">年齢構成比</label>
-                    <input type="text" name="employee_age_composition" value={formData.employee_age_composition || ''} onChange={handleInputChange} placeholder="例: 20代30%、30代40%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">画像URL</label>
-                    <input type="text" name="image_url" value={formData.image_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">企業の詳細リンクURL</label>
-                    <input type="url" name="link_url" value={formData.link_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div className="flex items-center md:col-span-2">
-                    <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active ?? true} onChange={handleInputChange} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
-                    <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">公開する</label>
-                  </div>
-                </div>
-              </section>
+              <div className="p-6 space-y-6"> {/* 各セクションのパディングはここに集約 */}
+                {/* 基本情報タブのコンテンツ */}
+                {activeModalTab === 'basicInfo' && (
+                  <>
+                    <section>
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">基本情報</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">会社名 <span className="text-red-500">*</span></label>
+                          <input type="text" name="company_name" value={formData.company_name || ''} onChange={handleInputChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">タイトル <span className="text-red-500">*</span></label>
+                          <input type="text" name="title" value={formData.title || ''} onChange={handleInputChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">説明 <span className="text-red-500">*</span></label>
+                          <textarea name="description" value={formData.description || ''} onChange={handleInputChange} required rows={3} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">所在地（本社／支社）</label>
+                          <input type="text" name="location_info" value={formData.location_info || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">設立年</label>
+                          <input type="number" name="establishment_year" value={formData.establishment_year ?? ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">従業員数</label>
+                          <input type="number" name="employee_count" value={formData.employee_count ?? ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">男女比</label>
+                          <input type="text" name="employee_gender_ratio" value={formData.employee_gender_ratio || ''} onChange={handleInputChange} placeholder="例: 男性6割、女性4割" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">年齢構成比</label>
+                          <input type="text" name="employee_age_composition" value={formData.employee_age_composition || ''} onChange={handleInputChange} placeholder="例: 20代30%、30代40%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">画像URL</label>
+                          <input type="text" name="image_url" value={formData.image_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">企業の詳細リンクURL</label>
+                          <input type="url" name="link_url" value={formData.link_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div className="flex items-center md:col-span-2">
+                          <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active ?? true} onChange={handleInputChange} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                          <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">公開する</label>
+                        </div>
+                      </div>
+                    </section>
+                    <section>
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">おすすめポイント (カンマ区切り)</h4>
+                      <div>
+                        <textarea name="recommended_points" value={(formData.recommended_points || []).join(', ')} onChange={handleInputChange} rows={2} placeholder="例: フレックスタイム制, 充実した研修制度, 若手にも裁量" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                      </div>
+                    </section>
+                  </>
+                )}
 
-              {/* おすすめポイント３つ */}
-              <section>
-                <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">おすすめポイント (カンマ区切り)</h4>
-                <div>
-                  <textarea name="recommended_points" value={(formData.recommended_points || []).join(', ')} onChange={handleInputChange} rows={2} placeholder="例: フレックスタイム制, 充実した研修制度, 若手にも裁量" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                </div>
-              </section>
+                {/* その他の情報タブのコンテンツ */}
+                {activeModalTab === 'otherInfo' && (
+                  <>
+                    {/* 仕事のリアル */}
+                    <section>
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">仕事のリアル</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">給与・昇給・賞与（モデル年収例など）</label>
+                          <input type="text" name="salary_info" value={formData.salary_info || ''} onChange={handleInputChange} placeholder="例: 25歳年収400万円" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">有給取得率</label>
+                          <input type="text" name="paid_leave_rate" value={formData.paid_leave_rate || ''} onChange={handleInputChange} placeholder="例: 80%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">長期休暇</label>
+                          <input type="text" name="long_holidays" value={formData.long_holidays || ''} onChange={handleInputChange} placeholder="例: 夏季休暇5日、年末年始休暇7日" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">研修・成長支援</label>
+                          <input type="text" name="training_support" value={formData.training_support || ''} onChange={handleInputChange} placeholder="例: 入社時研修、資格取得支援" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">繁忙期の忙しさ</label>
+                          <textarea name="busy_season_intensity" value={formData.busy_season_intensity || ''} onChange={handleInputChange} rows={2} placeholder="例: 四半期末は残業が多いが、それ以外は定時退社が基本" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                      </div>
+                    </section>
 
-              {/* 仕事のリアル */}
-              <section>
-                <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">仕事のリアル</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">給与・昇給・賞与（モデル年収例など）</label>
-                    <input type="text" name="salary_info" value={formData.salary_info || ''} onChange={handleInputChange} placeholder="例: 25歳年収400万円" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">有給取得率</label>
-                    <input type="text" name="paid_leave_rate" value={formData.paid_leave_rate || ''} onChange={handleInputChange} placeholder="例: 80%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">長期休暇</label>
-                    <input type="text" name="long_holidays" value={formData.long_holidays || ''} onChange={handleInputChange} placeholder="例: 夏季休暇5日、年末年始休暇7日" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">研修・成長支援</label>
-                    <input type="text" name="training_support" value={formData.training_support || ''} onChange={handleInputChange} placeholder="例: 入社時研修、資格取得支援" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">繁忙期の忙しさ</label>
-                    <textarea name="busy_season_intensity" value={formData.busy_season_intensity || ''} onChange={handleInputChange} rows={2} placeholder="例: 四半期末は残業が多いが、それ以外は定時退社が基本" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                  </div>
-                </div>
-              </section>
+                    {/* 会社の雰囲気・文化 */}
+                    <section>
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">会社の雰囲気・文化</h4>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">YouTubeショートURL</label>
+                        <input type="url" name="youtube_short_url" value={formData.youtube_short_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                      </div>
+                    </section>
 
-              {/* 会社の雰囲気・文化 */}
-              <section>
-                <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">会社の雰囲気・文化</h4>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">YouTubeショートURL</label>
-                  <input type="url" name="youtube_short_url" value={formData.youtube_short_url || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                </div>
-              </section>
-
-              {/* 応募・選考 */}
-              <section>
-                <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">応募・選考</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">募集職種と人数</label>
-                    <textarea name="recruitment_roles" value={formData.recruitment_roles || ''} onChange={handleInputChange} rows={2} placeholder="例: 営業職 3名、開発職 2名" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">応募資格</label>
-                    <textarea name="application_qualifications" value={formData.application_qualifications || ''} onChange={handleInputChange} rows={2} placeholder="例: 2026年3月卒業見込みの大学生・大学院生" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">選考フロー</label>
-                    <textarea name="selection_flow" value={formData.selection_flow || ''} onChange={handleInputChange} rows={3} placeholder="例: 会社説明会 → 書類選考 → 一次面接 → 最終面接 → 内定" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
-                  </div>
-                </div>
-              </section>
+                    {/* 応募・選考 */}
+                    <section>
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">応募・選考</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">募集職種と人数</label>
+                          <textarea name="recruitment_roles" value={formData.recruitment_roles || ''} onChange={handleInputChange} rows={2} placeholder="例: 営業職 3名、開発職 2名" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">応募資格</label>
+                          <textarea name="application_qualifications" value={formData.application_qualifications || ''} onChange={handleInputChange} rows={2} placeholder="例: 2026年3月卒業見込みの大学生・大学院生" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">選考フロー</label>
+                          <textarea name="selection_flow" value={formData.selection_flow || ''} onChange={handleInputChange} rows={3} placeholder="例: 会社説明会 → 書類選考 → 一次面接 → 最終面接 → 内定" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea>
+                        </div>
+                      </div>
+                    </section>
+                  </>
+                )}
+              </div>
             </form>
             
-            {/* フッター（ボタン群） */}
-            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 shrink-0 bg-white z-10"> {/* sticky bottom-0 を削除 */}
+            {/* フッター（ボタン群）をモーダル内に固定 */}
+            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 shrink-0 bg-white z-10">
                 <button
                   type="button"
                   onClick={closeModal}
