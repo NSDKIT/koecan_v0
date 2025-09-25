@@ -168,7 +168,7 @@ export function MatchingFeature() {
                     </div>
                     </header>
                     <section className="match-points">
-                    <h4>あなたへの推薦理由 [by GPT-4]</h4>
+                    <h4>あなたへの推薦理由</h4>
                     <p dangerouslySetInnerHTML={{ __html: rec.personalizedReason }} />
                     </section>
                     <div className="action-links">
