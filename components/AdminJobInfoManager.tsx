@@ -317,15 +317,15 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"> {/* max-h-[90vh] overflow-y-auto を直接適用 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10"> {/* sticky top-0 bg-white z-10 を追加してヘッダーを固定 */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"> {/* モーダル全体がスクロール */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10"> {/* ヘッダーを固定 */}
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
-            {/* フォーム内容全体をスクロール可能にする div を削除し、親要素に overflow を任せる */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6"> {/* flex-grow overflow-y-auto を削除 */}
+            {/* フォーム内容 */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                   <strong className="font-bold">エラー:</strong>
@@ -333,6 +333,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                 </div>
               )}
 
+              {/* ... （フォームの各セクションは省略） ... */}
               {/* 基本情報 */}
               <section>
                 <h4 className="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">基本情報</h4>
@@ -447,11 +448,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                 </div>
               </section>
 
-              {/* 送信ボタン */}
-              {/* この div はフォームの外に移動させるか、sticky bottom で固定する必要があります */}
-              {/* しかし、ここではフォーム内にあるため、フォームがスクロールすると一緒に動きます */}
-            </form>
-            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 sticky bottom-0 bg-white z-10"> {/* p-6 border-t border-gray-200 sticky bottom-0 bg-white z-10 を追加してフッターを固定 */}
+              {/* 送信ボタン（フォームの直後に配置） */}
+              <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200 mt-6 bg-white z-10">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -469,6 +467,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   {editingAd ? '更新' : '掲載'}
                 </button>
               </div>
+            </form>
           </div>
         </div>
       )}
