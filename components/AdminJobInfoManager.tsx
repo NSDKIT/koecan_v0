@@ -425,7 +425,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                 <button
                   type="submit"
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
+                  // disabled={isSubmitting} // 一時的にisSubmittingによる無効化をコメントアウトしてテスト
+                  disabled={false} // あるいは強制的にfalseにして、他の要因がないか確認
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                   {editingAd ? '更新' : '掲載'}
