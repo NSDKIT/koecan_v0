@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { OneSignalProvider } from '@/components/OneSignalProvider'
+import { SupabaseProvider } from '@/contexts/SupabaseProvider' // ★★★ これをインポート ★★★
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,9 +25,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#f69435" />
       </head>
       <body className={inter.className}>
-        <OneSignalProvider>
-          {children}
-        </OneSignalProvider>
+        {/* ★★★ SupabaseProviderでラップする ★★★ */}
+        <SupabaseProvider>
+          <OneSignalProvider>
+            {children}
+          </OneSignalProvider>
+        </SupabaseProvider>
       </body>
     </html>
   )
