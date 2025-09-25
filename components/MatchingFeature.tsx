@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, AlertCircle, CheckCircle, Sparkles, FileText } from 'lucide-react';
+import { Advertisement } from '@/types'; // Advertisement 型をインポート
 
 // 型定義
 interface Company {
@@ -29,25 +30,23 @@ export function MatchingFeature() {
   const [profileExists, setProfileExists] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // ユーザーが変更されたら、プロフィールの存在をチェック
     const checkProfile = async () => {
       if (!user) {
         setProfileExists(false);
         return;
       }
-      // 確実性のために、データを実際にselectして存在を確認
       const { data, error } = await supabase
         .from('monitor_profile_survey')
         .select('user_id')
         .eq('user_id', user.id)
-        .limit(1) // 1件だけ取得すれば十分
-        .single(); // .single() はデータが1件もなければエラーを返す
+        .limit(1)
+        .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116は「行が見つからない」エラーなので無視
+      if (error && error.code !== 'PGRST116') {
         console.error("Error checking profile existence:", error);
-        setProfileExists(false); // エラー時は存在しないとみなす
+        setProfileExists(false);
       } else {
-        setProfileExists(!!data); // dataがあればtrue, なければfalse
+        setProfileExists(!!data);
       }
     };
     checkProfile();
@@ -60,7 +59,6 @@ export function MatchingFeature() {
     setAnalysisSteps([]);
 
     try {
-      // Step 0: データの取得
       if (!user) throw new Error("ユーザー情報が見つかりません。");
 
       setAnalysisSteps(prev => [...prev, 'あなたのプロフィールデータを読み込んでいます...']);
@@ -83,21 +81,25 @@ export function MatchingFeature() {
       if (companiesError) throw companiesError;
       if (!companies || companies.length === 0) throw new Error("分析対象の企業データが見つかりません。");
 
+      setAnalysisSteps(prev => [...prev, '現在募集中の求人情報を取得しています...']);
+      const { data: allAds, error: adsError } = await supabase
+        .from('advertisements')
+        .select('*')
+        .eq('is_active', true);
+      if (adsError) throw adsError;
+
       // --- マルチLLMパイプライン（シミュレーション） ---
       
-      // Step 1: Geminiによるペルソナ分析
       await new Promise(resolve => setTimeout(resolve, 1500));
       const geminiResult = simulateGeminiAnalysis(studentProfile);
       setAnalysisSteps(prev => [...prev, 'あなたの価値観を解析しました [Gemini]']);
 
-      // Step 2: Claudeによる深層マッチング
       await new Promise(resolve => setTimeout(resolve, 2000));
       const claudeResult = simulateClaudeScoring(geminiResult, companies);
       setAnalysisSteps(prev => [...prev, '企業文化との深層マッチングを実行しました [Claude 3]']);
 
-      // Step 3: GPT-4による推薦文生成
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const finalRecommendations = claudeResult.map(res => simulateGpt4Copywriting(res, studentProfile));
+      const finalRecommendations = claudeResult.map(res => simulateGpt4Copywriting(res, studentProfile, allAds || []));
       setAnalysisSteps(prev => [...prev, 'パーソナライズ推薦文を作成しました [GPT-4]']);
 
       setResults(finalRecommendations);
@@ -181,6 +183,21 @@ export function MatchingFeature() {
                     <h4>あなたへの推薦理由 [by GPT-4]</h4>
                     <p dangerouslySetInnerHTML={{ __html: rec.personalizedReason }} />
                     </section>
+                    
+                    {rec.activeAdvertisements && rec.activeAdvertisements.length > 0 && (
+                      <section className="p-6 border-t">
+                        <h4 className="text-md font-bold text-green-700 mb-2">現在募集中の求人</h4>
+                        <div className="space-y-2">
+                          {rec.activeAdvertisements.map((ad: Advertisement) => (
+                            <div key={ad.id} className="p-3 bg-green-50 rounded-lg">
+                              <p className="font-semibold text-green-800">{ad.title}</p>
+                              <p className="text-sm text-gray-600 line-clamp-2">{ad.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
                     <div className="action-links">
                         <a href="#" className="primary-action">企業の詳細を見る</a>
                     </div>
@@ -193,9 +210,7 @@ export function MatchingFeature() {
   );
 }
 
-
-// ===== 以下、マルチLLMパイプラインシミュレーション関数群 =====
-
+// ... (simulateGeminiAnalysis と simulateClaudeScoring は変更なし)
 function simulateGeminiAnalysis(profile: StudentProfileSurvey) {
     const coreValues = new Set(profile.important_points || []);
     const allText = (profile.lively_work_state || '') + (profile.job_satisfaction_moments || '');
@@ -214,14 +229,9 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
     const scoredCompanies = db.map(company => {
         let scores = { growth: 5, culture: 5, wlb: 5 };
         let analysis: string[] = [];
-
         const locationMatch = geminiOutput.hardConditions.locations?.length === 0 || geminiOutput.hardConditions.locations?.some((loc: string) => company.location_info?.includes(loc));
         const industryMatch = geminiOutput.hardConditions.industries?.length === 0 || geminiOutput.hardConditions.industries?.some((ind: string) => company.industry?.includes(ind));
-
-        if (!locationMatch || !industryMatch) {
-            return null;
-        }
-
+        if (!locationMatch || !industryMatch) return null;
         geminiOutput.coreValues.forEach((value: string) => {
             if (company.recommended_points?.includes(value)) {
                 scores.culture += 2;
@@ -229,28 +239,22 @@ function simulateClaudeScoring(geminiOutput: any, db: Company[]) {
             }
             if (value === '成長できる環境') scores.growth += 3;
         });
-
         geminiOutput.welfarePriorities.forEach((welfare: string) => {
             if (company.training_support?.includes(welfare) || company.long_holidays?.includes(welfare)) {
                 scores.wlb += 2;
                 analysis.push(`重視する福利厚生「${welfare}」が充実。`);
             }
         });
-        
         Object.keys(scores).forEach(key => (scores as any)[key] = Math.max(0, Math.min(10, (scores as any)[key])));
-
         return { company, scores, analysis, totalScore: scores.growth + scores.culture + scores.wlb };
     });
-
-    // 確実にnullを除外してからソートする
     return scoredCompanies.filter(Boolean).sort((a, b) => (b as any)!.totalScore - (a as any)!.totalScore);
 }
 
-function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurvey) {
+function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurvey, allAds: Advertisement[]) {
     if (!claudeResult) return null;
     const { company } = claudeResult;
     let reason = `**${company.company_name}**がおすすめです。<br>`;
-
     if (profile.job_satisfaction_moments && profile.job_satisfaction_moments.length > 0) {
         reason += `あなたが働きがいに感じる「${profile.job_satisfaction_moments[0]}」という想い。`;
         if (company.culture_description?.includes('挑戦')) {
@@ -259,5 +263,6 @@ function simulateGpt4Copywriting(claudeResult: any, profile: StudentProfileSurve
             reason += 'この会社のチームワークを重んじる文化なら、そのやりがいを日々感じられるでしょう。<br>';
         }
     }
-    return { ...claudeResult, personalizedReason: reason };
+    const activeAds = allAds.filter(ad => ad.company_id === company.id && ad.is_active);
+    return { ...claudeResult, personalizedReason: reason, activeAdvertisements: activeAds };
 }
