@@ -12,31 +12,31 @@ interface AuthUser extends SupabaseUser {
 
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true); // ★★★ 修正点1: 初回読み込み状態を追加
+  const [loading, setLoading] = useState(true); // ★★★ 修正点1: 名前を'loading'に戻し、初期値はtrueのまま ★★★
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    // ユーザーデータを取得するヘルパー関数
+    // ユーザーのカスタムデータを 'users' テーブルから取得する関数
     const fetchUserData = async (userId: string): Promise<AuthUser | null> => {
       try {
-        const { data, error } = await supabase
+        const { data: userProfile, error } = await supabase
           .from('users')
-          .select('*')
+          .select('role, name')
           .eq('id', userId)
           .single();
-
         if (error) throw error;
 
-        // Supabaseのユーザー情報とDBのユーザー情報をマージ
+        // Supabase authから最新のユーザー情報を取得
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (!authUser) return null;
-
+        
+        // 認証情報とプロフィール情報をマージして返す
         return {
           ...authUser,
-          role: data.role,
-          name: data.name,
+          role: userProfile.role,
+          name: userProfile.name,
         };
       } catch (err) {
         console.error('Error fetching user data:', err);
@@ -44,42 +44,26 @@ export function useAuth() {
       }
     };
 
-    // ★★★ 修正点2: セッション復元ロジックを改善 ★★★
-    const getInitialSession = async () => {
-      try {
-        // getSessionはローカルストレージからセッションを同期的に復元しようとする
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session?.user && mounted) {
-          const userData = await fetchUserData(session.user.id);
-          setUser(userData);
-        }
-      } catch (err) {
-        console.error('Error in initial session fetch:', err);
-        if(mounted) setError(err instanceof Error ? err.message : 'Authentication error');
-      } finally {
-        if (mounted) {
-          setInitialLoading(false); // どちらの場合でも初回ローディングを終了
-        }
-      }
-    };
-
-    getInitialSession();
-
-    // 認証状態の変更を監視
+    // ★★★ 修正点2: onAuthStateChangeリスナーに処理を一本化 ★★★
+    // getSession()の呼び出しを削除し、このリスナーにすべてを任せる
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (!mounted) return;
 
-        if (session?.user) {
-          const userData = await fetchUserData(session.user.id);
-          setUser(userData);
-        } else {
-          setUser(null);
+        try {
+          if (session?.user) {
+            const userData = await fetchUserData(session.user.id);
+            setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch(err) {
+            console.error('Error during auth state change handling:', err);
+            setError(err instanceof Error ? err.message : '認証中にエラーが発生しました');
+        } finally {
+            // 最初のイベント（INITIAL_SESSIONなど）が処理されたら、ローディングを終了する
+            setLoading(false);
         }
-        // onAuthStateChangeが呼ばれたら、それは初期チェック後なのでローディングはfalse
-        setInitialLoading(false);
       }
     );
 
@@ -102,7 +86,7 @@ export function useAuth() {
 
   return {
     user,
-    loading: initialLoading, // ★★★ 修正点3: loadingとしてinitialLoadingを返す ★★★
+    loading,
     error,
     signOut,
   };
