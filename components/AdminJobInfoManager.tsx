@@ -5,8 +5,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { Advertisement } from '@/types';
-import {
-  Plus, Edit, Trash2, Loader2, Save, X, Eye,
+import { 
+  Plus, Edit, Trash2, Loader2, Save, X, Eye, 
   Building, MapPin, Calendar, Users, DollarSign,
   Briefcase, Award, Youtube, BookOpen, Clock, CheckCircle
 } from 'lucide-react';
@@ -143,7 +143,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     // 修正: 'checked' をデストラクチャリングから外し、typeがcheckboxの場合のみアクセス
-    const { name, value, type } = e.target;
+    const { name, value, type } = e.target; 
     
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked; // checkedプロパティに明示的にアクセス
@@ -323,7 +323,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[95vh]"> {/* max-hを95vhに調整 */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[95vh]"> {/* max-h-[95vh] でモーダル全体の高さを制限 */}
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
@@ -356,7 +356,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
               </button>
             </div>
             
-            {/* フォーム内容 - この部分がスクロールします */}
+            {/* フォーム内容（スクロール領域） */}
             <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
