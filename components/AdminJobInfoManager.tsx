@@ -317,18 +317,17 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          {/* モーダルコンテナ: max-h-[90vh] と overflow-y-auto でスクロール */}
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"> {/* relative を追加 */}
-            {/* ヘッダー: sticky で上部に固定 */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[90vh]"> {/* max-h-[90vh] は残し、Flexbox で内部を制御 */}
+            {/* ヘッダー */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            {/* フォーム内容 */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6"> {/* ここはスクロールしません */}
+            {/* フォーム内容 - この部分がスクロールします */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                   <strong className="font-bold">エラー:</strong>
@@ -452,8 +451,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
               </section>
             </form>
             
-            {/* フッター（ボタン群）をモーダル内に固定 */}
-            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 sticky bottom-0 bg-white z-10">
+            {/* フッター（ボタン群） */}
+            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 shrink-0 bg-white z-10"> {/* sticky bottom-0 を削除 */}
                 <button
                   type="button"
                   onClick={closeModal}
