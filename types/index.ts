@@ -122,6 +122,7 @@ export interface Advertisement {
   recruitment_roles?: string; // 募集職種と人数
   application_qualifications?: string; // 応募資格
   selection_flow?: string; // 選考フロー
+  internship_info?: string;
 }
 
 export interface ChatRoom {
