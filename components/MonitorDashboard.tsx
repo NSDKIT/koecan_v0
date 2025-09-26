@@ -493,9 +493,6 @@ export default function MonitorDashboard() {
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
                   声キャン！
                 </h1>
-                <span className="ml-3 px-3 py-1 bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 rounded-full text-sm font-medium">
-                  モニター
-                </span>
               </div>
               
               <div className="flex items-center space-x-4">
