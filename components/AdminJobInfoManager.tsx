@@ -142,20 +142,44 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    // 修正: 'checked' をデストラクチャリングから外し、typeがcheckboxの場合のみアクセス
     const { name, value, type } = e.target; 
     
+    // 文字列の入力値に対して、空白を除去した上で、空かどうかを判定する準備
+    // trim() は必須/任意問わず、意図しない前後空白を取り除くのに役立ちます。
+    const trimmedValue = value.trim();
+    
     if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked; // checkedプロパティに明示的にアクセス
+      const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (name === 'recommended_points') {
-      // カンマ区切りで入力された文字列を配列に変換
+      // カンマ区切り文字列を配列に変換し、空要素を除去
       setFormData(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()).filter(s => s !== '') }));
     } else if (type === 'number') {
+      // 数値型：空文字列の場合は null を設定
       const numericValue = value === '' ? null : parseInt(value);
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      // ↓↓↓↓↓↓ 全ての残りの文字列フィールド（input type="text", textarea, input type="url"など）の処理 ↓↓↓↓↓↓
+      // trim後の値が空であれば null を設定。そうでない場合は元の value を設定。
+      // ただし、もし name が必須フィールド（title, description, company_name）であった場合、
+      // trimmedValue === '' で null を設定するとクライアントバリデーションに失敗する可能性があるため、
+      // 必須フィールドは空文字列をそのまま残し、任意フィールドのみ null に変換するロジックがより安全です。
+      
+      // 必須フィールド名
+      const requiredFields = ['company_name', 'title', 'description'];
+      
+      let finalValue: string | null = value;
+      
+      // 必須フィールドでなく、かつ、トリミングされた値が空の場合
+      if (!requiredFields.includes(name) && trimmedValue === '') {
+          finalValue = null;
+      }
+      
+      setFormData(prev => ({ 
+          ...prev, 
+          [name]: finalValue 
+      }));
+      // ↑↑↑↑↑↑ 必須フィールドの考慮をしないなら、簡略版: setFormData(prev => ({ ...prev, [name]: trimmedValue === '' ? null : value }));
     }
   };
 
