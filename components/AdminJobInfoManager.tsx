@@ -322,8 +322,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full flex flex-col max-h-[95vh]"> {/* max-h-[95vh] でモーダル全体の高さを制限 */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch justify-center z-50">
+          <div className="bg-white w-full h-full flex flex-col">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
