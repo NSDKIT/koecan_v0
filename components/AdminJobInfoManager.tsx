@@ -1,3 +1,5 @@
+// koecan_v0-main/components/AdminJobInfoManager.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -29,31 +31,31 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   const [activeModalTab, setActiveModalTab] = useState<ModalTab>('basicInfo'); // 新しいタブの状態
 
   // フォームデータ用ステート (新規作成・編集共通)
-  // undefined ではなく null で初期化（handleInputChangeのロジックと統一）
+  // 全ての任意フィールドを null で初期化するように修正
   const [formData, setFormData] = useState<Partial<Advertisement>>({
     title: '',
     description: '',
-    image_url: null, // string -> null
-    link_url: null, // string -> null
+    image_url: null, 
+    link_url: null, 
     is_active: true,
     display_order: 1,
     priority: 100,
     company_name: '',
-    location_info: null, // string -> null
-    establishment_year: null, // number -> null
-    employee_count: null, // number -> null
-    employee_gender_ratio: null, // string -> null
-    employee_age_composition: null, // string -> null
-    recommended_points: [], // text[]型
-    salary_info: null, // string -> null
-    paid_leave_rate: null, // string -> null
-    long_holidays: null, // string -> null
-    training_support: null, // string -> null
-    busy_season_intensity: null, // string -> null
-    youtube_short_url: null, // string -> null
-    recruitment_roles: null, // string -> null
-    application_qualifications: null, // string -> null
-    selection_flow: null, // string -> null
+    location_info: null, 
+    establishment_year: null, 
+    employee_count: null, 
+    employee_gender_ratio: null, 
+    employee_age_composition: null, 
+    recommended_points: [], 
+    salary_info: null, 
+    paid_leave_rate: null, 
+    long_holidays: null, 
+    training_support: null, 
+    busy_season_intensity: null, 
+    youtube_short_url: null, 
+    recruitment_roles: null, 
+    application_qualifications: null, 
+    selection_flow: null, 
   });
 
   useEffect(() => {
@@ -125,14 +127,14 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     setEditingAd(ad);
     setFormData({
       ...ad,
-      // number型、string型フィールドの nullish coalescing を ?? null に統一
+      // nullish coalescing を使用して、null または undefined の場合に null に統一
       establishment_year: ad.establishment_year ?? null, 
       employee_count: ad.employee_count ?? null,
       image_url: ad.image_url ?? null,
       link_url: ad.link_url ?? null,
-      company_name: ad.company_name ?? '', // 必須フィールドは '' を維持
-      title: ad.title ?? '', // 必須フィールドは '' を維持
-      description: ad.description ?? '', // 必須フィールドは '' を維持
+      company_name: ad.company_name ?? '',
+      title: ad.title ?? '',
+      description: ad.description ?? '',
       location_info: ad.location_info ?? null,
       employee_gender_ratio: ad.employee_gender_ratio ?? null,
       employee_age_composition: ad.employee_age_composition ?? null,
@@ -145,7 +147,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       recruitment_roles: ad.recruitment_roles ?? null,
       application_qualifications: ad.application_qualifications ?? null,
       selection_flow: ad.selection_flow ?? null,
-
       // 配列型のフィールドは常に配列であることを保証
       recommended_points: ad.recommended_points ?? [],
     });
@@ -174,7 +175,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       // カンマ区切り文字列を配列に変換し、空要素を除去
       setFormData(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()).filter(s => s !== '') }));
     } else if (type === 'number') {
-      // 数値型：空文字列の場合は null を設定。isNaN も考慮
+      // 数値型：空文字列の場合は null を設定
       const numericValue = value === '' ? null : parseInt(value);
       setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {
@@ -211,8 +212,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
         console.log('handleSubmit: END early due to client-side validation error.');
         return;
     }
-    
-    // FormDataから不要なメタデータを除外
+
+    // FormDataから不要なメタデータを除外（RLSエラー回避策）
     const { id, created_at, updated_at, ...dataToUpdate } = formData;
     
     // 数値型の NaN を null に置き換える安全策（念のため）
@@ -229,13 +230,13 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
         console.log('Updating ID:', editingAd.id);
         console.log('Data to send (dataToUpdate):', dataToUpdate);
         console.log('--- DEBUG END ---');
-
+        
         // 更新
         const { error: updateError, status, statusText } = await supabase
           .from('advertisements')
           .update(dataToUpdate) // 不要なメタデータを含まないオブジェクトを送信
           .eq('id', editingAd.id);
-          
+
         if (updateError) {
              console.error('Supabase Update Error Details:', updateError);
              console.error('Status:', status, 'Status Text:', statusText);
@@ -245,7 +246,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
         console.log('--- DEBUG START (INSERT) ---');
         console.log('Data to send (dataToUpdate):', dataToUpdate);
         console.log('--- DEBUG END ---');
-        
+
         // 新規作成
         const { error: insertError, status, statusText } = await supabase
           .from('advertisements')
@@ -273,7 +274,31 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const handleDelete = async (id: string) => {
-    // ... (削除ロジックは変更なし) ...
+    console.log('handleDelete: Called for AD ID:', id);
+    if (!confirm('この就職情報を削除してもよろしいですか？')) {
+        console.log('handleDelete: Deletion cancelled by user.');
+        return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('handleDelete: Attempting to delete advertisement with ID:', id);
+      const { error } = await supabase
+        .from('advertisements')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      console.log('handleDelete: Advertisement deleted successfully. Refetching list.');
+      await fetchAdvertisements(); // リストを再取得
+    } catch (err) {
+      console.error('handleDelete: ERROR deleting advertisement:', err);
+      setError('削除に失敗しました。');
+    } finally {
+      console.log('handleDelete: FINALLY block. Setting loading to false.');
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -287,7 +312,85 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-blue-100">
-      {/* ... (省略: 一覧表示部分) ... */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">就職情報管理</h2>
+        <button
+          onClick={openCreateModal}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
+          <Plus className="w-5 h-5 mr-2" /> 新規掲載
+        </button>
+      </div>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <strong className="font-bold">エラー！</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      )}
+
+      {advertisements.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-600">現在、掲載されている就職情報はありません。</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  会社名 / タイトル
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  所在地
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  掲載状況
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {advertisements.map((ad) => (
+                <tr key={ad.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{ad.company_name || 'N/A'}</div>
+                    <div className="text-sm text-gray-500">{ad.title}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {ad.location_info || 'N/A'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      ad.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {ad.is_active ? '公開中' : '非公開'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => openEditModal(ad)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      title="編集"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(ad.id)}
+                      className="text-red-600 hover:text-red-900"
+                      title="削除"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
@@ -303,11 +406,30 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
             {/* タブナビゲーション */}
             <div className="flex border-b border-gray-200 bg-gray-50 shrink-0">
-              {/* ... (タブボタンは省略) ... */}
+              <button
+                onClick={() => setActiveModalTab('basicInfo')}
+                className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
+                  activeModalTab === 'basicInfo'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                    : 'text-gray-600 hover:text-blue-500'
+                }`}
+              >
+                基本情報
+              </button>
+              <button
+                onClick={() => setActiveModalTab('otherInfo')}
+                className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
+                  activeModalTab === 'otherInfo'
+                    ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                    : 'text-gray-600 hover:text-blue-500'
+                }`}
+              >
+                その他の情報
+              </button>
             </div>
             
             {/* フォーム内容（スクロール領域） */}
-            <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
                   <strong className="font-bold">エラー:</strong>
@@ -315,7 +437,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                 </div>
               )}
 
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6"> {/* 各セクションのパディングはここに集約 */}
                 {/* 基本情報タブのコンテンツ */}
                 {activeModalTab === 'basicInfo' && (
                   <>
@@ -340,7 +462,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">設立年</label>
-                          {/* value={formData.establishment_year ?? ''} は formData.establishment_year が nullでも '' を表示 */}
                           <input type="number" name="establishment_year" value={formData.establishment_year ?? ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
                         </div>
                         <div>
