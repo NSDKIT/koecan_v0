@@ -152,7 +152,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       // カンマ区切りで入力された文字列を配列に変換
       setFormData(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()).filter(s => s !== '') }));
     } else if (type === 'number') {
-        setFormData(prev => ({ ...prev, [name]: value === '' ? undefined : parseInt(value) }));
+      const numericValue = value === '' ? null : parseInt(value);
+      setFormData(prev => ({ ...prev, [name]: numericValue }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
