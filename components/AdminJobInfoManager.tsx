@@ -209,7 +209,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     if (!formData.company_name || !formData.title || !formData.description) {
         setError('会社名、タイトル、説明は必須です。');
         setIsSubmitting(false);
-        // ★★★ デバッグログを追加 ★★★
+        // ★★★ デバッグログが適用されている部分 ★★★
         console.error('ERROR: Client-side validation failed. Missing required field.', { 
             company_name: formData.company_name, 
             title: formData.title, 
