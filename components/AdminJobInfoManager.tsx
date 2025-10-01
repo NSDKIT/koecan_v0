@@ -205,16 +205,16 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     setIsSubmitting(true);
     setError(null);
 
-    console.log('--- VALIDATION DEBUG ---');
-    console.log('company_name:', `'${formData.company_name}'`, !!formData.company_name);
-    console.log('title:', `'${formData.title}'`, !!formData.title);
-    console.log('description:', `'${formData.description}'`, !!formData.description);
-    console.log('------------------------');
-
     // 必須フィールドの簡易バリデーション (クライアントサイド)
     if (!formData.company_name || !formData.title || !formData.description) {
         setError('会社名、タイトル、説明は必須です。');
         setIsSubmitting(false);
+        // ★★★ デバッグログを追加 ★★★
+        console.error('ERROR: Client-side validation failed. Missing required field.', { 
+            company_name: formData.company_name, 
+            title: formData.title, 
+            description: formData.description 
+        });
         console.log('handleSubmit: END early due to client-side validation error.');
         return;
     }
