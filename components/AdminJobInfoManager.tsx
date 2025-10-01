@@ -198,12 +198,13 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     }
 
     try {
+      const { id, created_at, updated_at, ...dataToUpdate } = formData;
       if (editingAd) {
         console.log('handleSubmit: Updating advertisement with ID:', editingAd.id);
         // 更新
         const { error } = await supabase
           .from('advertisements')
-          .update(formData)
+          .update(dataToUpdate)
           .eq('id', editingAd.id);
         if (error) throw error;
       } else {
@@ -211,7 +212,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
         // 新規作成
         const { error } = await supabase
           .from('advertisements')
-          .insert(formData);
+          .insert(dataToUpdate as any);
         if (error) throw error;
       }
       console.log('handleSubmit: Advertisement saved successfully. Refetching list.');
