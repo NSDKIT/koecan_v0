@@ -198,15 +198,25 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     }
 
     try {
-      const { id, created_at, updated_at, ...dataToUpdate } = formData;
       if (editingAd) {
-        console.log('handleSubmit: Updating advertisement with ID:', editingAd.id);
+        console.log('--- DEBUG START ---');
+        console.log('Updating ID:', editingAd.id);
+        console.log('Data to send (formData):', formData); // ★★★ この行を最重要で確認 ★★★
+        console.log('--- DEBUG END ---');
+
+        // 更新時のデータから、更新不要なメタデータを削除/除外する
+        const { id, created_at, updated_at, ...dataToUpdate } = formData;
+        
         // 更新
-        const { error } = await supabase
+        const { error, status, statusText } = await supabase
           .from('advertisements')
           .update(dataToUpdate)
           .eq('id', editingAd.id);
-        if (error) throw error;
+
+        if (error) {
+            console.error('Supabase Error Details:', error);
+            console.error('Status:', status, 'Status Text:', statusText);
+            throw error;
       } else {
         console.log('handleSubmit: Inserting new advertisement.');
         // 新規作成
