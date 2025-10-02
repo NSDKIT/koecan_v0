@@ -28,25 +28,23 @@ export const OneSignalButton: React.FC = () => {
     
     // OneSignalの準備状態を確認
     const checkOneSignalReady = () => {
-      if ((window as any).OneSignal) {
+      if ((window as any).OneSignal && typeof (window as any).OneSignal.push === 'function') {
         addDebugInfo('OneSignal object found');
-        
-        if (typeof (window as any).OneSignal.push === 'function') {
-          addDebugInfo('OneSignal.push is function - Ready!');
-          setOneSignalReady(true);
-          
-          // 購読状態を確認
-          (window as any).OneSignal.push(function() {
+        setOneSignalReady(true); // ★★★ 準備完了フラグを先に立てる
+
+        // ★★★ 初期化完了後に実行されるコールバックを追加 ★★★
+        (window as any).OneSignal.push(function() {
+            // isPushNotificationsEnabled が使える状態になったら実行される
             (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
               setIsSubscribed(isEnabled);
               addDebugInfo(`Subscription status: ${isEnabled}`);
             });
-          });
-        } else {
-          addDebugInfo(`OneSignal.push type: ${typeof (window as any).OneSignal.push}`);
-        }
+        });
+        
+      } else if ((window as any).OneSignal) {
+          addDebugInfo(`OneSignal object found, but push is type: ${typeof (window as any).OneSignal.push}`);
       } else {
-        addDebugInfo('OneSignal object not found');
+          addDebugInfo('OneSignal object not found');
       }
     };
 
