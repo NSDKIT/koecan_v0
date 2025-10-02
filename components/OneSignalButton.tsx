@@ -1,6 +1,10 @@
+// koecan_v0-main/components/OneSignalButton.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
+// lucide-react から Bell, BellOff, Loader2 をインポート（元のファイルにインポートがなかったため追加します）
+import { Bell, BellOff, Loader2 } from 'lucide-react'; 
 
 export const OneSignalButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -69,14 +73,14 @@ export const OneSignalButton: React.FC = () => {
     };
   }, [oneSignalReady]);
 
-// koecan_v0-main/components/OneSignalButton.tsx 内の handleSubscribe 関数をこのコードに置き換えてください
-
+  // ★★★ 修正された handleSubscribe 関数 ★★★
   const handleSubscribe = async () => {
     addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
     setMessage('');
     
     try {
+      // 1. 環境チェック
       if (!('Notification' in window)) {
         addDebugInfo('Notification API not supported');
         setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
@@ -89,49 +93,42 @@ export const OneSignalButton: React.FC = () => {
       if ((window as any).OneSignal && oneSignalReady) {
         addDebugInfo('Using OneSignal for subscription');
         
+        // OneSignalの非同期キューに処理を追加
         (window as any).OneSignal.push(async function() { // push内の関数をasyncに
           addDebugInfo('Inside OneSignal.push');
 
-          // 1. 購読状態を確認
+          // 2. 購読状態をOneSignalに確認
           const isEnabled = await (window as any).OneSignal.isPushNotificationsEnabled();
           addDebugInfo(`OneSignal initial check status: ${isEnabled}`);
           
           if (isEnabled) {
             // 既にOneSignalに購読済みの場合
             addDebugInfo('Already enabled in OneSignal. Updating UI.');
-            setIsSubscribed(true); 
-            setMessage('✅ プッシュ通知が有効です。');
-            (window as any).OneSignal.getUserId(function(userId: string) {
-              addDebugInfo(`OneSignal User ID: ${userId}`);
-            });
-            setIsLoading(false);
-            return;
+          } else {
+            // 未購読の場合、登録を試みる (最も確実な直接登録API)
+            addDebugInfo('Attempting to register for push notifications...');
+            
+            // ブラウザ許可済みならプロンプトなしで登録、未許可ならプロンプトが表示される
+            await (window as any).OneSignal.registerForPushNotifications();
+            addDebugInfo('registerForPushNotifications resolved.');
           }
-
-          // 2. 未購読の場合、登録を試みる (showNativePromptではなく、直接APIを叩く)
-          addDebugInfo('Attempting to register for push notifications...');
           
-          // OneSignalの登録プロセスを開始。ブラウザが許可済みならプロンプトなしで登録されるはず
-          await (window as any).OneSignal.registerForPushNotifications();
+          // 3. 最終的な状態を再確認し、UIを更新
+          const finalStatus = await (window as any).OneSignal.isPushNotificationsEnabled();
+          setIsSubscribed(finalStatus);
           
-          addDebugInfo('registerForPushNotifications resolved.');
-          
-          // 3. 登録後の状態を再確認
-          const newStatus = await (window as any).OneSignal.isPushNotificationsEnabled();
-          setIsSubscribed(newStatus);
-          
-          if (newStatus) {
+          if (finalStatus) {
             setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
             (window as any).OneSignal.getUserId(function(userId: string) {
               addDebugInfo(`OneSignal User ID: ${userId}`);
             });
           } else {
-            // ここに来る場合、ブラウザ許可済みでもOneSignalへの登録に失敗
-            setMessage('⚠️ 購読に失敗しました。OneSignal側でエラーが発生した可能性があります。');
+            // 失敗した場合は、ブラウザの通知許可が拒否された可能性が高い
+            setMessage('⚠️ 購読に失敗しました。ブラウザ設定またはOneSignal設定を確認してください。');
           }
         });
       } else {
-        // ... (OneSignal not available のフォールバック処理は省略)
+        // OneSignal SDKが利用できない場合のフォールバック
         setMessage('❌ OneSignal SDKが利用できません。');
       }
     } catch (error) {
@@ -142,6 +139,7 @@ export const OneSignalButton: React.FC = () => {
       setIsLoading(false);
     }
   };
+// ★★★ 修正された handleSubscribe 関数ここまで ★★★
 
   const handleUnsubscribe = () => {
     addDebugInfo('Unsubscribe button clicked');
@@ -253,4 +251,3 @@ export const OneSignalButton: React.FC = () => {
     </div>
   );
 };
-
