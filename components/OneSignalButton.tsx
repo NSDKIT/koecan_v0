@@ -49,65 +49,60 @@ export const OneSignalButton: React.FC = () => {
     addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
     setMessage('');
-    
+
     try {
-      // 1. 環境チェック
       if (!('Notification' in window)) {
         addDebugInfo('Notification API not supported');
         setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
         setIsLoading(false);
         return;
       }
-
-      addDebugInfo(`Current permission: ${Notification.permission}`);
+      
+      // OneSignalDeferred の存在を保証
+      (window as any).OneSignalDeferred = (window as any).OneSignalDeferred || [];
 
       if ((window as any).OneSignal && oneSignalReady) {
-        addDebugInfo('Using OneSignal for subscription');
+        addDebugInfo('Using OneSignal for subscription (ready)');
         
-        // OneSignalの非同期キューに処理を追加
-        (window as any).OneSignal.push(async function() { // push内の関数をasyncに
-          addDebugInfo('Inside OneSignal.push');
+        // OneSignalDeferred.push で確実に初期化後の OneSignal オブジェクトを使う
+        (window as any).OneSignalDeferred.push(async function(OneSignal: any) { 
+          addDebugInfo('Inside OneSignalDeferred.push (after init)');
 
-          // 2. 購読状態をOneSignalに確認
-          const isEnabled = await (window as any).OneSignal.isPushNotificationsEnabled();
-          addDebugInfo(`OneSignal initial check status: ${isEnabled}`);
+          // v16 SDK の新しい Notifications API を使用
+          const permission = await OneSignal.Notifications.getPermission();
+          const isEnabled = permission === 'granted';
+
+          addDebugInfo(`OneSignal permission status: ${permission}`);
           
           if (isEnabled) {
-            // 既にOneSignalに購読済みの場合
-            addDebugInfo('Already enabled in OneSignal. Updating UI.');
+            setMessage('✅ プッシュ通知は既に有効です。');
           } else {
-            // 未購読の場合、登録を試みる (最も確実な直接登録API)
-            addDebugInfo('Attempting to register for push notifications...');
+            addDebugInfo('Requesting permission...');
+            // requestPermission() はプロンプトを表示し、ユーザーの許可を待つ
+            const result = await OneSignal.Notifications.requestPermission();
             
-            // ブラウザ許可済みならプロンプトなしで登録、未許可ならプロンプトが表示される
-            await (window as any).OneSignal.registerForPushNotifications();
-            addDebugInfo('registerForPushNotifications resolved.');
+            if (result) {
+               // 許可された場合
+               setMessage('✅ プッシュ通知が有効になりました！');
+            } else {
+               // 拒否された場合
+               setMessage('⚠️ 購読に失敗しました。ブラウザ設定を確認してください。');
+            }
           }
           
-          // 3. 最終的な状態を再確認し、UIを更新
-          const finalStatus = await (window as any).OneSignal.isPushNotificationsEnabled();
-          setIsSubscribed(finalStatus);
-          
-          if (finalStatus) {
-            setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
-            (window as any).OneSignal.getUserId(function(userId: string) {
-              addDebugInfo(`OneSignal User ID: ${userId}`);
-            });
-          } else {
-            // 失敗した場合は、ブラウザの通知許可が拒否された可能性が高い
-            setMessage('⚠️ 購読に失敗しました。ブラウザ設定またはOneSignal設定を確認してください。');
-          }
+          // 最終的な状態を再確認し、UIを更新
+          const finalPermission = await OneSignal.Notifications.getPermission();
+          setIsSubscribed(finalPermission === 'granted');
         });
       } else {
-        // OneSignal SDKが利用できない場合のフォールバック
-        setMessage('❌ OneSignal SDKが利用できません。');
+        setMessage('❌ OneSignal SDKがまだ利用できません。時間をおいて再試行してください。');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       addDebugInfo(`Subscribe error: ${errorMessage}`);
-      setMessage('❌ プッシュ通知の設定に失敗しました。');
+      setMessage(`❌ プッシュ通知の設定に失敗しました: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // エラーが発生してもローディングは停止
     }
   };
 // ★★★ 修正された handleSubscribe 関数ここまで ★★★
