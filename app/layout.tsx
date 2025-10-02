@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { SupabaseProvider } from '@/contexts/SupabaseProvider' 
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -9,6 +10,11 @@ export const metadata: Metadata = {
   title: '声キャン！ - セルフサービス型アンケートツール',
   description: 'ポイ活しながら、キャリア相談ができる！あなたの声が未来を作る、新しいプラットフォーム',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-192x192.png',
+    apple: '/icon-192x192.png',
+  },
+  themeColor: '#f69435',
 }
 
 export default function RootLayout({
@@ -18,37 +24,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="theme-color" content="#f69435" />
-        
-        {/* ★★★ OneSignal SDK ロードと初期化のコード (async/awaitを適用) ★★★ */}
-        <script
-          async
-          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.OneSignalDeferred = window.OneSignalDeferred || [];
-              OneSignalDeferred.push(async function() { // async function を適用
-                await OneSignal.init({ // await を適用して初期化完了を待機
-                    appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
-                    allowLocalhostAsSecureOrigin: true,
-                    // Service Worker のカスタムパス設定を削除
-                });
-              });
-            `,
-          }}
-        />
-        {/* ★★★ OneSignal SDK ロードと初期化のコードここまで ★★★ */}
-
-      </head>
       <body className={inter.className}>
-        {/* ★★★ SupabaseProviderでラップする ★★★ */}
+        {/* OneSignal SDK */}
+        <Script
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          strategy="beforeInteractive"
+        />
+        <Script id="onesignal-init" strategy="beforeInteractive">
+          {`
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function() {
+              await OneSignal.init({
+                appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
+                allowLocalhostAsSecureOrigin: true,
+              });
+            });
+          `}
+        </Script>
+        
         <SupabaseProvider>
-            {children}
+          {children}
         </SupabaseProvider>
       </body>
     </html>
