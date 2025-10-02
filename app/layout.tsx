@@ -32,14 +32,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.OneSignalDeferred = window.OneSignalDeferred || [];
-              OneSignalDeferred.push(async function() { // ★★★ async function を適用 ★★★
-                await OneSignal.init({ // ★★★ await を適用して初期化完了を待機 ★★★
+              OneSignalDeferred.push(async function() { // async function を適用
+                await OneSignal.init({ // await を適用して初期化完了を待機
                     appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
                     allowLocalhostAsSecureOrigin: true,
-                    // Service Worker の名前を変更した場合は、以下を設定
-                    path: "/",
-                    serviceWorkerPath: "koecan-sw.js", // リネームしたファイル名
-                    serviceWorkerParam: { scope: '/' } 
+                    // Service Worker のカスタムパス設定を削除
                 });
               });
             `,
