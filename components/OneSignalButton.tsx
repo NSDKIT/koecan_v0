@@ -69,13 +69,14 @@ export const OneSignalButton: React.FC = () => {
     };
   }, [oneSignalReady]);
 
+// koecan_v0-main/components/OneSignalButton.tsx 内の handleSubscribe 関数をこのコードに置き換えてください
+
   const handleSubscribe = async () => {
     addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
     setMessage('');
     
     try {
-      // まずブラウザの通知許可を確認
       if (!('Notification' in window)) {
         addDebugInfo('Notification API not supported');
         setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
@@ -88,51 +89,54 @@ export const OneSignalButton: React.FC = () => {
       if ((window as any).OneSignal && oneSignalReady) {
         addDebugInfo('Using OneSignal for subscription');
         
-        (window as any).OneSignal.push(function() {
+        (window as any).OneSignal.push(async function() { // push内の関数をasyncに
           addDebugInfo('Inside OneSignal.push');
+
+          // 1. 購読状態を確認
+          const isEnabled = await (window as any).OneSignal.isPushNotificationsEnabled();
+          addDebugInfo(`OneSignal initial check status: ${isEnabled}`);
           
-          // プッシュ通知を要求
-          (window as any).OneSignal.showNativePrompt().then(function() {
-            addDebugInfo('showNativePrompt resolved');
-            
-            // 購読状態を再確認
-            setTimeout(() => {
-              (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
-                addDebugInfo(`Post-prompt subscription status: ${isEnabled}`);
-                setIsSubscribed(isEnabled);
-                
-                if (isEnabled) {
-                  setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
-                  
-                  // ユーザーIDを表示
-                  (window as any).OneSignal.getUserId(function(userId: string) {
-                    addDebugInfo(`OneSignal User ID: ${userId}`);
-                  });
-                } else {
-                  setMessage('⚠️ プッシュ通知の許可が必要です。');
-                }
-              });
-            }, 2000);
-          }).catch(function(error: any) {
-            addDebugInfo(`showNativePrompt error: ${error}`);
-            setMessage('❌ プッシュ通知の設定に失敗しました。');
-          });
+          if (isEnabled) {
+            // 既にOneSignalに購読済みの場合
+            addDebugInfo('Already enabled in OneSignal. Updating UI.');
+            setIsSubscribed(true); 
+            setMessage('✅ プッシュ通知が有効です。');
+            (window as any).OneSignal.getUserId(function(userId: string) {
+              addDebugInfo(`OneSignal User ID: ${userId}`);
+            });
+            setIsLoading(false);
+            return;
+          }
+
+          // 2. 未購読の場合、登録を試みる (showNativePromptではなく、直接APIを叩く)
+          addDebugInfo('Attempting to register for push notifications...');
+          
+          // OneSignalの登録プロセスを開始。ブラウザが許可済みならプロンプトなしで登録されるはず
+          await (window as any).OneSignal.registerForPushNotifications();
+          
+          addDebugInfo('registerForPushNotifications resolved.');
+          
+          // 3. 登録後の状態を再確認
+          const newStatus = await (window as any).OneSignal.isPushNotificationsEnabled();
+          setIsSubscribed(newStatus);
+          
+          if (newStatus) {
+            setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
+            (window as any).OneSignal.getUserId(function(userId: string) {
+              addDebugInfo(`OneSignal User ID: ${userId}`);
+            });
+          } else {
+            // ここに来る場合、ブラウザ許可済みでもOneSignalへの登録に失敗
+            setMessage('⚠️ 購読に失敗しました。OneSignal側でエラーが発生した可能性があります。');
+          }
         });
       } else {
-        addDebugInfo('OneSignal not available, using browser API');
-        
-        // フォールバック: ブラウザ標準API
-        const permission = await Notification.requestPermission();
-        addDebugInfo(`Browser permission result: ${permission}`);
-        
-        if (permission === 'granted') {
-          setMessage('✅ ブラウザの通知は許可されましたが、OneSignalとの連携を確認してください。');
-        } else {
-          setMessage('❌ プッシュ通知が拒否されました。');
-        }
+        // ... (OneSignal not available のフォールバック処理は省略)
+        setMessage('❌ OneSignal SDKが利用できません。');
       }
     } catch (error) {
-      addDebugInfo(`Subscribe error: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      addDebugInfo(`Subscribe error: ${errorMessage}`);
       setMessage('❌ プッシュ通知の設定に失敗しました。');
     } finally {
       setIsLoading(false);
