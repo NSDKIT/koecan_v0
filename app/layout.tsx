@@ -40,6 +40,7 @@ export default function RootLayout({
                     // Service Worker の名前を変更した場合は、以下を追加
                     path: "/",
                     serviceWorkerPath: "koecan-sw.js", // リネームしたファイル名
+                    serviceWorkerParam: { scope: '/' } // 念のためスコープも設定
                 });
               });
             `,
