@@ -26,45 +26,25 @@ export const OneSignalButton: React.FC = () => {
     addDebugInfo(`Notification API: ${'Notification' in window}`);
     addDebugInfo(`Service Worker: ${'serviceWorker' in navigator}`);
     
-    // OneSignalの準備状態を確認（isPushNotificationsEnabledは呼び出さない！）
-    const checkOneSignalReady = () => {
-      if ((window as any).OneSignal && typeof (window as any).OneSignal.push === 'function') {
-        addDebugInfo('OneSignal object found');
-        setOneSignalReady(true);
-        clearInterval(interval); // ★★★ 準備できたらポーリングを即停止
+    // ★★★ 修正されたポーリングロジック：OneSignal.pushに初期化を完全に委ねる ★★★
+    (window as any).OneSignal.push(function() {
+        // SDKが初期化を完了し、isPushNotificationsEnabledが使えるようになった後、一度だけ実行される
+        setOneSignalReady(true); // ★★★ SDKが使える状態になったことをフラグに設定
 
-        // ★★★ 初期状態を確認する関数をキューに入れる ★★★
-        (window as any).OneSignal.push(function() {
-            // SDKの初期化処理が完了してからこのブロックが実行される
-            (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
-              setIsSubscribed(isEnabled);
-              addDebugInfo(`Subscription status: ${isEnabled}`);
-            });
+        (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
+            setIsSubscribed(isEnabled);
+            addDebugInfo(`Subscription status: ${isEnabled}`);
         });
+    });
+    // ★★★ 修正されたポーリングロジックここまで ★★★
 
-      } else {
-        addDebugInfo('OneSignal object not found or not initialized yet.');
-      }
-    };
-
-    let interval = setInterval(checkOneSignalReady, 1000); // intervalをletで宣言
-
-    // 10秒後にタイムアウト
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      if (!oneSignalReady) {
-        addDebugInfo('OneSignal timeout after 10 seconds');
-        setMessage('⚠️ OneSignalの読み込みに時間がかかっています。');
-      }
-    }, 10000);
-
+    // 依存配列を空にすることでマウント時に一度だけ実行されるようにし、setIntervalは不要
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      // クリーンアップ処理（ここでは特に何もしなくても問題ありません）
     };
-  }, [oneSignalReady]);
+  }, []); // 依存配列を空にして、マウント時に一度だけ実行される
 
-  // ★★★ 修正された handleSubscribe 関数 ★★★
+  // ★★★ 修正された handleSubscribe 関数（これは前回の修正から変更なし） ★★★
   const handleSubscribe = async () => {
     addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
