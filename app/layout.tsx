@@ -35,8 +35,11 @@ export default function RootLayout({
               window.OneSignalDeferred = window.OneSignalDeferred || [];
               OneSignalDeferred.push(function() {
                 OneSignal.init({
-                  appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", // READMEのApp ID
-                  allowLocalhostAsSecureOrigin: true,
+                    appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
+                    allowLocalhostAsSecureOrigin: true,
+                    // Service Worker の名前を変更した場合は、以下を追加
+                    path: "/",
+                    serviceWorkerPath: "koecan-sw.js", // リネームしたファイル名
                 });
               });
             `,
