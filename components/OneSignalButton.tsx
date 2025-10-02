@@ -2,13 +2,13 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react'; 
 
 export const OneSignalButton: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // 初期ローディングをtrueに
   const [message, setMessage] = useState('');
-  // 初期状態を null にして、OneSignalのチェックが終わるまでボタンを表示しない
+  // null は初期状態（チェック中）を示す
   const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null); 
   const [oneSignalReady, setOneSignalReady] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
@@ -18,6 +18,57 @@ export const OneSignalButton: React.FC = () => {
     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
   };
 
+  // OneSignalのNotifications APIが利用可能かチェックするヘルパー関数
+  const isNotificationsReady = useCallback(() => {
+    const OneSignal = (window as any).OneSignal;
+    return (
+        OneSignal && 
+        OneSignal.Notifications && 
+        typeof OneSignal.Notifications.getPermission === 'function'
+    );
+  }, []);
+
+  // OneSignal SDKの状態をチェックし、UIを更新する関数
+  const checkOneSignalStatus = useCallback(async () => {
+    if (!isNotificationsReady()) {
+        return false; // まだ準備できていない
+    }
+
+    const OneSignal = (window as any).OneSignal;
+    addDebugInfo('OneSignal SDK fully ready.');
+    setOneSignalReady(true);
+    
+    try {
+        // 1. 初期状態の確認 (v16 API)
+        const permission = await OneSignal.Notifications.getPermission();
+        const isEnabled = permission === 'granted';
+        setIsSubscribed(isEnabled);
+        
+        addDebugInfo(`Initial permission status: ${permission}`);
+        
+        if (isEnabled) {
+            OneSignal.User.getPushSubscriptionId().then((userId: string) => {
+                addDebugInfo(`OneSignal User ID: ${userId}`);
+            });
+        }
+
+        // 2. 購読状態変更のイベントリスナーを設定 (v16 API)
+        OneSignal.Notifications.addEventListener('permissionChange', (isGranted: boolean) => {
+          setIsSubscribed(isGranted);
+          addDebugInfo(`Permission changed to: ${isGranted ? 'Granted' : 'Denied'}`);
+        });
+
+    } catch (error) {
+         console.error("Error in OneSignal initial check:", error);
+         addDebugInfo(`Error in initial check: ${error}`);
+         setIsSubscribed(false);
+    } finally {
+         setIsLoading(false); // 初期チェック完了
+    }
+    return true; // 処理完了
+  }, [isNotificationsReady, addDebugInfo]);
+
+
   useEffect(() => {
     addDebugInfo('Component mounted');
     
@@ -26,46 +77,32 @@ export const OneSignalButton: React.FC = () => {
     addDebugInfo(`Notification API: ${'Notification' in window}`);
     addDebugInfo(`Service Worker: ${'serviceWorker' in navigator}`);
     
-    // OneSignalDeferred の存在を保証
     (window as any).OneSignalDeferred = (window as any).OneSignalDeferred || [];
 
-    // ★★★ 修正箇所 1: 初期化後の購読状態チェックとイベントリスナーの設定 ★★★
-    (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
-        addDebugInfo('Inside OneSignalDeferred.push (after init)');
-        setOneSignalReady(true);
-
-        try {
-            // 1. 初期状態の確認 (v16 API)
-            const permission = await OneSignal.Notifications.getPermission();
-            const isEnabled = permission === 'granted';
-            setIsSubscribed(isEnabled);
-            
-            addDebugInfo(`Initial permission status: ${permission}`);
-            
-            if (isEnabled) {
-                 OneSignal.User.getPushSubscriptionId().then((userId: string) => {
-                    addDebugInfo(`OneSignal User ID: ${userId}`);
-                 });
-            }
-
-            // 2. 購読状態変更のイベントリスナーを設定 (v16 API)
-            OneSignal.Notifications.addEventListener('permissionChange', (isGranted: boolean) => {
-              setIsSubscribed(isGranted);
-              addDebugInfo(`Permission changed to: ${isGranted ? 'Granted' : 'Denied'}`);
-            });
-
-        } catch (error) {
-             console.error("Error in OneSignal initial check:", error);
-             addDebugInfo(`Error in initial check: ${error}`);
-             setIsSubscribed(false); // エラー時は未購読として扱う
-        }
-        setIsLoading(false); // 初期チェック完了
+    // OneSignalDeferred.push に登録 (標準的な方法)
+    (window as any).OneSignalDeferred.push(function() {
+        checkOneSignalStatus();
     });
-    // ★★★ 修正箇所 1 ここまで ★★★
 
-  }, []);
+    // ポーリングロジック: OneSignalDeferred.push が遅延する場合に備える
+    let checkInterval: NodeJS.Timeout | null = null;
+    
+    if (!oneSignalReady) {
+        checkInterval = setInterval(() => {
+            if (checkOneSignalStatus()) {
+                if (checkInterval) clearInterval(checkInterval);
+            }
+        }, 100); // 100ms ごとにチェック
+    }
+    
 
-  // ★★★ 修正箇所 2: 購読処理 (handleSubscribe) の修正 ★★★
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+    };
+
+  }, [checkOneSignalStatus, oneSignalReady]);
+
+
   const handleSubscribe = async () => {
     addDebugInfo('Subscribe button clicked');
     setIsLoading(true);
@@ -85,7 +122,6 @@ export const OneSignalButton: React.FC = () => {
           return;
       }
 
-      // OneSignalDeferred.push で確実に初期化後の OneSignal オブジェクトを使う
       (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
         addDebugInfo('Inside OneSignalDeferred.push for subscription');
 
@@ -100,7 +136,7 @@ export const OneSignalButton: React.FC = () => {
            });
         } else {
            // 拒否された場合
-           setMessage('⚠️ 購読に失敗しました。ブラウザ設定またはOneSignal設定を確認してください。');
+           setMessage('⚠️ 購読に失敗しました。ブラウザ設定を確認してください。');
         }
         
         // 最終的な状態を再確認し、UIを更新
@@ -116,17 +152,15 @@ export const OneSignalButton: React.FC = () => {
       setIsLoading(false);
     }
   };
-// ★★★ 修正箇所 2 ここまで ★★★
 
-  // ★★★ 修正箇所 3: 購読解除処理 (handleUnsubscribe) の修正 ★★★
   const handleUnsubscribe = () => {
     addDebugInfo('Unsubscribe button clicked');
     setIsLoading(true);
 
-    if ((window as any).OneSignal && oneSignalReady) {
+    if (oneSignalReady) {
       (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
         try {
-            // v16 SDKでプッシュ通知を無効化（ブラウザ設定を変更するわけではない点に注意）
+            // falseを渡して購読解除をリクエスト
             await OneSignal.Notifications.requestPermission(false); 
             setIsSubscribed(false);
             setMessage('🔕 プッシュ通知を無効にしました。');
@@ -142,11 +176,9 @@ export const OneSignalButton: React.FC = () => {
         setIsLoading(false);
     }
   };
-// ★★★ 修正箇所 3 ここまで ★★★
 
 
   const handleTestBrowserNotification = async () => {
-    // ... (ブラウザ通知テスト関数はそのまま) ...
     addDebugInfo('Testing browser notification');
     try {
       const permission = await Notification.requestPermission();
@@ -181,13 +213,15 @@ export const OneSignalButton: React.FC = () => {
   return (
     <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-lg shadow-lg">
       <h3 className="text-lg font-semibold text-gray-800">プッシュ通知設定</h3>
-      {/* ... (その他のUI要素はそのまま) ... */}
+      <p className="text-sm text-gray-600 text-center">
+        重要なお知らせやアンケートの通知を受け取るために、プッシュ通知を有効にしてください。
+      </p>
       
       {!oneSignalReady && (
         <div className="text-yellow-600 text-sm">OneSignalを読み込み中...</div>
       )}
       
-      {!isSubscribed ? (
+      {isSubscribed === false ? (
         <button
           onClick={handleSubscribe}
           disabled={isLoading || !oneSignalReady}
@@ -213,7 +247,7 @@ export const OneSignalButton: React.FC = () => {
         </div>
       )}
       
-      {/* デバッグセクション (デバッグ情報ログはそのまま) */}
+      {/* デバッグセクション */}
       <div className="w-full max-w-md border-t pt-4">
         <h4 className="text-sm font-semibold mb-2">デバッグ情報</h4>
         
