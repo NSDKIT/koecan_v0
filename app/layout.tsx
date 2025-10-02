@@ -33,9 +33,9 @@ export default function RootLayout({
         {/* OneSignal SDK */}
         <Script
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
-        <Script id="onesignal-init" strategy="beforeInteractive">
+        <Script id="onesignal-init" strategy="afterInteractive">
           {`
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function() {
