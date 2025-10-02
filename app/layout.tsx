@@ -23,7 +23,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="theme-color" content="#f69435" />
         
-        {/* ★★★ OneSignal SDK ロードと初期化のコード (async/awaitを適用) ★★★ */}
+        {/* ★★★ OneSignal SDK ロードと初期化のコード (async/awaitを削除し、標準のキュー利用に修正) ★★★ */}
         <script
           async
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
@@ -32,11 +32,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.OneSignalDeferred = window.OneSignalDeferred || [];
-              OneSignalDeferred.push(async function() { // async function を適用
-                await OneSignal.init({ // await を適用して初期化完了を待機
+              OneSignalDeferred.push(function() { // async function を削除
+                OneSignal.init({ // await を削除
                     appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
                     allowLocalhostAsSecureOrigin: true,
-                    // Service Worker のカスタムパス設定を削除
+                    // Service Worker のカスタムパス設定を削除 (publicフォルダのルート配置を前提)
                 });
               });
             `,
