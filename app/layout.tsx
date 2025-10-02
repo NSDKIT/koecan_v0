@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-// import { OneSignalProvider } from '@/components/OneSignalProvider' // ★★★ 削除：OneSignalProviderは不要になりました ★★★
 import { SupabaseProvider } from '@/contexts/SupabaseProvider' 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -24,7 +23,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="theme-color" content="#f69435" />
         
-        {/* ★★★ OneSignal SDK ロードと初期化のコードを直接挿入 ★★★ */}
+        {/* ★★★ OneSignal SDK ロードと初期化のコード (async/awaitを適用) ★★★ */}
         <script
           async
           src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
@@ -33,14 +32,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               window.OneSignalDeferred = window.OneSignalDeferred || [];
-              OneSignalDeferred.push(function() {
-                OneSignal.init({
+              OneSignalDeferred.push(async function() { // ★★★ async function を適用 ★★★
+                await OneSignal.init({ // ★★★ await を適用して初期化完了を待機 ★★★
                     appId: "66b12ad6-dbe7-498f-9eb6-f9d8031fa8a1", 
                     allowLocalhostAsSecureOrigin: true,
-                    // Service Worker の名前を変更した場合は、以下を追加
+                    // Service Worker の名前を変更した場合は、以下を設定
                     path: "/",
                     serviceWorkerPath: "koecan-sw.js", // リネームしたファイル名
-                    serviceWorkerParam: { scope: '/' } // 念のためスコープも設定
+                    serviceWorkerParam: { scope: '/' } 
                 });
               });
             `,
@@ -52,9 +51,7 @@ export default function RootLayout({
       <body className={inter.className}>
         {/* ★★★ SupabaseProviderでラップする ★★★ */}
         <SupabaseProvider>
-          {/* <OneSignalProvider> // ★★★ 削除：このタグも削除してください ★★★ */}
             {children}
-          {/* </OneSignalProvider> // ★★★ 削除：このタグも削除してください ★★★ */}
         </SupabaseProvider>
       </body>
     </html>
