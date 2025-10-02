@@ -5,7 +5,7 @@ import { Bell, BellOff, Loader2 } from 'lucide-react';
 
 export function NotificationButton() {
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [loading, setLoading] = useState(true); // 初期状態の確認中はローディング
+  const [loading, setLoading] = useState(true);
   const [isOneSignalReady, setIsOneSignalReady] = useState(false);
 
   useEffect(() => {
@@ -13,19 +13,25 @@ export function NotificationButton() {
     const checkOneSignal = () => {
       if ((window as any).OneSignal) {
         setIsOneSignalReady(true);
-        (window as any).OneSignal.push(async function() {
-          // OneSignalの初期化が完了するのを待つ
-          await (window as any).OneSignal.showSlidedownPrompt();
-          
-          // 現在の購読状態を確認
-          const subscribed = await (window as any).OneSignal.isPushNotificationsEnabled();
-          setIsSubscribed(subscribed);
-          setLoading(false);
+        
+        // OneSignal初期化完了を待つ
+        (window as any).OneSignalDeferred = (window as any).OneSignalDeferred || [];
+        (window as any).OneSignalDeferred.push(async function(OneSignal: any) {
+          try {
+            // 現在のパーミッション状態を確認
+            const permission = OneSignal.Notifications.permission;
+            setIsSubscribed(permission);
+            setLoading(false);
 
-          // 購読状態が変化したときのイベントリスナーを設定
-          (window as any).OneSignal.on('subscriptionChange', function(isSubscribed: boolean) {
-            setIsSubscribed(isSubscribed);
-          });
+            // パーミッション変更のイベントリスナーを設定
+            OneSignal.Notifications.addEventListener('permissionChange', function(isGranted: boolean) {
+              setIsSubscribed(isGranted);
+            });
+
+          } catch (error) {
+            console.error("Error checking OneSignal permission:", error);
+            setLoading(false);
+          }
         });
       }
     };
@@ -59,17 +65,15 @@ export function NotificationButton() {
 
     try {
       if (isSubscribed) {
-        // 購読解除（ブラウザの設定から手動で行うよう促すのが一般的）
-        // ここでは何もしないか、解除方法を案内するUIを表示する
-        alert('通知を無効にするには、ブラウザのサイト設定から通知をブロックしてください。');
+        // 購読解除の案内
+        alert('通知を無効にするには、ブラウザのサイト設定から通知をブロックしてください。\n\niOS端末の場合：\n1. ホーム画面のアプリアイコンを長押し\n2. 「設定」をタップ\n3. 「通知」をオフにする');
       } else {
-        // 購読を要求
-        await (window as any).OneSignal.registerForPushNotifications();
+        // パーミッションをリクエスト
+        await (window as any).OneSignal.Notifications.requestPermission();
       }
     } catch (error) {
       console.error("Error toggling notifications:", error);
     } finally {
-      // on('subscriptionChange')イベントが状態を更新するので、ここではローディングを解除するだけ
       setLoading(false);
     }
   };

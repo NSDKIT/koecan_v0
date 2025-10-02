@@ -19,8 +19,17 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="声キャン" />
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="256x256" href="/icon-256x256.png" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png" />
         <meta name="theme-color" content="#f69435" />
         
         {/* ★★★ OneSignal SDK ロードと初期化のコード (async/awaitを適用) ★★★ */}
