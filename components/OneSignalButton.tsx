@@ -26,35 +26,28 @@ export const OneSignalButton: React.FC = () => {
     addDebugInfo(`Notification API: ${'Notification' in window}`);
     addDebugInfo(`Service Worker: ${'serviceWorker' in navigator}`);
     
-    // OneSignalの準備状態を確認
+    // OneSignalの準備状態を確認（isPushNotificationsEnabledは呼び出さない！）
     const checkOneSignalReady = () => {
       if ((window as any).OneSignal && typeof (window as any).OneSignal.push === 'function') {
         addDebugInfo('OneSignal object found');
-        setOneSignalReady(true); // ★★★ 準備完了フラグを先に立てる
+        setOneSignalReady(true);
+        clearInterval(interval); // ★★★ 準備できたらポーリングを即停止
 
-        // ★★★ 初期化完了後に実行されるコールバックを追加 ★★★
+        // ★★★ 初期状態を確認する関数をキューに入れる ★★★
         (window as any).OneSignal.push(function() {
-            // isPushNotificationsEnabled が使える状態になったら実行される
+            // SDKの初期化処理が完了してからこのブロックが実行される
             (window as any).OneSignal.isPushNotificationsEnabled(function(isEnabled: boolean) {
               setIsSubscribed(isEnabled);
               addDebugInfo(`Subscription status: ${isEnabled}`);
             });
         });
-        
-      } else if ((window as any).OneSignal) {
-          addDebugInfo(`OneSignal object found, but push is type: ${typeof (window as any).OneSignal.push}`);
+
       } else {
-          addDebugInfo('OneSignal object not found');
+        addDebugInfo('OneSignal object not found or not initialized yet.');
       }
     };
 
-    // OneSignalが準備できるまで待機
-    const interval = setInterval(() => {
-      checkOneSignalReady();
-      if (oneSignalReady) {
-        clearInterval(interval);
-      }
-    }, 1000);
+    let interval = setInterval(checkOneSignalReady, 1000); // intervalをletで宣言
 
     // 10秒後にタイムアウト
     const timeout = setTimeout(() => {
