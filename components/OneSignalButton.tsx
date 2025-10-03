@@ -88,29 +88,19 @@ export const OneSignalButton: React.FC = () => {
     
     (window as any).OneSignalDeferred = (window as any).OneSignalDeferred || [];
 
-    // Service Worker がアクティブになるのを待ち、成功したら初期化完了とみなす
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(registration => {
-            // Service Worker が ready になったら、OneSignalDeferred.push を待たずに直接チェック
-            // ただし、getPermission が ready でない可能性も考慮し、isNotificationsReady で再チェック
-            if (!initializedFlag.current) {
-                checkOneSignalStatus(); 
-            }
-        }).catch(error => {
-            addDebugInfo(`Service Worker Ready check FAILED: ${error}`);
-            setIsLoading(false);
-            setIsSubscribed(false);
-            setMessage('❌ Service Workerの登録に失敗しました。');
-        });
-    }
+    // OneSignalDeferred.push に登録 (標準的な方法)
+    (window as any).OneSignalDeferred.push(function() {
+        // Init 完了後、チェックをトリガーする
+        checkOneSignalStatus(); 
+    });
 
-    // タイムアウトロジック: Service Worker Ready も含め、初期化が15秒で完了しない場合
+    // 最終タイムアウトループ: 15秒で強制終了させる
     const timeout = setTimeout(() => {
         if (!initializedFlag.current) {
             addDebugInfo('OneSignal init timed out (15s). Exiting loop.');
             setIsLoading(false);
             setIsSubscribed(false);
-            setMessage('❌ 通知機能の初期化に失敗しました。時間をおいて再試行してください。');
+            setMessage('❌ 通知機能の初期化に失敗しました。');
         }
     }, 15000); 
 
