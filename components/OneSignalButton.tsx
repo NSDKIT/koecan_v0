@@ -6,23 +6,21 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react'; 
 
 export const OneSignalButton: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true); // 初期ローディングをtrueに
+  const [isLoading, setIsLoading] = useState(true); 
   const [message, setMessage] = useState('');
-  // null は初期状態（チェック中）を示す
   const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null); 
-  const [oneSignalReady, setOneSignalReady] = useState(false);
+  // oneSignalReady は isNotificationsReady が true になるまで待つために使用
+  const [oneSignalReady, setOneSignalReady] = useState(false); 
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  // setInterval の ID を useRef で保持
-  const intervalRef = useRef<NodeJS.Timeout | null>(null); 
-  // 試行回数カウンターを useRef で保持
-  const attemptRef = useRef(0);
-  const MAX_ATTEMPTS = 50; // 100ms * 50 = 5秒でタイムアウト
+  // Service Worker 登録試行後に OneSignal SDK が初期化を完了したことを示すフラグ
+  const initializedFlag = useRef(false);
 
   const addDebugInfo = (info: string) => {
     console.log(info);
     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
   };
 
+  // Service Worker 登録後の OneSignal Notifications API の可用性をチェック
   const isNotificationsReady = useCallback(() => {
     const OneSignal = (window as any).OneSignal;
     return (
@@ -32,22 +30,22 @@ export const OneSignalButton: React.FC = () => {
     );
   }, []);
 
-  // OneSignal SDKの状態をチェックし、UIを更新する関数
+  // OneSignal SDKの状態をチェックし、UIを更新する関数 (Service Worker Ready 後に実行されるべき)
   const checkOneSignalStatus = useCallback(async () => {
+    if (initializedFlag.current) return true; // 二重実行防止
+
     if (!isNotificationsReady()) {
-        return false; // まだ準備できていない
+        addDebugInfo('Error: Notifications API is not ready after SW registration.');
+        setIsLoading(false);
+        setIsSubscribed(false);
+        return false;
     }
 
     const OneSignal = (window as any).OneSignal;
-    addDebugInfo('OneSignal SDK fully ready.');
+    addDebugInfo('OneSignal SDK fully ready. Starting final check.');
     setOneSignalReady(true);
+    initializedFlag.current = true; // 初期化完了フラグをセット
     
-    // 処理が完了したため、インターバルをクリア
-    if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-    }
-
     try {
         // 1. 初期状態の確認 (v16 API)
         const permission = await OneSignal.Notifications.getPermission();
@@ -76,7 +74,7 @@ export const OneSignalButton: React.FC = () => {
     } finally {
          setIsLoading(false); // 初期チェック完了
     }
-    return true; // 処理完了
+    return true; 
   }, [isNotificationsReady, addDebugInfo]);
 
 
@@ -90,36 +88,37 @@ export const OneSignalButton: React.FC = () => {
     
     (window as any).OneSignalDeferred = (window as any).OneSignalDeferred || [];
 
-    // OneSignalDeferred.push に登録 (標準的な方法)
-    (window as any).OneSignalDeferred.push(function() {
-        // Init 完了後、チェックをトリガーする (Promiseを返す)
-        checkOneSignalStatus(); 
-    });
-
-    // ポーリングロジック: 既に ready の場合はポーリング不要
-    if (!oneSignalReady) {
-        // Service Worker の登録と初期化には時間がかかるため、タイムアウト付きポーリング
-        intervalRef.current = setInterval(() => {
-            if (attemptRef.current++ >= MAX_ATTEMPTS) {
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                addDebugInfo('OneSignal init timed out (5s). Setting to unready.');
-                setIsLoading(false);
-                setIsSubscribed(false); // タイムアウト時は未購読として扱う
-                setMessage('❌ 通知機能の初期化に失敗しました。時間をおいて再試行してください。');
-                return;
+    // Service Worker がアクティブになるのを待ち、成功したら初期化完了とみなす
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(registration => {
+            // Service Worker が ready になったら、OneSignalDeferred.push を待たずに直接チェック
+            // ただし、getPermission が ready でない可能性も考慮し、isNotificationsReady で再チェック
+            if (!initializedFlag.current) {
+                checkOneSignalStatus(); 
             }
-            
-            // async関数を呼び出し、完了時にインターバルをクリアさせる
-            checkOneSignalStatus();
-        }, 100); // 100ms ごとにチェック
+        }).catch(error => {
+            addDebugInfo(`Service Worker Ready check FAILED: ${error}`);
+            setIsLoading(false);
+            setIsSubscribed(false);
+            setMessage('❌ Service Workerの登録に失敗しました。');
+        });
     }
-    
+
+    // タイムアウトロジック: Service Worker Ready も含め、初期化が15秒で完了しない場合
+    const timeout = setTimeout(() => {
+        if (!initializedFlag.current) {
+            addDebugInfo('OneSignal init timed out (15s). Exiting loop.');
+            setIsLoading(false);
+            setIsSubscribed(false);
+            setMessage('❌ 通知機能の初期化に失敗しました。時間をおいて再試行してください。');
+        }
+    }, 15000); 
+
     return () => {
-      // クリーンアップ時にインターバルをクリア
-      if (intervalRef.current) clearInterval(intervalRef.current);
+        clearTimeout(timeout);
     };
 
-  }, [checkOneSignalStatus, oneSignalReady]);
+  }, [checkOneSignalStatus, addDebugInfo]);
 
 
   const handleSubscribe = async () => {
@@ -128,15 +127,8 @@ export const OneSignalButton: React.FC = () => {
     setMessage('');
     
     try {
-      if (!('Notification' in window)) {
-        addDebugInfo('Notification API not supported');
-        setMessage('❌ このブラウザはプッシュ通知をサポートしていません。');
-        setIsLoading(false);
-        return;
-      }
-      
-      if (!oneSignalReady) {
-          setMessage('❌ OneSignal SDKがまだ初期化されていません。');
+      if (!('Notification' in window) || !oneSignalReady) {
+          setMessage('❌ 通知機能が利用できないか、初期化が完了していません。');
           setIsLoading(false);
           return;
       }
@@ -148,13 +140,11 @@ export const OneSignalButton: React.FC = () => {
         const result = await OneSignal.Notifications.requestPermission();
         
         if (result) {
-           // 許可された場合
            setMessage('✅ プッシュ通知が有効になりました！OneSignalに登録されました。');
            OneSignal.User.getPushSubscriptionId().then((userId: string) => {
                addDebugInfo(`OneSignal User ID after subscription: ${userId}`);
            });
         } else {
-           // 拒否された場合
            setMessage('⚠️ 購読に失敗しました。ブラウザ設定を確認してください。');
         }
         
