@@ -52,22 +52,23 @@ export function LineLinkButton() {
         // ① state の生成 (CSRF対策)
         // user.id とランダムな文字列を組み合わせて state を生成
         const rawState = JSON.stringify({ userId: user.id, random: generateSecureRandomId() });
-        // Base64 エンコードして URL セーフな state にする
         const encodedState = btoa(rawState); 
         
         // ② LINE 認証 URL の生成
-        const lineAuthUrl = new URL('https://access.line.me/oauth2/v2.1/authorize');
-        lineAuthUrl.searchParams.append('response_type', 'code');
-        lineAuthUrl.searchParams.append('client_id', LINE_CLIENT_ID);
-        lineAuthUrl.searchParams.append('redirect_uri', LINE_REDIRECT_URI);
-        lineAuthUrl.searchParams.append('scope', SCOPE);
-        lineAuthUrl.searchParams.append('state', encodedState);
-        lineAuthUrl.searchParams.append('prompt', PROMPT);
-        // 公式LINEを友だち追加させるためのオプション
-        lineAuthUrl.searchParams.append('bot_prompt', BOT_PROMPT); 
+        // ★★★ 修正: redirect_uri を明示的にエンコードし、URLを文字列で構築 ★★★
+        const encodedRedirectUri = encodeURIComponent(LINE_REDIRECT_URI); 
+
+        const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?` +
+            `response_type=code` +
+            `&client_id=${LINE_CLIENT_ID}` +
+            `&redirect_uri=${encodedRedirectUri}` + 
+            `&scope=${SCOPE}` +
+            `&state=${encodedState}` +
+            `&prompt=${PROMPT}` +
+            `&bot_prompt=${BOT_PROMPT}`;
         
         // ③ リダイレクト
-        window.location.href = lineAuthUrl.toString();
+        window.location.href = lineAuthUrl;
 
     } catch (e) {
         console.error("LINE連携エラー:", e);
