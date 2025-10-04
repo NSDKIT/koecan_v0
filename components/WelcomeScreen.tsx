@@ -3,7 +3,7 @@
 import React from 'react';
 import { Star, Users, Gift, MessageCircle, ArrowRight } from 'lucide-react';
 import { AnimatedBackground } from '@/components/AnimatedBackground';
-import { OneSignalButton } from '@/components/OneSignalButton';
+// import { OneSignalButton } from '@/components/OneSignalButton'; // 削除
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -88,7 +88,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
               無料でアカウントを作成して、今すぐ始めましょう
             </p>
 
-            <OneSignalButton />
+            {/* <OneSignalButton /> を削除 */}
           </div>
         </div>
       </div>
