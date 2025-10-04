@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
-import { NotificationButton } from '@/components/NotificationButton';
+// import { NotificationButton } from '@/components/NotificationButton'; // 削除
 import { SparklesCore } from '@/components/ui/sparkles';
 
 // TODO: ここに、クライアントがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
@@ -206,7 +206,7 @@ export function ClientDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                <NotificationButton />
+                {/* <NotificationButton /> を削除 */}
                 <button
                   onClick={() => setShowChatModal(true)} // チャットモーダルを開くボタン
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
