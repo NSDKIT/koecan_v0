@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
 import { 
   Star, 
   Gift, 
@@ -29,7 +28,7 @@ import {
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
-import { NotificationButton } from '@/components/NotificationButton';
+// import { NotificationButton } from '@/components/NotificationButton'; // 削除
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
@@ -496,7 +495,7 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                <NotificationButton />
+                {/* <NotificationButton /> を削除 */}
                 <button
                   ref={menuButtonRef}
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -812,8 +811,8 @@ export default function MonitorDashboard() {
       {/* Chat Modal - モニターからサポートへのチャット */}
       {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
-          user={user}
-          otherUserId={SUPABASE_SUPPORT_USER_ID} // モニターからサポート担当者のIDを渡す
+          user={user} // サポート担当者自身のユーザーオブジェクト
+          otherUserId={SUPABASE_SUPPORT_USER_ID} // チャット相手のモニターユーザーID
           onClose={() => setShowChatModal(false)}
         />
       )}
