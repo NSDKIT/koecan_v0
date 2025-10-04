@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { v4 as uuidv4 } from 'uuid'; // UUID生成ライブラリをインストールする必要があります (npm install uuid)
+// import { v4 as uuidv4 } from 'uuid'; // ★★★ 削除: uuidライブラリへの依存を解消 ★★★
 
 // 環境変数からGASのCallback URLとLINEのChannel IDを読み込む (ここでは仮のプレースホルダを使用)
 // 実際には .env.local にて定義が必要です。
@@ -16,6 +16,18 @@ const SCOPE = 'profile openid';
 const PROMPT = 'consent'; // 再同意を常に求める
 const BOT_PROMPT = 'aggressive'; // 友だち追加を強制 (optional)
 
+
+// ★★★ 修正: uuidv4 の代わりに、組み込みの crypto API を使用するヘルパー関数を定義 ★★★
+const generateSecureRandomId = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // フォールバック (開発環境での互換性のため)
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+// ★★★ 修正ここまで ★★★
+
+
 export function LineLinkButton() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -27,15 +39,20 @@ export function LineLinkButton() {
       return;
     }
     
+    // 環境変数チェック
+    if (LINE_CLIENT_ID === 'YOUR_LINE_CHANNEL_ID' || LINE_REDIRECT_URI === 'YOUR_GAS_WEB_APP_URL') {
+         setError('環境変数(NEXT_PUBLIC_LINE_CLIENT_ID, NEXT_PUBLIC_LINE_REDIRECT_URI)を設定してください。');
+         return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
         // ① state の生成 (CSRF対策)
-        // 実際には、この state と user.id をサーバー側で一時保存する必要があります。
-        // ここでは簡略化のため user.id を state に含めてBase64エンコードします。
-        // ★★★ 注: 運用環境では、stateをサーバー側(DB)に保存し、user.idと紐づけるのが最も安全です。★★★
-        const rawState = JSON.stringify({ userId: user.id, random: uuidv4() });
+        // user.id とランダムな文字列を組み合わせて state を生成
+        const rawState = JSON.stringify({ userId: user.id, random: generateSecureRandomId() });
+        // Base64 エンコードして URL セーフな state にする
         const encodedState = btoa(rawState); 
         
         // ② LINE 認証 URL の生成
@@ -83,13 +100,17 @@ export function LineLinkButton() {
           </>
         ) : (
           <>
-            <img src="/line_icon.png" alt="LINE" className="w-5 h-5 mr-2" /> 
+            {/* 備考: line_icon.png は publicフォルダに用意してください */}
+            <img 
+                src="https://scdn.line-apps.com/n/line_login/img/present/btn_text_login_on_c7885b5d.png" 
+                alt="LINE" 
+                className="w-5 h-5 mr-2" 
+            /> 
             LINEアカウントと連携する
           </>
         )}
       </button>
       <p className="text-xs text-gray-500 mt-2">※通知はLINE公式アカウントから届きます</p>
-      {/* 備考: line_icon.png は publicフォルダに用意してください */}
     </div>
   );
 }
