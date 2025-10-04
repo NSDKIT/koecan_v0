@@ -3,10 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-// ★★★ 修正: 必要な型をインポートします ★★★
 import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
-// import { NotificationButton } from '@/components/NotificationButton'; // 削除済み
-
 import { 
   Star, 
   Gift, 
@@ -32,6 +29,7 @@ import {
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
+import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LINE連携ボタンをインポート ★★★
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
@@ -498,7 +496,6 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* NotificationButtonを削除 */}
                 <button
                   ref={menuButtonRef}
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -714,10 +711,15 @@ export default function MonitorDashboard() {
             {activeTab === 'services' && (
               <>
                 <div className="grid md:grid-cols-2 gap-6">
+                  {/* LINE連携ボタンを新しいコンポーネントに置き換え */}
+                  <div className="md:col-span-1">
+                      <LineLinkButton /> 
+                  </div>
+                  
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" 
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -733,7 +735,7 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" 
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
