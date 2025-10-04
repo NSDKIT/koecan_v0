@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
+// ★★★ 修正: 必要な型をインポートします ★★★
+import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
+// import { NotificationButton } from '@/components/NotificationButton'; // 削除済み
+
 import { 
   Star, 
   Gift, 
@@ -28,7 +32,6 @@ import {
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
-// import { NotificationButton } from '@/components/NotificationButton'; // 削除
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
@@ -495,7 +498,7 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* <NotificationButton /> を削除 */}
+                {/* NotificationButtonを削除 */}
                 <button
                   ref={menuButtonRef}
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
