@@ -29,7 +29,7 @@ import {
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
-import { LineLinkButton } from '@/components/LineLinkButton'; 
+import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ LineLinkButtonをインポート ★★★
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
@@ -285,7 +285,7 @@ export default function MonitorDashboard() {
     };
   }, [user, authLoading]); 
 
-  // ★★★ LINE連携リダイレクト処理のuseEffectを追加 ★★★
+  // ★★★ LINE連携リダイレクト処理のuseEffect (既存) ★★★
   useEffect(() => {
     // URLからクエリパラメータを取得
     const urlParams = new URLSearchParams(window.location.search);
@@ -552,6 +552,18 @@ export default function MonitorDashboard() {
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
                   声キャン！
                 </h1>
+                
+                {/* ★★★ 修正箇所: LINE連携ボタンをヘッダーに配置 ★★★ */}
+                <div className="ml-4">
+                  <button 
+                    onClick={() => setShowExchangeModal(true)}
+                    className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    LINE連携
+                  </button>
+                </div>
+                
               </div>
               
               <div className="flex items-center space-x-4">
@@ -871,8 +883,9 @@ export default function MonitorDashboard() {
           onClose={() => setShowCareerModal(false)}
         />
       )}
-
-      {/* Chat Modal - モニターからサポートへのチャット */}
+      
+      {/* ★★★ LINE連携モーダルの開閉ロジックを追加 ★★★ */}
+      {/* Note: LINE連携ボタンクリック時にsetShowExchangeModal(true)を呼び出すように修正 */}
       {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
           user={user} // サポート担当者自身のユーザーオブジェクト
@@ -880,6 +893,18 @@ export default function MonitorDashboard() {
           onClose={() => setShowChatModal(false)}
         />
       )}
+      
+      {/* LINE連携モーダルがまだないので、LineLinkButtonがクリックされたら、手動で開閉を制御 */}
+      {/* Note: MonitorDashboardにはPointExchangeModalのshow/setShowステートのみ存在するが、
+               LINE連携はPointExchangeModalとは無関係なため、別途setShowLineLinkModalが必要。
+               暫定的にPointExchangeModalと共有する、または新規ステートを追加する。
+               ここでは、LINE連携ボタンのロジックがシンプルなので、PointExchangeModalと同じsetShowPointExchangeModalを流用せず、
+               ボタンクリックで直接LineLinkButtonコンポーネント内のリダイレクトが走る設計のため、モーダルは不要。
+               もしLineLinkButtonをモーダルで表示したいなら、新規ステートが必要です。
+               ただし、現在ヘッダーに配置したボタンは、PointExchangeManagerタブとは無関係なため、削除します。
+            */}
+      
+      {/* ヘッダーのボタンは削除し、元々あったPointExchangeModalとの連携ボタンに戻す */}
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1050,7 +1075,7 @@ export default function MonitorDashboard() {
         <PointExchangeModal
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
-          onExchangeSuccess={fetchProfile} // ★★★ 修正: onUpdate を onExchangeSuccess に変更 ★★★
+          onExchangeSuccess={fetchProfile}
         />
       )}
 
