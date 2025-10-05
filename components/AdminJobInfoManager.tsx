@@ -201,7 +201,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleSubmit: START. Setting isSubmitting to true.');
+    console.log('handleSubmit: START. Setting isSubmitting to true.'); 
     setIsSubmitting(true);
     setError(null);
 
@@ -229,6 +229,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             (dataToUpdate as any)[key] = null;
         }
     });
+    
+    console.log('DEBUG: Data payload prepared. Proceeding to DB update.'); // ★★★ 追加されたデバッグログ ★★★
 
     try {
       if (editingAd) {
