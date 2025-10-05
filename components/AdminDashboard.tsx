@@ -22,9 +22,10 @@ import {
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
+import { ChatModal } from '@/components/ChatModal';
+import { PointExchangeManager } from '@/components/PointExchangeManager'; // ★★★ 追加 ★★★
 
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring'; // 'chat_monitoring' を追加
-
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
