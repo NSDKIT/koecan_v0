@@ -222,10 +222,7 @@ export default function MonitorDashboard() {
         .order('priority', { ascending: false })
         .order('display_order', { ascending: true });
 
-      if (error) {
-        console.error('広告取得エラー:', error);
-        throw error;
-      }
+      if (error) throw error;
       setAdvertisements(data || []);
       console.log("MonitorDashboard: fetchAdvertisements completed.");
       return data;
@@ -434,11 +431,11 @@ export default function MonitorDashboard() {
                             onChange={(e) => {
                               const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
                               if (question.is_multiple_select) {
-                                const currentAnswers = currentAnswer ? currentAnswers.split(',') : [];
+                                const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : []; // ★★★ 修正済み ★★★
                                 if (e.target.checked) {
-                                  handleAnswerChange(question.id, [...currentAnswers, option].join(','));
+                                  handleAnswerChange(question.id, [...currentAnswersArray, option].join(','));
                                 } else {
-                                  handleAnswerChange(question.id, currentAnswers.filter(a => a !== option).join(','));
+                                  handleAnswerChange(question.id, currentAnswersArray.filter(a => a !== option).join(','));
                                 }
                               } else {
                                 handleAnswerChange(question.id, option);
@@ -550,7 +547,7 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* ★★★ 修正箇所: LINE連携ボタンをヘッダーに配置（再修正） ★★★ */}
+                {/* ★★★ LINE連携ボタンをヘッダーに配置 ★★★ */}
                 
                 {/* 1. LINE連携を直接ヘッダーに配置（モーダルを開くボタンとして） */}
                 <button 
@@ -574,7 +571,7 @@ export default function MonitorDashboard() {
           </div>
         </header>
 
-        {/* ハンバーガーメニュー ドロップダウン (省略) */}
+        {/* ハンバーガーメニュー ドロップダウン */}
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
