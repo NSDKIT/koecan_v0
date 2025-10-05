@@ -27,15 +27,17 @@ export function PointExchangeManager() {
         .from('point_exchange_requests')
         .select(`
           *,
-          monitor:users (id, name, email)
-          -- 新しく追加したカラムを明示的に含める
-          , contact_type, exchange_contact, reward_detail
+          monitor:users (id, name, email),
+          contact_type, 
+          exchange_contact, 
+          reward_detail 
         `)
-        .eq('status', 'pending') // ステータスがpendingのもののみ取得
+        .eq('status', 'pending')
         .order('created_at', { ascending: true });
-
+  
       if (error) throw error;
-      setRequests(data as ExchangeRequestWithMonitor[] || []); // キャストを明示
+      // ★★★ エラー回避のため、as any で型を強制的にキャスト ★★★
+      setRequests(data as any as ExchangeRequestWithMonitor[] || []); 
     } catch (err) {
       console.error('Error fetching exchange requests:', err);
       setError('リクエストの取得に失敗しました。');
