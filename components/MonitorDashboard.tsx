@@ -434,7 +434,7 @@ export default function MonitorDashboard() {
                             onChange={(e) => {
                               const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
                               if (question.is_multiple_select) {
-                                const currentAnswers = currentAnswer ? currentAnswer.split(',') : [];
+                                const currentAnswers = currentAnswer ? currentAnswers.split(',') : [];
                                 if (e.target.checked) {
                                   handleAnswerChange(question.id, [...currentAnswers, option].join(','));
                                 } else {
@@ -775,29 +775,10 @@ export default function MonitorDashboard() {
             {activeTab === 'services' && (
               <>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* LINE連携ボタンを新しいコンポーネントに置き換え (サービス内に残しておくことも可能) */}
-                  <div className="md:col-span-1">
-                      {/* サービス内のボタンは、ヘッダーに移動したため、ここではクリックでモーダルを開く処理を定義します */}
-                      <button
-                        onClick={() => setShowLineLinkModal(true)}
-                        className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group w-full h-full"
-                      >
-                         <div className="flex items-center justify-start w-full"> 
-                            <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
-                                <MessageCircle className="w-6 h-6 text-white" /> 
-                            </div>
-                            <div> 
-                                <h3 className="text-lg font-semibold text-gray-800">LINE連携</h3> 
-                                <p className="text-gray-600 text-sm">通知を受け取る</p>
-                            </div>
-                        </div>
-                      </button>
-                  </div>
-                  
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group"
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                      <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -813,7 +794,7 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" 
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                      <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -833,7 +814,7 @@ export default function MonitorDashboard() {
       </div>
 
       {/* ボトムタブバー */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> 
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
         <div className="max-w-7xl mx-auto flex justify-around h-16">
           <button
             onClick={() => setActiveTab('surveys')}
@@ -924,7 +905,7 @@ export default function MonitorDashboard() {
         />
       )}
       
-      {/* ★★★ LINE連携モーダル（LineLinkButtonをモーダル内で使用） ★★★ */}
+      {/* LINE連携モーダル */}
       {showLineLinkModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
@@ -938,7 +919,6 @@ export default function MonitorDashboard() {
               </div>
           </div>
       )}
-      {/* ★★★ モーダル群ここまで ★★★ */}
 
     </div>
   );
