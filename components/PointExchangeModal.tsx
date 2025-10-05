@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react';
-import { X, Gift, Send, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Gift, Send, Loader2, Mail, MessageSquare } from 'lucide-react'; // アイコン追加
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
 
@@ -11,19 +11,47 @@ interface PointExchangeModalProps {
   onExchangeSuccess: () => void; // Callback to refresh points on success
 }
 
+// 連絡先情報の型を更新
+type ContactType = 'email' | 'line_push';
+
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
-  const { user } = useAuth(); // useAuthからuserを取得
-  // 修正: useStateの型を明示的に指定
+  const { user } = useAuth();
   const [exchangeType, setExchangeType] = useState<'' | 'paypay' | 'amazon' | 'starbucks'>('');
   const [pointsAmount, setPointsAmount] = useState<number>(0);
   const [contactInfo, setContactInfo] = useState('');
+  const [contactType, setContactType] = useState<ContactType>('email'); // 新しいステート
+  const [isLineLinked, setIsLineLinked] = useState<boolean>(false); // LINE連携状態
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 修正: availableExchangeOptionsのtypeプロパティの型を明示的に指定
+  // LINE連携状態をチェック
+  useEffect(() => {
+    const checkLineLink = async () => {
+      if (!user) return;
+      // user_line_links テーブルに user_id があるか確認
+      const { data, error } = await supabase
+        .from('user_line_links')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single();
+      
+      if (data) {
+        setIsLineLinked(true);
+        // LINE連携済みの場合は、デフォルトの通知方法をLINEにする (UX改善)
+        setContactType('line_push');
+      } else {
+        setIsLineLinked(false);
+        setContactType('email');
+      }
+    };
+
+    checkLineLink();
+  }, [user]);
+
   const availableExchangeOptions: {
-    type: 'paypay' | 'amazon' | 'starbucks'; // 明示的に型を指定
+    type: 'paypay' | 'amazon' | 'starbucks';
     name: string;
     minPoints: number;
     maxPoints: number;
@@ -34,13 +62,12 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   ];
 
   const handleExchange = async () => {
-    // userが存在しない場合はエラーを出す
     if (!user) {
       setError('ユーザー情報が取得できません。再度ログインしてください。');
       return;
     }
 
-    if (!exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || contactInfo.trim() === '') {
+    if (!exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || (contactType === 'email' && contactInfo.trim() === '')) {
       setError('全ての必須項目を入力し、有効なポイント数を指定してください。');
       return;
     }
@@ -61,7 +88,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
         .insert([
           {
             monitor_id: user.id,
-            points: -pointsAmount, // Subtract points
+            points: -pointsAmount,
             transaction_type: 'redeemed',
             notes: `ポイント交換リクエスト: ${exchangeType} ${pointsAmount}pt`
           },
@@ -69,7 +96,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
       if (transactionError) throw transactionError;
 
-      // Create point exchange request
+      // Create point exchange request - DBスキーマの変更に対応
       const { error: requestError } = await supabase
         .from('point_exchange_requests')
         .insert([
@@ -77,7 +104,10 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             monitor_id: user.id,
             exchange_type: exchangeType,
             points_amount: pointsAmount,
-            contact_info: contactInfo,
+            // 修正: 連絡先情報のフィールドを contact_type と exchange_contact に分ける
+            contact_type: contactType, 
+            exchange_contact: contactType === 'email' ? contactInfo : null, // LINEの場合はnull
+            contact_info: contactType === 'email' ? contactInfo : 'LINE連携済み', // 互換性のため残す
             notes: notes.trim() === '' ? null : notes.trim(),
             status: 'pending',
           },
@@ -85,16 +115,8 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
       if (requestError) throw requestError;
 
-      // Update monitor's total points (assuming this is handled by a trigger in DB)
-      // If not, you might need an RPC call or direct update here:
-      // const { error: profileUpdateError } = await supabase
-      //   .from('monitor_profiles')
-      //   .update({ points: currentPoints - pointsAmount })
-      //   .eq('user_id', user.id);
-      // if (profileUpdateError) throw profileUpdateError;
-
       alert('ポイント交換リクエストを送信しました！処理が完了するまでお待ちください。');
-      onExchangeSuccess(); // Refresh parent's points display
+      onExchangeSuccess(); 
       onClose();
     } catch (err) {
       console.error('Error during point exchange:', err);
@@ -136,6 +158,8 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
           </div>
 
           <form onSubmit={(e) => { e.preventDefault(); handleExchange(); }} className="space-y-6">
+            
+            {/* 交換先の選択 (既存) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 交換先を選択してください *
@@ -162,6 +186,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
             {exchangeType && (
               <>
+                {/* 報酬ポイント数の入力 (既存) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     交換ポイント数 *
@@ -184,24 +209,68 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
                   )}
                 </div>
 
+                {/* ★★★ 新規: 通知連絡先の選択 ★★★ */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    連絡先情報 (メールアドレスなど) *
+                    交換完了通知の受け取り方法 *
                   </label>
-                  <input
-                    type="text"
-                    value={contactInfo}
-                    onChange={(e) => setContactInfo(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={
-                      exchangeType === 'paypay' ? 'PayPayに登録の電話番号またはメールアドレス' :
-                      exchangeType === 'amazon' ? 'ギフトカード送付先のメールアドレス' :
-                      'スターバックス eGift送付先のメールアドレス'
-                    }
-                    required
-                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    
+                    {/* メール選択 */}
+                    <button
+                      type="button"
+                      onClick={() => setContactType('email')}
+                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                        contactType === 'email'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <Mail className="w-6 h-6 mb-2" />
+                      <span className="font-semibold">メールで通知</span>
+                    </button>
+
+                    {/* LINE選択 */}
+                    <button
+                      type="button"
+                      onClick={() => isLineLinked && setContactType('line_push')}
+                      disabled={!isLineLinked}
+                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                        contactType === 'line_push'
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <MessageSquare className="w-6 h-6 mb-2" />
+                      <span className="font-semibold">LINEで通知</span>
+                      {!isLineLinked && <span className="text-xs text-red-500 mt-1">未連携</span>}
+                    </button>
+                  </div>
                 </div>
 
+                {/* ★★★ 連絡先情報の入力 (メール選択時のみ表示) ★★★ */}
+                {contactType === 'email' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      連絡先情報 (メールアドレスなど) *
+                    </label>
+                    <input
+                      type="text"
+                      name="contactInfo"
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                      placeholder={
+                        exchangeType === 'paypay' ? 'PayPayに登録の電話番号またはメールアドレス' :
+                        exchangeType === 'amazon' ? 'ギフトカード送付先のメールアドレス' :
+                        'スターバックス eGift送付先のメールアドレス'
+                      }
+                      required={contactType === 'email'}
+                    />
+                  </div>
+                )}
+                
+                {/* 備考 (既存) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     備考 (任意)
@@ -235,7 +304,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
               <button
                 type="submit"
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white rounded-lg hover:from-yellow-700 hover:to-yellow-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                disabled={loading || !exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || contactInfo.trim() === '' || (selectedOption && pointsAmount < selectedOption.minPoints)}
+                disabled={loading || !exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || (contactType === 'email' && contactInfo.trim() === '') || (selectedOption && pointsAmount < selectedOption.minPoints)}
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
