@@ -63,7 +63,7 @@ export interface Response {
   id: string;
   survey_id: string;
   monitor_id: string;
-  answers: Answer[];
+  answers: jsonb;
   completed_at: string;
   points_earned: number;
 }
@@ -75,6 +75,7 @@ export interface PointTransaction {
   points: number;
   transaction_type: 'earned' | 'redeemed';
   created_at: string;
+  notes?: string | null; // ★★★ POINT TRANSACTION TABLE FIX: notes カラムを追加 ★★★
 }
 
 export interface PointExchangeRequest {
@@ -87,9 +88,14 @@ export interface PointExchangeRequest {
   notes?: string | null; // null許容
   created_at: string;
   processed_at?: string | null; // null許容
+  
+  // ★★★ POINT EXCHANGE TABLE FIX: 新規カラムを追加 ★★★
+  contact_type?: 'email' | 'line_push' | null; // null許容
+  exchange_contact?: string | null; // null許容
+  reward_detail?: string | null; // null許容 (管理者が入力するギフト券URL/コード)
+  // ★★★ END FIX ★★★
 }
 
-// AdminJobInfoManager.tsxが依存する型 (null許容の修正を適用)
 export interface Advertisement {
   id: string;
   title: string;
