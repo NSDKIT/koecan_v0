@@ -41,9 +41,6 @@ type ActiveTab = 'surveys' | 'recruitment' | 'services' | 'matching'; // 'matchi
 // TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
 const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; // 例: 実際のIDに置き換えてください。
 
-// NOTE: MonitorProfile 型は points: number を持っている前提で、
-// DBの monitor_profiles から points を削除し、ビューから取得するようにロジックを変更します。
-
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); 
   const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
@@ -97,7 +94,6 @@ export default function MonitorDashboard() {
     
     try {
       // 1. 基本プロフィール情報（モニターの属性情報）を取得
-      // NOTE: このクエリで取得されるデータには、pointsカラムは含まれていません
       const { data: profileData, error: profileError } = await supabase
         .from('monitor_profiles')
         .select('*') 
@@ -108,24 +104,23 @@ export default function MonitorDashboard() {
 
       // 2. 累積ポイント残高をビューから取得
       const { data: pointsData, error: pointsError } = await supabase
-        .from('monitor_points_view') // ★★★ 新しいビューを参照 ★★★
+        .from('monitor_points_view') 
         .select('points_balance')
         .eq('user_id', user.id)
         .single();
       
-      if (pointsError && pointsError.code !== 'PGRST116') { // 存在しない場合(PGRST116)は無視
+      if (pointsError && pointsError.code !== 'PGRST116') { 
          throw pointsError;
       }
       
       const pointsBalance = pointsData ? pointsData.points_balance : 0;
       
       // profileステートに結合してセット
-      // MonitorProfileの型を満たすために、DBから取得したデータに points を手動で追加
       const combinedProfile: MonitorProfile = {
-          ...profileData, // user_id, age, gender, occupation, location, created_at, updated_at
-          points: pointsBalance, // ★★★ ビューから取得した残高をセット ★★★
-          monitor_id: profileData.id // idをmonitor_idとしてコピー
-      };
+          ...profileData, 
+          points: pointsBalance, 
+          monitor_id: profileData.id 
+      } as MonitorProfile; // MonitorProfile型へのキャストを明示
 
       setProfile(combinedProfile);
 
@@ -135,7 +130,7 @@ export default function MonitorDashboard() {
       console.error('プロフィール取得エラー:', error);
       // エラーが発生した場合も、ダッシュボードの表示が止まらないよう、最低限のデータで設定を試みる
       setProfile({ 
-          id: user.id, // エラー回避のため、最低限のフィールドをセット (types/index.tsのMonitorProfileの定義に依存)
+          id: user.id, 
           user_id: user.id,
           points: 0,
           age: 0, 
@@ -553,16 +548,8 @@ export default function MonitorDashboard() {
                   声キャン！
                 </h1>
                 
-                {/* ★★★ 修正箇所: LINE連携ボタンをヘッダーに配置 ★★★ */}
-                <div className="ml-4">
-                  <button 
-                    onClick={() => setShowExchangeModal(true)}
-                    className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    LINE連携
-                  </button>
-                </div>
+                {/* ★★★ 修正箇所: LINE連携ボタンをヘッダーに配置（再修正：以前のボタン配置を維持） ★★★ */}
+                {/* 以前の修正で発生したエラーを防ぐため、ヘッダーにはLINE連携ボタンを直接配置しない */}
                 
               </div>
               
@@ -883,9 +870,8 @@ export default function MonitorDashboard() {
           onClose={() => setShowCareerModal(false)}
         />
       )}
-      
-      {/* ★★★ LINE連携モーダルの開閉ロジックを追加 ★★★ */}
-      {/* Note: LINE連携ボタンクリック時にsetShowExchangeModal(true)を呼び出すように修正 */}
+
+      {/* Chat Modal - モニターからサポートへのチャット */}
       {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
           user={user} // サポート担当者自身のユーザーオブジェクト
@@ -893,18 +879,6 @@ export default function MonitorDashboard() {
           onClose={() => setShowChatModal(false)}
         />
       )}
-      
-      {/* LINE連携モーダルがまだないので、LineLinkButtonがクリックされたら、手動で開閉を制御 */}
-      {/* Note: MonitorDashboardにはPointExchangeModalのshow/setShowステートのみ存在するが、
-               LINE連携はPointExchangeModalとは無関係なため、別途setShowLineLinkModalが必要。
-               暫定的にPointExchangeModalと共有する、または新規ステートを追加する。
-               ここでは、LINE連携ボタンのロジックがシンプルなので、PointExchangeModalと同じsetShowPointExchangeModalを流用せず、
-               ボタンクリックで直接LineLinkButtonコンポーネント内のリダイレクトが走る設計のため、モーダルは不要。
-               もしLineLinkButtonをモーダルで表示したいなら、新規ステートが必要です。
-               ただし、現在ヘッダーに配置したボタンは、PointExchangeManagerタブとは無関係なため、削除します。
-            */}
-      
-      {/* ヘッダーのボタンは削除し、元々あったPointExchangeModalとの連携ボタンに戻す */}
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
