@@ -82,7 +82,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     setError(null);
 
     try {
-      // Create point transaction (redeemed)
+      // 1. Create point transaction (redeemed) - ★★★ .select()を削除 ★★★
       const { error: transactionError } = await supabase
         .from('point_transactions')
         .insert([
@@ -92,11 +92,14 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             transaction_type: 'redeemed',
             notes: `ポイント交換リクエスト: ${exchangeType} ${pointsAmount}pt`
           },
-        ]);
+        ]); // .select() を削除
 
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+         console.error('Point Transaction Error:', transactionError);
+         throw transactionError;
+      }
 
-      // Create point exchange request - DBスキーマの変更に対応
+      // 2. Create point exchange request - ★★★ .select()を削除 ★★★
       const { error: requestError } = await supabase
         .from('point_exchange_requests')
         .insert([
@@ -111,15 +114,19 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             notes: notes.trim() === '' ? null : notes.trim(),
             status: 'pending',
           },
-        ]);
+        ]); // .select() を削除
 
-      if (requestError) throw requestError;
+      if (requestError) {
+          console.error('Exchange Request Error:', requestError);
+          throw requestError;
+      }
 
       alert('ポイント交換リクエストを送信しました！処理が完了するまでお待ちください。');
       onExchangeSuccess(); 
       onClose();
     } catch (err) {
-      console.error('Error during point exchange:', err);
+      // Supabaseエラーオブジェクト全体をログに出力
+      console.error('Error during point exchange:', err); 
       setError(err instanceof Error ? err.message : 'ポイント交換に失敗しました。');
     } finally {
       setLoading(false);
