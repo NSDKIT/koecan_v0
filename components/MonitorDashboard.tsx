@@ -29,7 +29,7 @@ import {
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
-import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LINE連携ボタンをインポート ★★★
+import { LineLinkButton } from '@/components/LineLinkButton'; 
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
@@ -39,8 +39,10 @@ import { MatchingFeature } from '@/components/MatchingFeature'; // これを追�
 type ActiveTab = 'surveys' | 'recruitment' | 'services' | 'matching'; // 'matching' を追加
 
 // TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
-// このIDは、Supabase Studioの「Authentication」→「Users」タブで確認できるサポート担当者のユーザーIDです。
 const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; // 例: 実際のIDに置き換えてください。
+
+// NOTE: MonitorProfile 型は points: number を持っている前提で、
+// DBの monitor_profiles から points を削除し、ビューから取得するようにロジックを変更します。
 
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); 
@@ -91,19 +93,56 @@ export default function MonitorDashboard() {
 
   const fetchProfile = async () => {
     console.log("MonitorDashboard: fetchProfile started.");
+    if (!user?.id) throw new Error("User ID is missing.");
+    
     try {
-      const { data, error } = await supabase
+      // 1. 基本プロフィール情報（モニターの属性情報）を取得
+      // NOTE: このクエリで取得されるデータには、pointsカラムは含まれていません
+      const { data: profileData, error: profileError } = await supabase
         .from('monitor_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
+        .select('*') 
+        .eq('user_id', user.id)
         .single();
 
-      if (error) throw error;
-      setProfile(data);
-      console.log("MonitorDashboard: fetchProfile completed.");
-      return data; 
+      if (profileError) throw profileError;
+
+      // 2. 累積ポイント残高をビューから取得
+      const { data: pointsData, error: pointsError } = await supabase
+        .from('monitor_points_view') // ★★★ 新しいビューを参照 ★★★
+        .select('points_balance')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (pointsError && pointsError.code !== 'PGRST116') { // 存在しない場合(PGRST116)は無視
+         throw pointsError;
+      }
+      
+      const pointsBalance = pointsData ? pointsData.points_balance : 0;
+      
+      // profileステートに結合してセット
+      // MonitorProfileの型を満たすために、DBから取得したデータに points を手動で追加
+      const combinedProfile: MonitorProfile = {
+          ...profileData, // user_id, age, gender, occupation, location, created_at, updated_at
+          points: pointsBalance, // ★★★ ビューから取得した残高をセット ★★★
+          monitor_id: profileData.id // idをmonitor_idとしてコピー
+      };
+
+      setProfile(combinedProfile);
+
+      console.log("MonitorDashboard: fetchProfile completed. Points: " + pointsBalance);
+      return combinedProfile; 
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
+      // エラーが発生した場合も、ダッシュボードの表示が止まらないよう、最低限のデータで設定を試みる
+      setProfile({ 
+          id: user.id, // エラー回避のため、最低限のフィールドをセット (types/index.tsのMonitorProfileの定義に依存)
+          user_id: user.id,
+          points: 0,
+          age: 0, 
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          monitor_id: user.id 
+      } as MonitorProfile); 
       throw error;
     }
   };
@@ -245,6 +284,26 @@ export default function MonitorDashboard() {
       console.log("MonitorDashboard: useEffect cleanup.");
     };
   }, [user, authLoading]); 
+
+  // ★★★ LINE連携リダイレクト処理のuseEffectを追加 ★★★
+  useEffect(() => {
+    // URLからクエリパラメータを取得
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('line_link_status');
+    const errorMsg = urlParams.get('error');
+
+    if (status === 'success') {
+      alert('✅ LINE連携が完了しました！今後はLINEで通知を受け取れます。');
+    } else if (status === 'failure') {
+      alert(`❌ LINE連携に失敗しました。\nエラー: ${errorMsg || '不明なエラー'}`);
+    }
+
+    // クエリパラメータを削除してURLをクリーンアップ
+    if (status) {
+        history.replaceState(null, '', window.location.pathname);
+    }
+    
+  }, []);
 
 
   const handleSurveyClick = async (survey: Survey) => {
@@ -719,7 +778,7 @@ export default function MonitorDashboard() {
                   {/* キャリア相談 */}
                   <button
                     onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" 
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -735,7 +794,7 @@ export default function MonitorDashboard() {
                   {/* チャット */}
                   <button
                     onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" 
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
                   >
                     <div className="flex items-center justify-start w-full"> 
                        <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
@@ -991,7 +1050,7 @@ export default function MonitorDashboard() {
         <PointExchangeModal
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
-          onExchangeSuccess={fetchProfile} 
+          onUpdate={fetchProfile}
         />
       )}
 
