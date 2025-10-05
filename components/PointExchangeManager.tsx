@@ -6,7 +6,7 @@ import { PointExchangeRequest, User } from '@/types';
 import { Loader2, CheckCircle, XCircle, Gift, AlertCircle, Send } from 'lucide-react';
 
 interface ExchangeRequestWithMonitor extends PointExchangeRequest {
-  monitor: User | null; // ★★★ 修正: モニターが削除されている可能性を考慮し、nullを許容 ★★★
+  monitor: User | null; // モニターが削除されている可能性を考慮し、nullを許容
 }
 
 export function PointExchangeManager() {
@@ -32,12 +32,11 @@ export function PointExchangeManager() {
           exchange_contact, 
           reward_detail 
         `)
-        .eq('status', 'pending')
+        .eq('status', 'pending') // ステータスがpendingのもののみ取得
         .order('created_at', { ascending: true });
-  
+
       if (error) throw error;
-      // ★★★ エラー回避のため、as any で型を強制的にキャスト ★★★
-      setRequests(data as any as ExchangeRequestWithMonitor[] || []); 
+      setRequests(data as any as ExchangeRequestWithMonitor[] || []); // キャストを明示
     } catch (err) {
       console.error('Error fetching exchange requests:', err);
       setError('リクエストの取得に失敗しました。');
@@ -69,22 +68,25 @@ export function PointExchangeManager() {
     };
 
     try {
-      // ★★★ INSERTとは異なり、UPDATEには.select()は不要（PostgRESTの標準） ★★★
       const { error } = await supabase
         .from('point_exchange_requests')
         .update(payload)
         .eq('id', request.id);
+      
+      // ★★★ 修正箇所: ここでローディングを解除（UXを優先） ★★★
+      setIsSubmitting(false); // 即座にローディングを解除し、アプリのハングを防ぐ
 
       if (error) throw error;
-
+      
       alert(`リクエストID ${request.id.substring(0, 8)} を ${newStatus === 'completed' ? '承認' : '却下'} しました。通知が送信されます。`);
       fetchRequests(); // リストを更新
 
     } catch (err) {
+      // エラーが起きた場合も、ローディングは既に解除済み
       console.error('Error updating status:', err);
-      setError('ステータス更新に失敗しました。');
-    } finally {
-      setIsSubmitting(false);
+      setError('ステータス更新に失敗しました。詳細をコンソールで確認してください。');
+      // ★★★ エラー時に再フェッチしても、リスト更新でエラーが上書きされることを防止 ★★★
+      fetchRequests(); 
     }
   };
 
@@ -141,7 +143,6 @@ interface RequestCardProps {
 function RequestCard({ request, onUpdate, isSubmitting }: RequestCardProps) {
     const [rewardDetail, setRewardDetail] = useState('');
     
-    // ★★★ 修正箇所 1: request.monitor が null の場合を考慮した安全なアクセス ★★★
     const monitorName = request.monitor?.name || request.monitor?.email || '不明なモニター';
     
     // 連絡先表示ロジック
@@ -169,7 +170,6 @@ function RequestCard({ request, onUpdate, isSubmitting }: RequestCardProps) {
             </div>
             
             <div className="mb-4 space-y-1 text-sm">
-                {/* ★★★ 修正箇所 2: email のアクセスも安全にする ★★★ */}
                 <p><strong>申請者:</strong> {monitorName} ({request.monitor?.email || 'N/A'})</p>
                 <p className="flex items-center">
                     <strong>通知先:</strong> 
