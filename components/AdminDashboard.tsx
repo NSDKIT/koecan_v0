@@ -22,10 +22,10 @@ import {
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
-import { ChatModal } from '@/components/ChatModal';
-import { PointExchangeManager } from '@/components/PointExchangeManager'; // ★★★ 追加 ★★★
+import { PointExchangeManager } from '@/components/PointExchangeManager'; // ★★★ 追加: ポイント交換管理をインポート ★★★
 
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange'; // ★★★ 'point_exchange' を追加 ★★★
+
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
   const [stats, setStats] = useState({
@@ -276,6 +276,16 @@ export function AdminDashboard() {
               >
                 チャット監視
               </button>
+              <button
+                onClick={() => setActiveTab('point_exchange')} // ★★★ 追加 ★★★
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                activeTab === 'point_exchange'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                ポイント交換
+              </button>
             </div>
           </div>
 
@@ -286,6 +296,9 @@ export function AdminDashboard() {
               <AdminJobInfoManager onDataChange={fetchStats} />
             )}
             {activeTab === 'chat_monitoring' && renderChatMonitoringTab()}
+            {activeTab === 'point_exchange' && ( // ★★★ 追加: ポイント交換管理をレンダリング ★★★
+                <PointExchangeManager />
+            )}
           </div>
         </main>
       </div>
