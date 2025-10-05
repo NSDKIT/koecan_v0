@@ -6,7 +6,7 @@ import { PointExchangeRequest, User } from '@/types';
 import { Loader2, CheckCircle, XCircle, Gift, AlertCircle, Send } from 'lucide-react';
 
 interface ExchangeRequestWithMonitor extends PointExchangeRequest {
-  monitor: User; // 紐づいたユーザー情報
+  monitor: User | null; // ★★★ 修正: モニターが削除されている可能性を考慮し、nullを許容 ★★★
 }
 
 export function PointExchangeManager() {
@@ -28,12 +28,14 @@ export function PointExchangeManager() {
         .select(`
           *,
           monitor:users (id, name, email)
+          -- 新しく追加したカラムを明示的に含める
+          , contact_type, exchange_contact, reward_detail
         `)
         .eq('status', 'pending') // ステータスがpendingのもののみ取得
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setRequests(data || []);
+      setRequests(data as ExchangeRequestWithMonitor[] || []); // キャストを明示
     } catch (err) {
       console.error('Error fetching exchange requests:', err);
       setError('リクエストの取得に失敗しました。');
@@ -65,6 +67,7 @@ export function PointExchangeManager() {
     };
 
     try {
+      // ★★★ INSERTとは異なり、UPDATEには.select()は不要（PostgRESTの標準） ★★★
       const { error } = await supabase
         .from('point_exchange_requests')
         .update(payload)
@@ -135,6 +138,8 @@ interface RequestCardProps {
 
 function RequestCard({ request, onUpdate, isSubmitting }: RequestCardProps) {
     const [rewardDetail, setRewardDetail] = useState('');
+    
+    // ★★★ 修正箇所 1: request.monitor が null の場合を考慮した安全なアクセス ★★★
     const monitorName = request.monitor?.name || request.monitor?.email || '不明なモニター';
     
     // 連絡先表示ロジック
@@ -162,7 +167,8 @@ function RequestCard({ request, onUpdate, isSubmitting }: RequestCardProps) {
             </div>
             
             <div className="mb-4 space-y-1 text-sm">
-                <p><strong>申請者:</strong> {monitorName} ({request.monitor.email})</p>
+                {/* ★★★ 修正箇所 2: email のアクセスも安全にする ★★★ */}
+                <p><strong>申請者:</strong> {monitorName} ({request.monitor?.email || 'N/A'})</p>
                 <p className="flex items-center">
                     <strong>通知先:</strong> 
                     <span className={`ml-2 px-2 rounded-full text-xs font-semibold ${
