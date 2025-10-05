@@ -63,7 +63,7 @@ export interface Response {
   id: string;
   survey_id: string;
   monitor_id: string;
-  answers: jsonb;
+  answers: any; // ★★★ 修正: jsonb を any に変更 ★★★
   completed_at: string;
   points_earned: number;
 }
@@ -75,7 +75,7 @@ export interface PointTransaction {
   points: number;
   transaction_type: 'earned' | 'redeemed';
   created_at: string;
-  notes?: string | null; // ★★★ POINT TRANSACTION TABLE FIX: notes カラムを追加 ★★★
+  notes?: string | null; // POINT TRANSACTION TABLE FIX: notes カラムを追加
 }
 
 export interface PointExchangeRequest {
@@ -89,11 +89,11 @@ export interface PointExchangeRequest {
   created_at: string;
   processed_at?: string | null; // null許容
   
-  // ★★★ POINT EXCHANGE TABLE FIX: 新規カラムを追加 ★★★
+  // POINT EXCHANGE TABLE FIX: 新規カラムを追加
   contact_type?: 'email' | 'line_push' | null; // null許容
   exchange_contact?: string | null; // null許容
   reward_detail?: string | null; // null許容 (管理者が入力するギフト券URL/コード)
-  // ★★★ END FIX ★★★
+  // END FIX
 }
 
 export interface Advertisement {
