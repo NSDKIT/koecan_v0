@@ -1050,7 +1050,7 @@ export default function MonitorDashboard() {
         <PointExchangeModal
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
-          onUpdate={fetchProfile}
+          onExchangeSuccess={fetchProfile} // ★★★ 修正: onUpdate を onExchangeSuccess に変更 ★★★
         />
       )}
 
