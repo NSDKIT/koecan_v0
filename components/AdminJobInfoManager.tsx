@@ -1,4 +1,4 @@
-// koecan_v0-main/components/AdminJobInfoManager.tsx
+// koecan_v0-main/components/AdminJobInfoManager.tsx (最終版のコード)
 
 'use client'
 
@@ -20,9 +20,9 @@ type ModalTab = 'basicInfo' | 'otherInfo' | 'recruitment' | 'internship'; // 新
 
 // 必須フィールドのリストを定義
 const REQUIRED_FIELDS = ['company_name']; 
-// ★★★ 会社名のみを必須とし、その他のフィールドは任意とする ★★★
 
 export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) {
+  const { user } = useAuth(); // ★★★ 追加: ユーザー情報（ID）を取得するために useAuth をインポート/使用 ★★★
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,12 +93,13 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     transport_lodging_stipend: false,
     internship_application_url: null,
 
-    // 旧・メタデータ（新しい項目にマップされなかったがDBに存在し得るもの）
+    // 旧・メタデータ（DBの NOT NULL 制約回避のため必要）
     is_active: true,
     display_order: 1,
     priority: 100,
     title: '', 
     description: '', 
+    // created_by: null, // created_byはformDataの初期値ではnullを許可する
   };
 
   const [formData, setFormData] = useState<Partial<Advertisement>>(initialFormData);
@@ -164,7 +165,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     Object.keys(initialFormData).forEach(key => {
       const field = key as keyof Advertisement;
       
-      // ★★★ 修正箇所: 型アサーションを使用し、代入エラーを解消 ★★★
       if (typeof initialFormData[field] === 'number') {
         (adData as any)[field] = (adData[field] as number ?? null);
       } else if (typeof initialFormData[field] === 'boolean') {
@@ -176,7 +176,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       } else {
         (adData as any)[field] = (adData[field] as string ?? null);
       }
-      // ★★★ 修正箇所ここまで ★★★
     });
 
     setFormData(adData);
@@ -264,7 +263,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     if (!formData.company_name) {
         setError('会社名は必須です。');
         setIsSubmitting(false);
-        // ★★★ デバッグログが適用されている部分 ★★★
         console.error('ERROR: Client-side validation failed. Missing required field.', { 
             company_name: formData.company_name, 
         });
@@ -275,12 +273,17 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     // FormDataから不要なメタデータを除外（RLSエラー回避策）
     const { id, created_at, updated_at, ...dataToUpdate } = formData;
     
-    // ★★★ 修正箇所: title と description に値を設定して NOT NULL 制約に対応 ★★★
-    // DBの NOT NULL 制約に対応するため、company_name の値を title にコピー
+    // ★★★ 修正箇所: created_by と NOT NULL 制約への対応ロジックを追加 ★★★
+    // created_by (または client_id) が NULL 不可の制約に対応
+    if (user?.id) {
+        (dataToUpdate as any).created_by = user.id; 
+    }
+        
+    // title と description の NOT NULL 制約に対応するため、値を設定
     (dataToUpdate as any).title = formData.company_name; 
-    // description も NOT NULL の可能性があるため、vision または company_name を使用
     (dataToUpdate as any).description = formData.company_vision || formData.company_name || '企業情報';
     // ★★★ 修正箇所ここまで ★★★
+
 
     // 数値型の NaN を null に置き換える安全策（念のため）
     Object.keys(dataToUpdate).forEach(key => {
