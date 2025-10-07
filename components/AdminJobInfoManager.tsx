@@ -1,4 +1,4 @@
-// koecan_v0-main/components/AdminJobInfoManager.tsx (最終版のコード)
+// koecan_v0-main/components/AdminJobInfoManager.tsx
 
 'use client'
 
@@ -10,6 +10,8 @@ import {
   Building, MapPin, Calendar, Users, DollarSign,
   Briefcase, Award, Youtube, BookOpen, Clock, CheckCircle
 } from 'lucide-react';
+// ★★★ 修正箇所: useAuth の import を追加 ★★★
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminJobInfoManagerProps {
   onDataChange: () => void; // 親コンポーネント（AdminDashboard）にデータ変更を通知するコールバック
@@ -22,7 +24,7 @@ type ModalTab = 'basicInfo' | 'otherInfo' | 'recruitment' | 'internship'; // 新
 const REQUIRED_FIELDS = ['company_name']; 
 
 export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) {
-  const { user } = useAuth(); // ★★★ 追加: ユーザー情報（ID）を取得するために useAuth をインポート/使用 ★★★
+  const { user } = useAuth(); // ★★★ ユーザー情報（ID）を取得するために useAuth を使用 ★★★
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +101,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     priority: 100,
     title: '', 
     description: '', 
-    // created_by: null, // created_byはformDataの初期値ではnullを許可する
   };
 
   const [formData, setFormData] = useState<Partial<Advertisement>>(initialFormData);
@@ -280,7 +281,9 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     }
         
     // title と description の NOT NULL 制約に対応するため、値を設定
+    // DBの NOT NULL 制約に対応するため、company_name の値を title にコピー
     (dataToUpdate as any).title = formData.company_name; 
+    // description も NOT NULL の可能性があるため、vision または company_name を使用
     (dataToUpdate as any).description = formData.company_vision || formData.company_name || '企業情報';
     // ★★★ 修正箇所ここまで ★★★
 
@@ -294,6 +297,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     });
     
     console.log('DEBUG: Data payload prepared. Proceeding to DB update.'); 
+    console.log('Data to send (dataToUpdate):', dataToUpdate); // ★★★ 最終ペイロードの確認ログ ★★★
+
 
     try {
       if (editingAd) {
