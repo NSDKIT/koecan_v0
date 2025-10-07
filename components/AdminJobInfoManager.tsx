@@ -1,4 +1,4 @@
-// koecan_v0-main/components/AdminJobInfoManager.tsx
+// koecan_v0-main/components/AdminJobInfoManager.tsx (最終版のコード)
 
 'use client'
 
@@ -10,8 +10,7 @@ import {
   Building, MapPin, Calendar, Users, DollarSign,
   Briefcase, Award, Youtube, BookOpen, Clock, CheckCircle
 } from 'lucide-react';
-// ★★★ 修正箇所: useAuth の import を追加 ★★★
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; // ★★★ useAuth の import が追加されていることを確認 ★★★
 
 interface AdminJobInfoManagerProps {
   onDataChange: () => void; // 親コンポーネント（AdminDashboard）にデータ変更を通知するコールバック
@@ -274,17 +273,24 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     // FormDataから不要なメタデータを除外（RLSエラー回避策）
     const { id, created_at, updated_at, ...dataToUpdate } = formData;
     
-    // ★★★ 修正箇所: created_by と NOT NULL 制約への対応ロジックを追加 ★★★
-    // created_by (または client_id) が NULL 不可の制約に対応
+    // ★★★ 修正箇所 1: created_by にログインユーザーIDを設定する ★★★
     if (user?.id) {
         (dataToUpdate as any).created_by = user.id; 
     }
         
     // title と description の NOT NULL 制約に対応するため、値を設定
-    // DBの NOT NULL 制約に対応するため、company_name の値を title にコピー
     (dataToUpdate as any).title = formData.company_name; 
-    // description も NOT NULL の可能性があるため、vision または company_name を使用
     (dataToUpdate as any).description = formData.company_vision || formData.company_name || '企業情報';
+    
+    // ★★★ 修正箇所 2: 配列型フィールドのチェックと NULL への変換 ★★★
+    const arrayFields = ['industries', 'health_management_practices', 'selection_flow_steps', 'internship_target_students', 'internship_locations', 'internship_content_types'];
+    arrayFields.forEach(field => {
+        const arrayValue = (dataToUpdate as any)[field];
+        if (Array.isArray(arrayValue) && arrayValue.length === 0) {
+            // 空の配列を NULL に変換 (Postgresで空配列とNULLが区別されるため)
+            (dataToUpdate as any)[field] = null; 
+        }
+    });
     // ★★★ 修正箇所ここまで ★★★
 
 
