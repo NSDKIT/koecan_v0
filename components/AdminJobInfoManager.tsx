@@ -58,7 +58,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     selection_flow: null, 
   });
 
-  // ★★★ 修正箇所: JSX外にデバッグログを移動 ★★★
+  // ★★★ 修正: JSX外にデバッグログを移動 (フォームの状態監視用) ★★★
   useEffect(() => {
     if (isModalOpen) {
       console.log('DEBUG: Button Disabled Check (isSubmitting, company_name, title, description)', {
@@ -417,8 +417,10 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
+        // ★★★ 修正1: モーダルオーバーレイのクラスを修正 (画面中央配置) ★★★
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+          {/* ★★★ 修正1: max-w-4xl を追加、max-h-[90vh] と overflow-y-auto を追加してモーダル全体をスクロール可能に ★★★ */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-y-auto">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
@@ -452,7 +454,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </div>
             
             {/* フォーム内容（スクロール領域） */}
-            <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
+            {/* ★★★ 修正2: form から overflow-y-auto を削除 ★★★ */}
+            <form onSubmit={handleSubmit} className="flex-grow">
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
                   <strong className="font-bold">エラー:</strong>
@@ -598,7 +601,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   type="submit"
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isSubmitting || !formData.company_name || !formData.title || !formData.description}
-                  onClick={() => console.log('Temporary onClick: Button Clicked')} // ★★★ 暫定的な onClick ログを再追加 ★★★
+                  onClick={() => console.log('Temporary onClick: Button Clicked')} // クリックイベント確認用ログ (handleSubmitの実行が確認できたら削除推奨)
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                   {editingAd ? '更新' : '掲載'}
