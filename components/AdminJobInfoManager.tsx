@@ -124,7 +124,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     setLoading(true);
     setError(null);
     try {
-      console.log('fetchAdvertisements: Attempting to select from "advertisements" table.');
       const { data, error } = await supabase
         .from('advertisements')
         .select('*') // 全てのカラムを取得
@@ -276,6 +275,13 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     // FormDataから不要なメタデータを除外（RLSエラー回避策）
     const { id, created_at, updated_at, ...dataToUpdate } = formData;
     
+    // ★★★ 修正箇所: title と description に値を設定して NOT NULL 制約に対応 ★★★
+    // DBの NOT NULL 制約に対応するため、company_name の値を title にコピー
+    (dataToUpdate as any).title = formData.company_name; 
+    // description も NOT NULL の可能性があるため、vision または company_name を使用
+    (dataToUpdate as any).description = formData.company_vision || formData.company_name || '企業情報';
+    // ★★★ 修正箇所ここまで ★★★
+
     // 数値型の NaN を null に置き換える安全策（念のため）
     Object.keys(dataToUpdate).forEach(key => {
         const value = (dataToUpdate as any)[key];
@@ -457,7 +463,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch justify-center z-50">
-          {/* ★★★ 修正: w-full h-full と overflow-y-auto でフルスクリーン表示のままスクロールを可能にする ★★★ */}
+          {/* w-full h-full と overflow-y-auto でフルスクリーン表示のままスクロールを可能にする */}
           <div className="bg-white w-full h-full flex flex-col overflow-y-auto">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
@@ -512,7 +518,6 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </div>
             
             {/* フォーム内容（スクロール領域） */}
-            {/* ★★★ 修正: flex-grow のみ。全体スクロールのため、ここでは overflow-y-auto を削除 ★★★ */}
             <form onSubmit={handleSubmit} className="flex-grow"> 
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
