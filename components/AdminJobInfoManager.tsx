@@ -1,4 +1,4 @@
-// koecan_v0-main/components/AdminJobInfoManager.tsx (最終版のコード)
+// koecan_v0-main/components/AdminJobInfoManager.tsx
 
 'use client'
 
@@ -10,7 +10,7 @@ import {
   Building, MapPin, Calendar, Users, DollarSign,
   Briefcase, Award, Youtube, BookOpen, Clock, CheckCircle
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth'; // ★★★ useAuth の import が追加されていることを確認 ★★★
+import { useAuth } from '@/hooks/useAuth';
 
 interface AdminJobInfoManagerProps {
   onDataChange: () => void; // 親コンポーネント（AdminDashboard）にデータ変更を通知するコールバック
@@ -274,21 +274,28 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     const { id, created_at, updated_at, ...dataToUpdate } = formData;
     
     // ★★★ 修正箇所 1: created_by にログインユーザーIDを設定する ★★★
+    // created_by (または client_id) が NULL 不可の制約に対応
     if (user?.id) {
         (dataToUpdate as any).created_by = user.id; 
     }
         
     // title と description の NOT NULL 制約に対応するため、値を設定
+    // DBの NOT NULL 制約に対応するため、company_name の値を title にコピー
     (dataToUpdate as any).title = formData.company_name; 
+    // description も NOT NULL の可能性があるため、vision または company_name を使用
     (dataToUpdate as any).description = formData.company_vision || formData.company_name || '企業情報';
     
     // ★★★ 修正箇所 2: 配列型フィールドのチェックと NULL への変換 ★★★
     const arrayFields = ['industries', 'health_management_practices', 'selection_flow_steps', 'internship_target_students', 'internship_locations', 'internship_content_types'];
-    arrayFields.forEach(field => {
-        const arrayValue = (dataToUpdate as any)[field];
-        if (Array.isArray(arrayValue) && arrayValue.length === 0) {
-            // 空の配列を NULL に変換 (Postgresで空配列とNULLが区別されるため)
-            (dataToUpdate as any)[field] = null; 
+    
+    // Object.keys(dataToUpdate) を直接使用して型安全性の問題を回避
+    Object.keys(dataToUpdate).forEach(fieldKey => {
+        if (arrayFields.includes(fieldKey)) {
+            const arrayValue = (dataToUpdate as any)[fieldKey];
+            if (Array.isArray(arrayValue) && arrayValue.length === 0) {
+                // 空の配列を NULL に変換 (Postgresで空配列とNULLが区別されるため)
+                (dataToUpdate as any)[fieldKey] = null; 
+            }
         }
     });
     // ★★★ 修正箇所ここまで ★★★
