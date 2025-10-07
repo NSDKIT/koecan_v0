@@ -214,6 +214,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('--- HANDLE SUBMIT EXECUTED ---'); 
     e.preventDefault();
     console.log('handleSubmit: START. Setting isSubmitting to true.'); 
     setIsSubmitting(true);
