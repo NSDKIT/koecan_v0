@@ -66,6 +66,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     male_parental_leave_rate: null,
     health_management_practices: [],
     internal_event_frequency: null,
+
+    // その他
     must_tell_welfare: null,
     transfer_existence: false,
     transfer_frequency: null,
@@ -95,8 +97,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     is_active: true,
     display_order: 1,
     priority: 100,
-    title: '', // 便宜上残す
-    description: '', // 便宜上残す
+    title: '', 
+    description: '', 
   };
 
   const [formData, setFormData] = useState<Partial<Advertisement>>(initialFormData);
@@ -156,21 +158,26 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
     console.log('openEditModal: Called for AD ID:', ad.id);
     setEditingAd(ad);
     
-    const adData = { ...ad };
+    // ad を Partial<Advertisement> としてコピーし、型エラーを回避
+    const adData: Partial<Advertisement> = { ...ad }; 
+    
     // 数値型、ブーリアン型、配列型のフィールドを安全に初期化
     Object.keys(initialFormData).forEach(key => {
       const field = key as keyof Advertisement;
+      
+      // ★★★ 修正箇所: 型アサーションを使用し、代入エラーを解消 ★★★
       if (typeof initialFormData[field] === 'number') {
-        adData[field] = (adData[field] as number ?? null);
+        (adData as any)[field] = (adData[field] as number ?? null);
       } else if (typeof initialFormData[field] === 'boolean') {
-        adData[field] = (adData[field] as boolean ?? false);
+        (adData as any)[field] = (adData[field] as boolean ?? false);
       } else if (Array.isArray(initialFormData[field])) {
-        adData[field] = (adData[field] as string[] ?? []);
+        (adData as any)[field] = (adData[field] as string[] ?? []);
       } else if (REQUIRED_FIELDS.includes(key)) {
-        adData[field] = (adData[field] as string ?? '');
+        (adData as any)[field] = (adData[field] as string ?? '');
       } else {
-        adData[field] = (adData[field] as string ?? null);
+        (adData as any)[field] = (adData[field] as string ?? null);
       }
+      // ★★★ 修正箇所ここまで ★★★
     });
 
     setFormData(adData);
@@ -505,6 +512,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </div>
             
             {/* フォーム内容（スクロール領域） */}
+            {/* ★★★ 修正: flex-grow のみ。全体スクロールのため、ここでは overflow-y-auto を削除 ★★★ */}
             <form onSubmit={handleSubmit} className="flex-grow"> 
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
@@ -783,10 +791,10 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   キャンセル
                 </button>
                 <button
-                  type="button" // ★★★ 修正: type="submit" から type="button" に変更 ★★★
-                  onClick={handleSubmit} // ★★★ 修正: onClick で直接 handleSubmit を呼び出す ★★★
+                  type="button" 
+                  onClick={handleSubmit} 
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting || !formData.company_name} // 必須項目は company_name のみ
+                  disabled={isSubmitting || !formData.company_name} 
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                   {editingAd ? '更新' : '掲載'}
