@@ -436,6 +436,15 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
               </button>
             </div>
             
+            {/* デバッグログの追加（フォームがレンダリングされるたびに実行） */}
+            {console.log('DEBUG: Button Disabled Check (isSubmitting, company_name, title, description)', {
+                isSubmitting: isSubmitting,
+                company_name: formData.company_name,
+                title: formData.title,
+                description: formData.description,
+                disabled: isSubmitting || !formData.company_name || !formData.title || !formData.description
+            })}
+
             {/* フォーム内容（スクロール領域） */}
             <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto"> {/* flex-grow と overflow-y-auto を適用 */}
               {error && (
