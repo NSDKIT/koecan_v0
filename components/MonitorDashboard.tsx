@@ -1,3 +1,5 @@
+// koecan_v0-main/components/MonitorDashboard.tsx
+
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -199,25 +201,7 @@ export default function MonitorDashboard() {
     try {
       const { data, error } = await supabase
         .from('advertisements')
-        .select(`
-          *,
-          company_name,
-          location_info,
-          establishment_year,
-          employee_count,
-          employee_gender_ratio,
-          employee_age_composition,
-          recommended_points,
-          salary_info,
-          paid_leave_rate,
-          long_holidays,
-          training_support,
-          busy_season_intensity,
-          youtube_short_url,
-          recruitment_roles,
-          application_qualifications,
-          selection_flow
-        `)
+        .select(`*`)
         .eq('is_active', true)
         .order('priority', { ascending: false })
         .order('display_order', { ascending: true });
@@ -747,20 +731,23 @@ export default function MonitorDashboard() {
                         className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group" // transition-all duration-300 hover:shadow-lg 削除
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
+                        {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
                         {ad.image_url && (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
                             <img
                               src={ad.image_url}
-                              alt={ad.title}
+                              alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} // ★★★ 修正: null/undefined の場合のフォールバック文字列を設定 ★★★
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           </div>
                         )}
                         <div className="p-4">
-                          <h3 className="font-semibold text-gray-800 mb-2">{ad.title}</h3>
-                          {ad.description && (
-                            <p className="text-gray-600 text-sm line-clamp-2">{ad.description}</p>
-                          )}
+                          <h3 className="font-semibold text-gray-800 mb-2">
+                            {ad.company_name || 'N/A'}
+                          </h3>
+                          <p className="text-gray-600 text-sm line-clamp-2">
+                            {ad.company_vision || ad.title || ad.description || '詳細情報がありません'}
+                          </p>
                         </div>
                       </div>
                     ))}
