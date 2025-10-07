@@ -447,7 +447,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
               <button
                 onClick={() => setActiveModalTab('otherInfo')}
                 className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
-                  activeTab === 'otherInfo'
+                  activeModalTab === 'otherInfo' // ★★★ 修正箇所: activeTab から activeModalTab に変更 ★★★
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                     : 'text-gray-600 hover:text-blue-500'
                 }`}
