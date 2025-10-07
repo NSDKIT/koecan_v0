@@ -214,7 +214,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    // e.preventDefault(); は onClick から呼ばれる場合は不要だが、onSubmitの互換性のため残す
+    if (e && e.preventDefault) {
+        e.preventDefault(); 
+    }
+    
     console.log('--- HANDLE SUBMIT EXECUTED ---'); // ★★★ クリックイベント確認用ログ ★★★
     console.log('handleSubmit: START. Setting isSubmitting to true.'); 
     setIsSubmitting(true);
@@ -418,7 +422,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch justify-center z-50">
-          {/* ★★★ 修正: w-full h-full に戻し、overflow-y-auto で全体をスクロール可能に ★★★ */}
+          {/* ★★★ 修正: w-full h-full と overflow-y-auto でフルスクリーン表示のままスクロールを可能にする ★★★ */}
           <div className="bg-white w-full h-full flex flex-col overflow-y-auto">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
@@ -443,7 +447,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
               <button
                 onClick={() => setActiveModalTab('otherInfo')}
                 className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
-                  activeModalTab === 'otherInfo'
+                  activeTab === 'otherInfo'
                     ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                     : 'text-gray-600 hover:text-blue-500'
                 }`}
@@ -453,7 +457,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </div>
             
             {/* フォーム内容（スクロール領域） */}
-            {/* ★★★ 修正: flex-grow のみ。モーダル全体がスクロールするため、個別のスクロールは不要 ★★★ */}
+            {/* ★★★ 修正: flex-grow のみ。全体スクロールのため、ここでは overflow-y-auto を削除 ★★★ */}
             <form onSubmit={handleSubmit} className="flex-grow"> 
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
@@ -597,10 +601,10 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                   キャンセル
                 </button>
                 <button
-                  type="submit"
+                  type="button" // ★★★ 修正: type="submit" から type="button" に変更 ★★★
+                  onClick={handleSubmit} // ★★★ 修正: onClick で直接 handleSubmit を呼び出す ★★★
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isSubmitting || !formData.company_name || !formData.title || !formData.description}
-                  onClick={() => console.log('Temporary onClick: Button Clicked')} // クリックイベント確認用ログ (handleSubmitの実行が確認できたら削除推奨)
                 >
                   {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
                   {editingAd ? '更新' : '掲載'}
