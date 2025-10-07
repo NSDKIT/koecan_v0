@@ -732,15 +732,21 @@ export default function MonitorDashboard() {
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
                         {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
-                        {ad.image_url && (
+                        {(ad.image_url && ad.image_url.length > 0) ? (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
                             <img
                               src={ad.image_url}
-                              alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} // ★★★ 修正: null/undefined の場合のフォールバック文字列を設定 ★★★
+                              alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           </div>
+                        ) : (
+                          // 画像がない場合のプレースホルダー
+                          <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                            <Briefcase className="w-12 h-12 text-gray-500" />
+                          </div>
                         )}
+                        
                         <div className="p-4">
                           <h3 className="font-semibold text-gray-800 mb-2">
                             {ad.company_name || 'N/A'}
@@ -866,8 +872,53 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"> 
-            {/* ... モーダルのコンテンツ ... */}
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            
+            {/* ★★★ 企業詳細モーダルのコンテンツ ★★★ */}
+            <div className="p-6">
+              <div className="flex justify-between items-start border-b pb-4 mb-4">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-1">{selectedAdvertisement.company_name}</h2>
+                  <p className="text-gray-600">{selectedAdvertisement.company_vision}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedAdvertisement(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* 主要情報グリッド */}
+              <h3 className="text-xl font-semibold border-b pb-2 mb-4">企業概要</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div><p className="font-semibold">代表者名:</p><p>{selectedAdvertisement.representative_name || 'N/A'}</p></div>
+                <div><p className="font-semibold">設立年:</p><p>{selectedAdvertisement.establishment_year || 'N/A'}</p></div>
+                <div><p className="font-semibold">所在地 (本社):</p><p>{selectedAdvertisement.headquarters_location || 'N/A'}</p></div>
+                <div><p className="font-semibold">従業員数:</p><p>{selectedAdvertisement.employee_count || 'N/A'}</p></div>
+              </div>
+
+              {/* 募集情報セクション */}
+              <h3 className="text-xl font-semibold border-b pb-2 mb-4">募集・待遇情報</h3>
+              <p className="mb-2"><strong>初任給:</strong> {selectedAdvertisement.starting_salary || 'N/A'}</p>
+              <p className="mb-2"><strong>募集職種:</strong> {selectedAdvertisement.recruitment_roles_count || 'N/A'}</p>
+              <p className="mb-4"><strong>イチオシポイント:</strong> {selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && `, ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && `, ${selectedAdvertisement.highlight_point_3}`}</p>
+              
+              {/* 外部リンクボタン */}
+              {selectedAdvertisement.official_website_url && (
+                <a 
+                  href={selectedAdvertisement.official_website_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  公式ホームページを見る
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </a>
+              )}
+            </div>
+            {/* ★★★ 企業詳細モーダルのコンテンツここまで ★★★ */}
+            
           </div>
         </div>
       )}
