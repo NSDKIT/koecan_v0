@@ -417,10 +417,9 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
 
       {/* 就職情報 登録/編集 モーダル */}
       {isModalOpen && (
-        // ★★★ 修正1: モーダルオーバーレイのクラスを修正 (画面中央配置) ★★★
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          {/* ★★★ 修正1: max-w-4xl を追加、max-h-[90vh] と overflow-y-auto を追加してモーダル全体をスクロール可能に ★★★ */}
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-stretch justify-center z-50">
+          {/* ★★★ 修正: w-full h-full に戻し、overflow-y-auto で全体をスクロール可能に ★★★ */}
+          <div className="bg-white w-full h-full flex flex-col overflow-y-auto">
             {/* モーダルヘッダー */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
               <h3 className="text-2xl font-bold text-gray-800">{editingAd ? '就職情報を編集' : '新規就職情報を掲載'}</h3>
@@ -454,8 +453,8 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
             </div>
             
             {/* フォーム内容（スクロール領域） */}
-            {/* ★★★ 修正2: form から overflow-y-auto を削除 ★★★ */}
-            <form onSubmit={handleSubmit} className="flex-grow">
+            {/* ★★★ 修正: flex-grow のみ。モーダル全体がスクロールするため、個別のスクロールは不要 ★★★ */}
+            <form onSubmit={handleSubmit} className="flex-grow"> 
               {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-6 mt-6" role="alert">
                   <strong className="font-bold">エラー:</strong>
