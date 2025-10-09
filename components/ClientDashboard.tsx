@@ -1,3 +1,5 @@
+// koecan_v0-main/components/ClientDashboard.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -17,15 +19,15 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  MessageCircle // アイコンをインポート
 } from 'lucide-react';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
-// import { NotificationButton } from '@/components/NotificationButton'; // 削除
+import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LINE連携ボタンをインポート ★★★
 import { SparklesCore } from '@/components/ui/sparkles';
 
 // TODO: ここに、クライアントがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
-// モニター用ダッシュボードのSUPABASE_SUPPORT_USER_IDと同じIDであるべきです。
 const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; 
 
 export function ClientDashboard() {
@@ -42,6 +44,8 @@ export function ClientDashboard() {
     description: '',
     points_reward: 10,
   });
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // ★★★ 追加: LINE連携モーダル用のステート ★★★
+
 
   useEffect(() => {
     if (user) {
@@ -206,7 +210,16 @@ export function ClientDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* <NotificationButton /> を削除 */}
+                {/* ★★★ 追加: LINE連携ボタン（モーダルを開く） ★★★ */}
+                <button 
+                  onClick={() => setShowLineLinkModal(true)} 
+                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  LINE連携
+                </button>
+                {/* ★★★ ここまで追加 ★★★ */}
+
                 <button
                   onClick={() => setShowChatModal(true)} // チャットモーダルを開くボタン
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
@@ -535,6 +548,21 @@ export function ClientDashboard() {
           otherUserId={SUPABASE_SUPPORT_USER_ID} // otherUserIdを渡す
           onClose={() => setShowChatModal(false)}
         />
+      )}
+      
+      {/* LINE連携モーダル */}
+      {showLineLinkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+                  <div className="flex justify-end p-4">
+                      <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
+                          <X className="w-6 h-6" />
+                      </button>
+                  </div>
+                  {/* LineLinkButtonは、自身でリダイレクトを行うため、ここで直接レンダリング */}
+                  <LineLinkButton /> 
+              </div>
+          </div>
       )}
     </div>
   );
