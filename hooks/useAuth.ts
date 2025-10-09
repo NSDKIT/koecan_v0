@@ -10,7 +10,7 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// ★★★ 修正箇所: タイムアウト時間を 2秒 (2000ms) に変更 ★★★
+// タイムアウト時間を定義 (例: 2秒)
 const AUTH_TIMEOUT_MS = 2000;
 
 export function useAuth() {
@@ -146,12 +146,10 @@ export function useAuth() {
             console.warn('Handling AUTH TIMEOUT: Forcing signOut and full page reload.');
             if (mountedRef.current) {
               
-              // ★★★ 修正箇所: エラー画面表示ではなく、自動でセッションをクリアし強制リロード ★★★
-              performSignOut(); // ローカルセッションをクリーンアップ
-              // 強制的にキャッシュを無視してリロード (UXを優先し、自動で再試行)
-              setTimeout(() => { 
-                window.location.reload(true); 
-              }, 100); // わずかな遅延を挟んでリロード (ログアウト処理完了を待つ)
+              // ★★★ 修正箇所: performSignOut の完了を待ってから引数なしでリロード ★★★
+              await performSignOut(); // ローカルセッションをクリーンアップ
+              // 強制的にキャッシュを無視するリロードに近い動作
+              window.location.reload(); 
               
               // loading: true のままにすることで、リロードが始まるまで「認証情報を確認中」を維持
               return; 
