@@ -69,7 +69,17 @@ export function AuthForm({ onBack }: AuthFormProps) {
               },
             ]);
 
-          if (userError) throw userError;
+          if (userError) {
+             // ★★★ 修正箇所: プロファイル作成エラー時の処理を強化 ★★★
+             console.error('Profile creation failed:', userError);
+             // ユーザーの認証自体は成功しているため、エラーメッセージを表示して処理を中断
+             setError(`ユーザープロファイル作成に失敗しました。認証は完了していますが、データに不整合が発生しています。メッセージ: ${userError.message}`);
+             setLoading(false);
+             
+             // 致命的なエラーなので、ログイン状態をクリアして再試行を促す
+             await supabase.auth.signOut();
+             return; 
+          }
 
           // Create role-specific profile
           if (role === 'client') {
@@ -82,7 +92,13 @@ export function AuthForm({ onBack }: AuthFormProps) {
                   industry,
                 },
               ]);
-            if (clientError) throw clientError;
+            if (clientError) {
+                console.error('Client profile creation failed:', clientError);
+                setError(`クライアント情報作成に失敗しました: ${clientError.message}`);
+                setLoading(false);
+                await supabase.auth.signOut();
+                return;
+            }
           } else if (role === 'monitor') {
             const { error: monitorError } = await supabase
               .from('monitor_profiles')
@@ -95,7 +111,13 @@ export function AuthForm({ onBack }: AuthFormProps) {
                   location,
                 },
               ]);
-            if (monitorError) throw monitorError;
+            if (monitorError) {
+                console.error('Monitor profile creation failed:', monitorError);
+                setError(`モニター情報作成に失敗しました: ${monitorError.message}`);
+                setLoading(false);
+                await supabase.auth.signOut();
+                return;
+            }
           }
         }
       }
@@ -103,7 +125,11 @@ export function AuthForm({ onBack }: AuthFormProps) {
       console.error('Auth error:', err);
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
-      setLoading(false);
+      // 成功時のみ finally が実行されるが、上記 return で抜けるため、
+      // 成功時/サインイン時/サインアップ成功後にのみ実行
+      if (!error) {
+        setLoading(false);
+      }
     }
   };
 
