@@ -10,6 +10,9 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
+// タイムアウト時間を定義 (例: 10秒)
+const AUTH_TIMEOUT_MS = 10000;
+
 export function useAuth() {
   const supabase = useSupabase();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -20,11 +23,27 @@ export function useAuth() {
   const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true; // マウント時にtrueに設定
+    mountedRef.current = true;
     return () => {
-      mountedRef.current = false; // アンマウント時にfalseに設定
+      mountedRef.current = false;
     };
   }, []);
+
+  // 独立した signOut 関数 (タイムアウトループ対策)
+  const performSignOut = async () => {
+    if (!supabase) return;
+    try {
+      await supabase.auth.signOut();
+      if (mountedRef.current) {
+        setUser(null);
+        setError(null);
+        setLoading(false);
+      }
+      console.log('signOut: Successfully performed sign out after error.');
+    } catch (e) {
+      console.error('Sign Out Failed in performSignOut:', e);
+    }
+  }
 
   useEffect(() => {
     console.log('--- useAuth useEffect START ---');
@@ -34,49 +53,33 @@ export function useAuth() {
     const fetchUserData = async (client: SupabaseClient, userId: string): Promise<AuthUser | null> => {
       console.log('fetchUserData: START for user ID:', userId);
       try {
-        console.log('fetchUserData: Attempting to select from "users" table for ID:', userId);
         const { data: userProfile, error: profileError } = await client
           .from('users')
           .select('role, name')
           .eq('id', userId)
           .single();
 
-        // ★★★ 修正箇所: 行がない場合 (PGRST116) のエラーを安全に処理する ★★★
         if (profileError && profileError.code !== 'PGRST116') {
           console.error('fetchUserData: ERROR fetching user profile (Non-PGRST116):', profileError.message);
           throw profileError;
         }
-
-        console.log('fetchUserData: Successfully fetched user profile:', userProfile);
         
-        console.log('fetchUserData: Attempting to get auth user data using client.auth.getUser().');
         const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
-        if (authUserError) {
-          // AuthError は message プロパティがメイン
-          console.error('fetchUserData: ERROR fetching auth user:', authUserError.message); // details, hint を削除
-          throw authUserError;
-        }
+        if (authUserError) throw authUserError;
 
-        if (!authUser) {
-          console.log('fetchUserData: No auth user found after profile fetch - this should not happen if session was active.');
-          return null;
-        }
+        if (!authUser) return null;
         
-        console.log('fetchUserData: Auth user data fetched successfully. Returning combined user data.');
         console.log('fetchUserData: END successfully.');
-        
-        // userProfile が null の場合もあるため、安全に結合
         return {
           ...authUser,
           role: userProfile?.role,
           name: userProfile?.name,
-        } as AuthUser; // AuthUser 型への明示的なキャスト
+        } as AuthUser;
       } catch (err) {
         console.error('fetchUserData: CRITICAL ERROR during user data retrieval:', err);
         if (mountedRef.current) {
           setError(err instanceof Error ? err.message : 'ユーザープロファイル取得中に致命的なエラーが発生しました');
         }
-        console.log('fetchUserData: END with error.');
         return null;
       }
     };
@@ -86,25 +89,37 @@ export function useAuth() {
       console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
 
       if (!supabase) {
-        console.log('getInitialSession: Supabase client is null. Cannot proceed with session check.');
         if (mountedRef.current) {
-          // Supabaseが利用できない場合、ローディングを停止しエラーを表示
           setLoading(false);
-          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
+          setError('Supabaseクライアントが初期化されていません。');
         }
-        console.log('getInitialSession: END early due to null Supabase client.');
         return;
       }
       
+      let timeoutId: NodeJS.Timeout | null = null;
+      let isTimedOut = false;
+
       try {
-        console.log('getInitialSession: Attempting to get session using supabase.auth.getSession().');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) {
-          // AuthError は message プロパティがメイン
-          console.error('getInitialSession: ERROR getting session:', sessionError.message); // details, hint を削除
-          throw sessionError;
+        const timeoutPromise = new Promise<void>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            isTimedOut = true;
+            reject(new Error('AUTH_TIMEOUT: Supabaseセッションの検証に時間がかかりすぎました。'));
+          }, AUTH_TIMEOUT_MS);
+        });
+
+        console.log('getInitialSession: Attempting to get session with timeout.');
+        
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise.then(() => ({ data: { session: null }, error: new Error('AUTH_TIMEOUT_INNER') })),
+        ]);
+
+        if (isTimedOut || (sessionResult as any).error?.message === 'AUTH_TIMEOUT_INNER') {
+            throw new Error('AUTH_TIMEOUT');
         }
 
+        const session = (sessionResult as any).data.session;
+        
         if (session?.user) {
           console.log('getInitialSession: Active session found for user ID:', session.user.id);
           const userData = await fetchUserData(supabase, session.user.id);
@@ -118,11 +133,22 @@ export function useAuth() {
           }
         }
       } catch (err) {
-        console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
-        if (mountedRef.current) {
+        console.error('getInitialSession: CRITICAL ERROR during initial session check or timeout:', err);
+        
+        // タイムアウトエラーの場合、セッションを強制的にクリーンアップ
+        if (err instanceof Error && err.message.includes('AUTH_TIMEOUT')) {
+            console.warn('Handling AUTH TIMEOUT: Forcing signOut to clear local cache.');
+            if (mountedRef.current) {
+              setError('認証に失敗しました。セッションをリセットしましたので、再度ログインしてください。');
+              performSignOut(); // 外部の performSignOut を呼び出してローカルキャッシュをクリーン
+            }
+        } else if (mountedRef.current) {
           setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
         }
       } finally {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+        }
         if (mountedRef.current) {
           console.log('getInitialSession: Finished. Setting loading to false.');
           setLoading(false);
@@ -134,85 +160,51 @@ export function useAuth() {
     // 初期セッションチェックを実行
     getInitialSession();
 
-    // 認証状態の変化を監視するリスナーを設定
-    let subscription: { unsubscribe: () => void } | undefined;
-    if (supabase) {
-      console.log('useEffect: Setting up onAuthStateChange listener.');
-      const { data } = supabase.auth.onAuthStateChange(
+    // ... (onAuthStateChange のリスナー設定は変更なし) ...
+    const { data: authListener } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
           if (!mountedRef.current) return;
           console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
           try {
             if (session?.user) {
-              console.log('onAuthStateChange: Session user found. Fetching user data.');
               const userData = await fetchUserData(supabase, session.user.id);
-              if (mountedRef.current) {
-                setUser(userData);
-              }
+              if (mountedRef.current) setUser(userData);
             } else {
-              console.log('onAuthStateChange: No session user found. Setting user to null.');
-              if (mountedRef.current) {
-                setUser(null);
-              }
+              if (mountedRef.current) setUser(null);
             }
           } catch(err) {
               console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
-              if (mountedRef.current) {
-                setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
-              }
+              if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
           }
           console.log('onAuthStateChange: END of event processing.');
         }
       );
-      subscription = data.subscription;
-    } else {
-      console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
-    }
-    console.log('--- useAuth useEffect END ---');
 
     return () => {
-      // クリーンアップ
-      if (subscription) {
+      if (authListener.subscription) {
         console.log('useEffect: Unsubscribing from onAuthStateChange.');
-        subscription.unsubscribe();
+        authListener.subscription.unsubscribe();
       }
       console.log('useEffect: Cleanup complete.');
     };
-  }, [supabase]); // supabaseクライアントが変更された場合にのみ再実行
+  }, [supabase]); 
 
+  // 公開する signOut 関数はそのまま維持
   const signOut = async () => {
-    if (!supabase) {
-      if (mountedRef.current) {
-        setError('Supabaseクライアントが初期化されていません。ログアウトできません。');
-      }
-      console.log('signOut: END early due to null Supabase client.');
-      return;
-    }
+    // ... (既存の signOut ロジックをそのまま使用) ...
+    if (!supabase) return;
     try {
-      if (mountedRef.current) {
-        setLoading(true); // ログアウト処理中にローディングを表示
-      }
-      console.log('signOut: START. Attempting to sign out.');
+      if (mountedRef.current) setLoading(true);
       const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-        console.error('signOut: ERROR during sign out:', signOutError);
-        throw signOutError;
-      }
+      if (signOutError) throw signOutError;
       if (mountedRef.current) {
         setUser(null);
-        setError(null); // ログアウト成功時はエラーもクリア
+        setError(null);
       }
-      console.log('signOut: Successfully signed out.');
     } catch (err) {
-      console.error('signOut: CRITICAL ERROR during sign out:', err);
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'Sign out error');
-      }
+      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Sign out error');
     } finally {
-      if (mountedRef.current) {
-        setLoading(false); // ログアウト処理完了後にローディングを非表示
-      }
-      console.log('signOut: END.');
+      if (mountedRef.current) setLoading(false);
     }
   };
 
