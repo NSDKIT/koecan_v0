@@ -82,11 +82,11 @@ export function MatchingFeature() {
 
       await new Promise(resolve => setTimeout(resolve, 1500));
       const geminiResult = simulateGeminiAnalysis(studentProfile);
-      setAnalysisSteps(prev => [...prev, 'あなたの価値観を解析しました [Gemini]']);
+      setAnalysisSteps(prev => [...prev, 'あなたの価値観を解析しました']);
 
       await new Promise(resolve => setTimeout(resolve, 2000));
       const claudeResult = simulateClaudeScoring(geminiResult, companies);
-      setAnalysisSteps(prev => [...prev, '企業文化との深層マッチングを実行しました [Claude 3]']);
+      setAnalysisSteps(prev => [...prev, '企業文化との深層マッチングを実行しました']);
 
       // ★★★ 変更点: 結果が0件の場合のハンドリングを追加 ★★★
       if (claudeResult.length === 0) {
