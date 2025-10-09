@@ -91,7 +91,7 @@ export function useAuth() {
       if (!supabase) {
         if (mountedRef.current) {
           setLoading(false);
-          setError('Supabaseクライアントが初期化されていません。');
+          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
         }
         return;
       }
@@ -118,8 +118,14 @@ export function useAuth() {
             throw new Error('AUTH_TIMEOUT');
         }
 
+        const sessionError = (sessionResult as any).error;
         const session = (sessionResult as any).data.session;
         
+        if (sessionError) {
+          console.error('getInitialSession: ERROR getting session:', sessionError.message);
+          throw sessionError;
+        }
+
         if (session?.user) {
           console.log('getInitialSession: Active session found for user ID:', session.user.id);
           const userData = await fetchUserData(supabase, session.user.id);
@@ -160,30 +166,41 @@ export function useAuth() {
     // 初期セッションチェックを実行
     getInitialSession();
 
-    // ... (onAuthStateChange のリスナー設定は変更なし) ...
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (_event, session) => {
-          if (!mountedRef.current) return;
-          console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
-          try {
-            if (session?.user) {
-              const userData = await fetchUserData(supabase, session.user.id);
-              if (mountedRef.current) setUser(userData);
-            } else {
-              if (mountedRef.current) setUser(null);
+    // ★★★ 修正箇所: onAuthStateChange のリスナー設定に null チェックを追加 ★★★
+    let subscription: { unsubscribe: () => void } | undefined;
+    if (supabase) { // <-- ここで null チェック
+        console.log('useEffect: Setting up onAuthStateChange listener.');
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+            async (_event, session) => {
+              if (!mountedRef.current) return;
+              console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
+              try {
+                if (session?.user) {
+                  const userData = await fetchUserData(supabase, session.user.id);
+                  if (mountedRef.current) setUser(userData);
+                } else {
+                  if (mountedRef.current) setUser(null);
+                }
+              } catch(err) {
+                  console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
+                  if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
+              }
+              console.log('onAuthStateChange: END of event processing.');
             }
-          } catch(err) {
-              console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
-              if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
-          }
-          console.log('onAuthStateChange: END of event processing.');
-        }
-      );
+          );
+          subscription = authListener.subscription;
+    } else {
+        console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
+    }
+    // ★★★ 修正箇所ここまで ★★★
+
+    console.log('--- useAuth useEffect END ---');
 
     return () => {
-      if (authListener.subscription) {
+      // クリーンアップ
+      if (subscription) {
         console.log('useEffect: Unsubscribing from onAuthStateChange.');
-        authListener.subscription.unsubscribe();
+        subscription.unsubscribe();
       }
       console.log('useEffect: Cleanup complete.');
     };
@@ -191,7 +208,6 @@ export function useAuth() {
 
   // 公開する signOut 関数はそのまま維持
   const signOut = async () => {
-    // ... (既存の signOut ロジックをそのまま使用) ...
     if (!supabase) return;
     try {
       if (mountedRef.current) setLoading(true);
