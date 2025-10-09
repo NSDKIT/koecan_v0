@@ -10,8 +10,8 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウト時間を定義 (例: 10秒)
-const AUTH_TIMEOUT_MS = 10000;
+// ★★★ 修正箇所: タイムアウト時間を 2秒 (2000ms) に変更 ★★★
+const AUTH_TIMEOUT_MS = 2000;
 
 export function useAuth() {
   const supabase = useSupabase();
@@ -141,12 +141,20 @@ export function useAuth() {
       } catch (err) {
         console.error('getInitialSession: CRITICAL ERROR during initial session check or timeout:', err);
         
-        // タイムアウトエラーの場合、セッションを強制的にクリーンアップ
+        // タイムアウトエラーの場合、セッションを強制的にクリーンアップし、強制リロード
         if (err instanceof Error && err.message.includes('AUTH_TIMEOUT')) {
-            console.warn('Handling AUTH TIMEOUT: Forcing signOut to clear local cache.');
+            console.warn('Handling AUTH TIMEOUT: Forcing signOut and full page reload.');
             if (mountedRef.current) {
-              setError('認証に失敗しました。セッションをリセットしましたので、再度ログインしてください。');
-              performSignOut(); // 外部の performSignOut を呼び出してローカルキャッシュをクリーン
+              
+              // ★★★ 修正箇所: エラー画面表示ではなく、自動でセッションをクリアし強制リロード ★★★
+              performSignOut(); // ローカルセッションをクリーンアップ
+              // 強制的にキャッシュを無視してリロード (UXを優先し、自動で再試行)
+              setTimeout(() => { 
+                window.location.reload(true); 
+              }, 100); // わずかな遅延を挟んでリロード (ログアウト処理完了を待つ)
+              
+              // loading: true のままにすることで、リロードが始まるまで「認証情報を確認中」を維持
+              return; 
             }
         } else if (mountedRef.current) {
           setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
@@ -166,9 +174,9 @@ export function useAuth() {
     // 初期セッションチェックを実行
     getInitialSession();
 
-    // ★★★ 修正箇所: onAuthStateChange のリスナー設定に null チェックを追加 ★★★
+    // ... (onAuthStateChange のリスナー設定) ...
     let subscription: { unsubscribe: () => void } | undefined;
-    if (supabase) { // <-- ここで null チェック
+    if (supabase) { 
         console.log('useEffect: Setting up onAuthStateChange listener.');
         const { data: authListener } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
@@ -192,7 +200,7 @@ export function useAuth() {
     } else {
         console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
     }
-    // ★★★ 修正箇所ここまで ★★★
+    // ... (onAuthStateChange のリスナー設定ここまで) ...
 
     console.log('--- useAuth useEffect END ---');
 
