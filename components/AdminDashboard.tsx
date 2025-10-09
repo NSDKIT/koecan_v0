@@ -1,3 +1,5 @@
+// koecan_v0-main/components/AdminDashboard.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -17,14 +19,17 @@ import {
   CheckCircle,
   Clock,
   Briefcase,
-  MessageCircle // アイコンを追加
+  MessageCircle,
+  Menu, // ハンバーガーメニュー
+  X // 閉じるボタン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
-import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
-import { PointExchangeManager } from '@/components/PointExchangeManager'; // ★★★ 追加: ポイント交換管理をインポート ★★★
+import { ChatModal } from '@/components/ChatModal';
+import { PointExchangeManager } from '@/components/PointExchangeManager';
+import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LineLinkButtonをインポート ★★★
 
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange'; // ★★★ 'point_exchange' を追加 ★★★
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
@@ -36,6 +41,8 @@ export function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminDashboardTab>('overview');
+  const [isMenuOpen, setIsMenuOpen] = useState(false); // メニュー開閉状態
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // LINE連携モーダル
 
   // チャット監視用ステート
   const [chatRooms, setChatRooms] = useState<any[]>([]);
@@ -204,6 +211,16 @@ export function AdminDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
+                {/* ★★★ 追加: LINE連携ボタン（モーダルを開く） ★★★ */}
+                <button 
+                  onClick={() => setShowLineLinkModal(true)} 
+                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  LINE連携
+                </button>
+                {/* ★★★ ここまで追加 ★★★ */}
+
                 <button
                   onClick={() => {}}
                   className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-colors"
@@ -314,6 +331,20 @@ export function AdminDashboard() {
           readOnly={true} // 閲覧モードを有効化
           roomIdOverride={selectedRoomId} // 選択したルームIDを渡す
         />
+      )}
+
+      {/* ★★★ 追加: LINE連携モーダル ★★★ */}
+      {showLineLinkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+                  <div className="flex justify-end p-4">
+                      <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
+                          <X className="w-6 h-6" />
+                      </button>
+                  </div>
+                  <LineLinkButton /> 
+              </div>
+          </div>
       )}
     </div>
   );
