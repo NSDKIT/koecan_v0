@@ -1,3 +1,5 @@
+// koecan_v0-main/components/SupportDashboard.tsx
+
 'use client'
 
 import React, { useState, useEffect } from 'react';
@@ -14,11 +16,12 @@ import {
   CheckCircle, // ユーザーが見つからない場合のアイコン
   PhoneCall, // キャリア相談リクエストのアイコン（仮）
   Mail, // キャリア相談リクエストのアイコン（仮）
-  X // モーダルを閉じるアイコン
+  X // 閉じるアイコン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
 import { CareerConsultationModal } from '@/components/CareerConsultationModal'; // キャリア相談モーダルをインポート
+import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LineLinkButtonをインポート ★★★
 
 export default function SupportDashboard() {
   const { user, signOut } = useAuth();
@@ -28,6 +31,8 @@ export default function SupportDashboard() {
   const [monitorUsers, setMonitorUsers] = useState<User[]>([]); // モニターユーザーのリスト
   const [error, setError] = useState<string | null>(null);
   const [showCareerConsultationManagement, setShowCareerConsultationManagement] = useState(false); // キャリア相談管理UIの表示
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // LINE連携モーダル
+
 
   useEffect(() => {
     if (user) {
@@ -121,6 +126,16 @@ export default function SupportDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
+                {/* ★★★ 追加: LINE連携ボタン（モーダルを開く） ★★★ */}
+                <button 
+                  onClick={() => setShowLineLinkModal(true)} 
+                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  LINE連携
+                </button>
+                {/* ★★★ ここまで追加 ★★★ */}
+
                 <button
                   onClick={() => {}}
                   className="flex items-center space-x-2 text-gray-700 hover:text-green-600 transition-colors"
@@ -250,6 +265,20 @@ export default function SupportDashboard() {
             {/* 実際には、ここにSupabaseからキャリア相談リクエストデータをフェッチして表示する */}
           </div>
         </div>
+      )}
+
+      {/* ★★★ 追加: LINE連携モーダル ★★★ */}
+      {showLineLinkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+                  <div className="flex justify-end p-4">
+                      <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
+                          <X className="w-6 h-6" />
+                      </button>
+                  </div>
+                  <LineLinkButton /> 
+              </div>
+          </div>
       )}
     </div>
   );
