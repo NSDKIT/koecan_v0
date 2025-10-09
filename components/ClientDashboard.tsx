@@ -20,7 +20,8 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  MessageCircle // アイコンをインポート
+  MessageCircle, // アイコンをインポート
+  X // ★★★ 修正箇所: X アイコンを追加 ★★★
 } from 'lucide-react';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
