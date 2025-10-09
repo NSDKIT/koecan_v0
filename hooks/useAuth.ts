@@ -41,11 +41,12 @@ export function useAuth() {
           .eq('id', userId)
           .single();
 
-        if (profileError) {
-          // PostgrestError の詳細プロパティに注意
-          console.error('fetchUserData: ERROR fetching user profile:', profileError.message, profileError.details, profileError.hint);
+        // ★★★ 修正箇所: 行がない場合 (PGRST116) のエラーを安全に処理する ★★★
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('fetchUserData: ERROR fetching user profile (Non-PGRST116):', profileError.message);
           throw profileError;
         }
+
         console.log('fetchUserData: Successfully fetched user profile:', userProfile);
         
         console.log('fetchUserData: Attempting to get auth user data using client.auth.getUser().');
@@ -63,11 +64,13 @@ export function useAuth() {
         
         console.log('fetchUserData: Auth user data fetched successfully. Returning combined user data.');
         console.log('fetchUserData: END successfully.');
+        
+        // userProfile が null の場合もあるため、安全に結合
         return {
           ...authUser,
-          role: userProfile.role,
-          name: userProfile.name,
-        };
+          role: userProfile?.role,
+          name: userProfile?.name,
+        } as AuthUser; // AuthUser 型への明示的なキャスト
       } catch (err) {
         console.error('fetchUserData: CRITICAL ERROR during user data retrieval:', err);
         if (mountedRef.current) {
