@@ -1,7 +1,9 @@
+// koecan_v0-main/app/page.tsx
+
 'use client'
 
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // ★★★ useEffect を追加 ★★★
 import { useAuth } from '@/hooks/useAuth';
 import { isSupabaseConfigured } from '@/config/supabase';
 import { AuthForm } from '@/components/AuthForm';
@@ -19,6 +21,16 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
   // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
+
+  // ★★★ 修正箇所: 認証状態の変化を監視するログを追加 ★★★
+  useEffect(() => {
+    console.log('PAGE.TSX RENDER: Current Auth State:', { 
+      loading: loading, 
+      user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
+      error: error
+    });
+  }, [loading, user, error]);
+  // ★★★ 修正箇所ここまで ★★★
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
