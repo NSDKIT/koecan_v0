@@ -1,3 +1,5 @@
+// koecan_v0-main/components/LineLinkButton.tsx
+
 'use client'
 
 import React, { useState } from 'react';
@@ -55,7 +57,6 @@ export function LineLinkButton() {
         const encodedState = btoa(rawState); 
         
         // ② LINE 認証 URL の生成
-        // ★★★ 修正: redirect_uri を明示的にエンコードし、URLを文字列で構築 ★★★
         const encodedRedirectUri = encodeURIComponent(LINE_REDIRECT_URI); 
 
         const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?` +
@@ -67,8 +68,11 @@ export function LineLinkButton() {
             `&prompt=${PROMPT}` +
             `&bot_prompt=${BOT_PROMPT}`;
         
-        // ③ リダイレクト
-        window.location.href = lineAuthUrl;
+        // ★★★ デバッグ修正箇所: アラートで URL を表示し、リダイレクトを停止 ★★★
+        alert("リダイレクトURLを確認してください:\n" + lineAuthUrl);
+        // window.location.href = lineAuthUrl; // <-- 元のリダイレクト処理
+        setLoading(false);
+        // ★★★ デバッグ修正箇所ここまで ★★★
 
     } catch (e) {
         console.error("LINE連携エラー:", e);
