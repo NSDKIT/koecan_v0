@@ -580,7 +580,7 @@ export default function MonitorDashboard() {
               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
             >
               <FileText className="w-5 h-5 mr-2" /> 
-              プロフィールアンケート
+              プロフィール
             </button>
             <button
               onClick={() => {
