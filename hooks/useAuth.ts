@@ -10,8 +10,8 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウト時間を定義 (例: 2秒)
-const AUTH_TIMEOUT_MS = 2000;
+// ★★★ 修正箇所: タイムアウト時間を 3秒 (3000ms) に変更 ★★★
+const AUTH_TIMEOUT_MS = 3000;
 
 export function useAuth() {
   const supabase = useSupabase();
@@ -37,7 +37,8 @@ export function useAuth() {
       if (mountedRef.current) {
         setUser(null);
         setError(null);
-        setLoading(false);
+        // ★★★ 修正: サインアウト後に loading を false に戻すロジックを維持 ★★★
+        setLoading(false); 
       }
       console.log('signOut: Successfully performed sign out after error.');
     } catch (e) {
@@ -146,12 +147,14 @@ export function useAuth() {
             console.warn('Handling AUTH TIMEOUT: Forcing signOut and full page reload.');
             if (mountedRef.current) {
               
-              // ★★★ 修正箇所: performSignOut の完了を待ってから引数なしでリロード ★★★
+              // ★★★ 修正: サインアウトを待ち、ローディングを解除してからリロード ★★★
               await performSignOut(); // ローカルセッションをクリーンアップ
+              // エラーメッセージは不要。ローディングが false になり、リロードまでの短い間は未認証画面が表示されます。
+              
               // 強制的にキャッシュを無視するリロードに近い動作
               window.location.reload(); 
               
-              // loading: true のままにすることで、リロードが始まるまで「認証情報を確認中」を維持
+              // loading: true を解除するが、リロードが即座に起こるため UX の問題はないはず
               return; 
             }
         } else if (mountedRef.current) {
