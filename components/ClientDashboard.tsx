@@ -21,7 +21,7 @@ import {
   CheckCircle,
   AlertCircle,
   MessageCircle, // アイコンをインポート
-  X // ★★★ 修正箇所: X アイコンを追加 ★★★
+  X 
 } from 'lucide-react';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
@@ -115,12 +115,18 @@ export function ClientDashboard() {
 
   const handleStatusChange = async (surveyId: string, newStatus: string) => {
     try {
+      console.log(`DEBUG: Attempting to update survey ${surveyId} to status ${newStatus}`); // ★★★ デバッグログ ★★★
       const { error } = await supabase
         .from('surveys')
         .update({ status: newStatus })
         .eq('id', surveyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('DEBUG RLS FAIL:', error); // ★★★ 失敗時のエラーログ ★★★
+        throw error;
+      }
+      console.log('DEBUG RLS SUCCESS: Status update successful.'); // ★★★ 成功時のログ ★★★
+      
       fetchSurveys();
     } catch (error) {
       console.error('Error updating survey status:', error);
