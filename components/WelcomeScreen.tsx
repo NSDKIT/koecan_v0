@@ -1,3 +1,5 @@
+// koecan_v0-main/components/WelcomeScreen.tsx
+
 'use client'
 
 import React from 'react';
@@ -17,26 +19,21 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
       <div className="max-w-4xl mx-auto text-center relative z-20">
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 border border-orange-100">
           <div className="mb-8">
-            <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
+            {/* ★★★ 修正: 文字サイズを半分に (text-5xl -> text-3xl) ★★★ */}
+            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
               声キャン！
             </h1>
-            <p className="text-xl text-gray-600 mb-2">
-              セルフサービス型アンケートツール
-            </p>
-            <p className="text-lg text-gray-500">
-              ポイ活しながら、キャリア相談ができる！
-            </p>
-            <p className="text-lg text-gray-500">
-              あなたの声が未来を作る、新しいプラットフォーム
-            </p>
+            {/* ★★★ 修正: 「セルフサービス型アンケートツール」と「ポイ活しながら...」のテキストを除去 ★★★ */}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* ★★★ 修正: グリッドを削除し、モニター（学生）セクションのみを残す ★★★ */}
+          <div className="space-y-4 max-w-md mx-auto mb-12">
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">モニター（学生）</h3>
+              {/* ★★★ 修正: モニター（学生）を学生に変更 ★★★ */}
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">学生</h3>
               <ul className="text-gray-600 space-y-2 text-left">
                 <li className="flex items-center">
                   <Star className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
@@ -53,26 +50,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
               </ul>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
-              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <Star className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">クライアント（企業）</h3>
-              <ul className="text-gray-600 space-y-2 text-left">
-                <li className="flex items-center">
-                  <Star className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
-                  簡単にアンケートを作成・配信
-                </li>
-                <li className="flex items-center">
-                  <Users className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
-                  学生の生の声を収集
-                </li>
-                <li className="flex items-center">
-                  <MessageCircle className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
-                  リアルタイムで結果を確認
-                </li>
-              </ul>
-            </div>
+            {/* クライアント（企業）セクションは除去されました */}
           </div>
 
           <div className="space-y-4">
