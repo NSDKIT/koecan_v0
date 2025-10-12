@@ -1,3 +1,5 @@
+// koecan_v0-main/components/AuthForm.tsx
+
 'use client'
 
 import React, { useState } from 'react';
@@ -16,12 +18,13 @@ export function AuthForm({ onBack }: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'monitor' | 'client'>('monitor');
+  // ★★★ 修正箇所: role を 'monitor' に固定 ★★★
+  const [role, setRole] = useState<'monitor' | 'client'>('monitor'); 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Client-specific fields
+  // Client-specific fields (未使用になるが、コードの整合性のため残す)
   const [companyName, setCompanyName] = useState('');
   const [industry, setIndustry] = useState('');
 
@@ -57,7 +60,7 @@ export function AuthForm({ onBack }: AuthFormProps) {
         if (error) throw error;
 
         if (data.user) {
-          // Create user profile
+          // Create user profile (roleは 'monitor' に固定)
           const { error: userError } = await supabase
             .from('users')
             .insert([
@@ -65,41 +68,22 @@ export function AuthForm({ onBack }: AuthFormProps) {
                 id: data.user.id,
                 email,
                 name,
-                role,
+                role: 'monitor', // ★★★ 修正: role を 'monitor' に固定して挿入 ★★★
               },
             ]);
 
           if (userError) {
-             // ★★★ 修正箇所: プロファイル作成エラー時の処理を強化 ★★★
              console.error('Profile creation failed:', userError);
-             // ユーザーの認証自体は成功しているため、エラーメッセージを表示して処理を中断
-             setError(`ユーザープロファイル作成に失敗しました。認証は完了していますが、データに不整合が発生しています。メッセージ: ${userError.message}`);
+             setError(`ユーザープロファイル作成に失敗しました: ${userError.message}`);
              setLoading(false);
-             
-             // 致命的なエラーなので、ログイン状態をクリアして再試行を促す
              await supabase.auth.signOut();
              return; 
           }
 
           // Create role-specific profile
-          if (role === 'client') {
-            const { error: clientError } = await supabase
-              .from('client_profiles')
-              .insert([
-                {
-                  user_id: data.user.id,
-                  company_name: companyName,
-                  industry,
-                },
-              ]);
-            if (clientError) {
-                console.error('Client profile creation failed:', clientError);
-                setError(`クライアント情報作成に失敗しました: ${clientError.message}`);
-                setLoading(false);
-                await supabase.auth.signOut();
-                return;
-            }
-          } else if (role === 'monitor') {
+          // ★★★ 修正: 'client' の処理を削除 ★★★
+          // ★★★ 'monitor' の処理のみ実行 ★★★
+          if (role === 'monitor') { // role の state は削除されたが、ここでは 'monitor' として処理
             const { error: monitorError } = await supabase
               .from('monitor_profiles')
               .insert([
@@ -125,8 +109,6 @@ export function AuthForm({ onBack }: AuthFormProps) {
       console.error('Auth error:', err);
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
-      // 成功時のみ finally が実行されるが、上記 return で抜けるため、
-      // 成功時/サインイン時/サインアップ成功後にのみ実行
       if (!error) {
         setLoading(false);
       }
@@ -216,80 +198,21 @@ export function AuthForm({ onBack }: AuthFormProps) {
                 </div>
               </div>
 
-              <div>
+              {/* ★★★ 修正箇所: 役割選択を非表示/削除し、モニター（学生）に固定 ★★★ */}
+              <div className="hidden">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  役割
+                  役割 (固定: モニター)
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRole('monitor')}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      role === 'monitor'
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="text-sm font-medium">モニター</div>
-                    <div className="text-xs text-gray-500">学生</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRole('client')}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      role === 'client'
-                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="text-sm font-medium">クライアント</div>
-                    <div className="text-xs text-gray-500">企業</div>
-                  </button>
-                </div>
+                {/* 役割選択ロジックを削除 */}
               </div>
+              {/* ★★★ 修正箇所ここまで ★★★ */}
 
-              {role === 'client' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      会社名
-                    </label>
-                    <div className="relative">
-                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                      <input
-                        type="text"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                        placeholder="会社名を入力"
-                        required
-                      />
-                    </div>
-                  </div>
+              {/* ★★★ 修正箇所: クライアント固有のフォームを削除 ★★★ */}
+              {/* {role === 'client' && ( ... )} を削除 */}
+              {/* ★★★ 修正箇所ここまで ★★★ */}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      業界
-                    </label>
-                    <select
-                      value={industry}
-                      onChange={(e) => setIndustry(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      required
-                    >
-                      <option value="">業界を選択</option>
-                      <option value="IT・ソフトウェア">IT・ソフトウェア</option>
-                      <option value="製造業">製造業</option>
-                      <option value="金融・保険">金融・保険</option>
-                      <option value="小売・流通">小売・流通</option>
-                      <option value="サービス業">サービス業</option>
-                      <option value="その他">その他</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {role === 'monitor' && (
+              {/* ★★★ 修正箇所: モニター固有のフォームのみ残す ★★★ */}
+              {/* role === 'monitor' は常に true なので条件判定を削除 */}
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -355,7 +278,7 @@ export function AuthForm({ onBack }: AuthFormProps) {
                     </div>
                   </div>
                 </>
-              )}
+              {/* ★★★ 修正箇所ここまで ★★★ */}
             </>
           )}
 
