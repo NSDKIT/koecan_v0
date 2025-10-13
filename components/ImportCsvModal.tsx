@@ -172,7 +172,7 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
         if (ad.company_name) {
             results.push(ad);
         } else {
-            console.log(`WARNING: 行 ${i + 1} の企業名は空のためスキップされました。`); // ★★★ 修正箇所: Logger.log -> console.log ★★★
+            console.log(`WARNING: 行 ${i + 1} の企業名は空のためスキップされました。`); 
         }
     }
     return results;
@@ -200,7 +200,8 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
           setError("CSVから有効な企業情報が抽出されませんでした。ヘッダーとデータを確認してください。");
       }
     } catch (err) {
-      setError(`CSV解析に失敗しました。形式を確認してください: ${err.message}`);
+      // ★★★ 修正箇所: 型ガードを使用して err.message にアクセス ★★★
+      setError(`CSV解析に失敗しました。形式を確認してください: ${err instanceof Error ? err.message : String(err)}`);
       setPreview(null);
     }
   };
@@ -227,7 +228,8 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
       onClose();
     } catch (err) {
       console.error('Error importing advertisements:', err);
-      setError(`データベースへの挿入に失敗しました: ${err.message}`);
+      // ★★★ 修正箇所: 型ガードを使用して err.message にアクセス ★★★
+      setError(`データベースへの挿入に失敗しました: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
