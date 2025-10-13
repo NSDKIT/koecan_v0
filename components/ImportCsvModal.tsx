@@ -1,8 +1,8 @@
-// koecan_v0-main/components/ImportCsvModal.tsx (新規作成)
+// koecan_v0-main/components/ImportCsvModal.tsx
 
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react'; // useRef を追加
 import { X, FileText, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,11 +13,12 @@ interface ImportCsvModalProps {
   onImport: () => void; // 成功時のコールバック (AdminDashboardのリスト再取得)
 }
 
+// ... (中略: CSV_HEADERS と FIELD_MAPPING の定義は変更なし) ...
 // CSVヘッダーの配列（CSVファイルと完全に一致させる）
 const CSV_HEADERS = [
     "タイムスタンプ", "会社名", "公式ホームページのURL", "代表者名", "貴社が目指す未来（100文字以内）", 
     "所在地（本社）", "所在地（支社）", "業界（複数回答）", "設立年", "従業員数", 
-    "男女比", "従業員の平均年齢（社員以外を含む）", "イチオシポイント①", "イチオシポイント①", // CSVにはイチオシポイント①が重複しているが、ここでは2つ目を②として処理
+    "男女比", "従業員の平均年齢（社員以外を含む）", "イチオシポイント①", "イチオシポイント①", 
     "イチオシポイント③", "初任給", "20代の平均年収", "30代の平均年収", "3年間の定着率", 
     "昇進・キャリアパスのモデルケース", "副業の可否", "リモートワークの有無", "住宅手当・家賃補助の有無", 
     "女性の育休・産休の取得割合", "男性の育休取得割合", "実践している健康経営の取り組み（複数選択）", 
@@ -46,7 +47,7 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "男女比": "employee_gender_ratio",
     "従業員の平均年齢（社員以外を含む）": "employee_avg_age",
     "イチオシポイント①": "highlight_point_1",
-    "イチオシポイント①_2": "highlight_point_2", // CSVの重複を考慮し2つ目を②として扱う
+    "イチオシポイント①_2": "highlight_point_2",
     "イチオシポイント③": "highlight_point_3",
     "初任給": "starting_salary",
     "20代の平均年収": "avg_annual_income_20s",
@@ -81,7 +82,6 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "交通費・宿泊費の支給": "transport_lodging_stipend",
     "インターンシップ申込URL": "internship_application_url",
     "従業員様の働く様子や、集合写真、オフィス等、会社の雰囲気が伝わる画像を１枚ご提供ください。": "image_url",
-    // 従業員様の働く様子... -> image_url にマッピング (任意)
     // 以下の項目はDBに定義がないが、CSVに存在するため無視（または別のカラムにマッピングが必要）
     // "考え方の傾向": null, "2.視野の広げ方": null, "1.仕事のエネルギーの使い方": null, ...
 };
@@ -185,11 +185,36 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<Partial<Advertisement>[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力要素への参照
+
+  // ★★★ 修正箇所: ファイル選択ハンドラを追加 ★★★
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'text/csv' && !file.name.toLowerCase().endsWith('.csv')) {
+      setError("CSVファイルを選択してください。");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      setCsvText(text);
+    };
+    reader.onerror = () => {
+      setError("ファイルの読み込み中にエラーが発生しました。");
+    };
+
+    reader.readAsText(file, 'UTF-8');
+  };
+  // ★★★ 修正箇所ここまで ★★★
 
   const handlePreview = () => {
     setError(null);
     if (!csvText.trim()) {
-        setError("CSVテキストを入力してください。");
+        setError("CSVファイルの内容が空です。ファイルを再選択してください。");
         return;
     }
     
@@ -200,7 +225,6 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
           setError("CSVから有効な企業情報が抽出されませんでした。ヘッダーとデータを確認してください。");
       }
     } catch (err) {
-      // ★★★ 修正箇所: 型ガードを使用して err.message にアクセス ★★★
       setError(`CSV解析に失敗しました。形式を確認してください: ${err instanceof Error ? err.message : String(err)}`);
       setPreview(null);
     }
@@ -228,7 +252,6 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
       onClose();
     } catch (err) {
       console.error('Error importing advertisements:', err);
-      // ★★★ 修正箇所: 型ガードを使用して err.message にアクセス ★★★
       setError(`データベースへの挿入に失敗しました: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
@@ -269,25 +292,37 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
             /* Input Form */
             <div>
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">CSVデータを入力</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">CSVファイルを選択</h3>
                 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-blue-800">
                       <p className="font-semibold mb-2">重要:</p>
-                      <p>CSVはヘッダー（1行目）を含めて、カンマ区切りで入力してください。</p>
-                      <p>ヘッダーはGoogleフォームの回答形式に厳密に一致させる必要があります。</p>
+                      <p>ファイルは**カンマ区切り（CSV）**で、ヘッダー行を含める必要があります。</p>
+                      <p>ファイル名: {fileInputRef.current?.files?.[0]?.name || '未選択'}</p>
                     </div>
                   </div>
                 </div>
 
-                <textarea
-                  value={csvText}
-                  onChange={(e) => setCsvText(e.target.value)}
-                  className="w-full h-64 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="例: タイムスタンプ,会社名,公式ホームページのURL,...\n2025/10/06 20:28:55,株式会社A,https://a.com,..."
+                {/* ★★★ 修正箇所: ファイル入力要素の追加 ★★★ */}
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
+                
+                {csvText && (
+                    <div className="mt-4 p-3 bg-gray-100 border rounded-md">
+                        <p className="text-xs text-gray-600 truncate">
+                            **ファイル内容のプレビュー:** {csvText.substring(0, 100)}...
+                        </p>
+                    </div>
+                )}
+                {/* ★★★ 修正箇所ここまで ★★★ */}
+
               </div>
 
               <div className="flex space-x-4">
