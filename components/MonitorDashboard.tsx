@@ -30,7 +30,9 @@ import {
   Building, // 新しいアイコン
   MapPin, // 新しいアイコン
   Calendar, // 新しいアイコン
-  DollarSign // 新しいアイコン
+  DollarSign, // 新しいアイコン
+  // ★★★ 修正箇所: BarChart3 を追加 ★★★
+  BarChart3 
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
