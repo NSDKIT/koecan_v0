@@ -21,11 +21,11 @@ import {
   CheckCircle,
   AlertCircle,
   MessageCircle, // アイコンをインポート
-  X 
+  X // X アイコンを追加
 } from 'lucide-react';
-import { ImportSurveyModal } from '@/components/ImportSurveyModal';
-import { ChatModal } from '@/components/ChatModal'; // ChatModalをインポート
-import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LINE連携ボタンをインポート ★★★
+import { ImportSurveyModal } from '@/components/ImportSurveyModal'; // ImportSurveyModal を維持
+import { ChatModal } from '@/components/ChatModal'; 
+import { LineLinkButton } from '@/components/LineLinkButton'; 
 import { SparklesCore } from '@/components/ui/sparkles';
 
 // TODO: ここに、クライアントがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
@@ -35,7 +35,7 @@ export function ClientDashboard() {
   const { user, signOut } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showImportModal, setShowImportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false); // ImportSurveyModal 用のステートを維持
   const [showChatModal, setShowChatModal] = useState(false); // ChatModal表示用のステート
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null);
   const [surveyResponses, setSurveyResponses] = useState<any[]>([]);
@@ -45,7 +45,7 @@ export function ClientDashboard() {
     description: '',
     points_reward: 10,
   });
-  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // ★★★ 追加: LINE連携モーダル用のステート ★★★
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // LINE連携モーダル用のステート
 
 
   useEffect(() => {
@@ -115,17 +115,17 @@ export function ClientDashboard() {
 
   const handleStatusChange = async (surveyId: string, newStatus: string) => {
     try {
-      console.log(`DEBUG: Attempting to update survey ${surveyId} to status ${newStatus}`); // ★★★ デバッグログ ★★★
+      console.log(`DEBUG: Attempting to update survey ${surveyId} to status ${newStatus}`);
       const { error } = await supabase
         .from('surveys')
         .update({ status: newStatus })
         .eq('id', surveyId);
 
       if (error) {
-        console.error('DEBUG RLS FAIL:', error); // ★★★ 失敗時のエラーログ ★★★
+        console.error('DEBUG RLS FAIL:', error);
         throw error;
       }
-      console.log('DEBUG RLS SUCCESS: Status update successful.'); // ★★★ 成功時のログ ★★★
+      console.log('DEBUG RLS SUCCESS: Status update successful.');
       
       fetchSurveys();
     } catch (error) {
@@ -217,7 +217,7 @@ export function ClientDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* ★★★ 追加: LINE連携ボタン（モーダルを開く） ★★★ */}
+                {/* ★★★ LINE連携ボタン（モーダルを開く） ★★★ */}
                 <button 
                   onClick={() => setShowLineLinkModal(true)} 
                   className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
@@ -293,6 +293,7 @@ export function ClientDashboard() {
               新規アンケート作成
             </button>
             
+            {/* ★★★ 修正箇所: Markdownインポートボタンをクライアント向けに復活 ★★★ */}
             <button
               onClick={() => setShowImportModal(true)}
               className="bg-white/80 backdrop-blur-sm border border-blue-200 hover:border-blue-300 text-blue-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
