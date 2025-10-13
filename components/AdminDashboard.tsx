@@ -12,7 +12,7 @@ import {
   LogOut, 
   User as UserIcon,
   Shield,
-  Database,
+  Database, // Database アイコンを維持
   Activity,
   TrendingUp,
   AlertCircle,
@@ -32,7 +32,7 @@ import { LineLinkButton } from '@/components/LineLinkButton';
 
 // ★★★ 追加: インポートモーダルをインポート ★★★
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
-import { ImportCsvModal } from '@/components/ImportCsvModal'; // ImportCsvModal が存在することを前提とします。
+import { ImportCsvModal } from '@/components/ImportCsvModal'; // ImportCsvModal をインポート
 
 type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
 
@@ -220,7 +220,7 @@ export function AdminDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* ★★★ 追加: LINE連携ボタン（モーダルを開く） ★★★ */}
+                {/* ★★★ LINE連携ボタン（モーダルを開く） ★★★ */}
                 <button 
                   onClick={() => setShowLineLinkModal(true)} 
                   className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
