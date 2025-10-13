@@ -822,7 +822,7 @@ export default function MonitorDashboard() {
             }`}
           >
             <Sparkles className="w-6 h-6 mb-1" />
-            キャリア診断
+            企業マッチング
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
