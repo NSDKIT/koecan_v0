@@ -11,7 +11,7 @@ interface AuthUser extends SupabaseUser {
 }
 
 // ★★★ 修正箇所: タイムアウト時間を 3秒 (3000ms) に変更 ★★★
-const AUTH_TIMEOUT_MS = 3000;
+const AUTH_TIMEOUT_MS = 5000;
 
 export function useAuth() {
   const supabase = useSupabase();
