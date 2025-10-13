@@ -21,13 +21,18 @@ import {
   Briefcase,
   MessageCircle,
   Menu, // ハンバーガーメニュー
-  X // 閉じるボタン
+  X, // 閉じるボタン
+  FileText
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
 import { ChatModal } from '@/components/ChatModal';
 import { PointExchangeManager } from '@/components/PointExchangeManager';
-import { LineLinkButton } from '@/components/LineLinkButton'; // ★★★ 追加: LineLinkButtonをインポート ★★★
+import { LineLinkButton } from '@/components/LineLinkButton'; 
+
+// ★★★ 追加: インポートモーダルをインポート ★★★
+import { ImportSurveyModal } from '@/components/ImportSurveyModal';
+import { ImportCsvModal } from '@/components/ImportCsvModal'; // ImportCsvModal が存在することを前提とします。
 
 type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
 
@@ -42,7 +47,11 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminDashboardTab>('overview');
   const [isMenuOpen, setIsMenuOpen] = useState(false); // メニュー開閉状態
-  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // LINE連携モーダル
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false); 
+  // ★★★ 追加: 2つのインポートモーダル制御ステート ★★★
+  const [showImportSurveyModal, setShowImportSurveyModal] = useState(false);
+  const [showImportCsvModal, setShowImportCsvModal] = useState(false);
+
 
   // チャット監視用ステート
   const [chatRooms, setChatRooms] = useState<any[]>([]);
@@ -259,6 +268,26 @@ export function AdminDashboard() {
               </div>
             </div>
           </div>
+          
+          {/* ★★★ 修正箇所: インポートボタンをここに追加 ★★★ */}
+          <div className="flex flex-wrap gap-4 mb-8">
+            <button
+                onClick={() => setShowImportSurveyModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+            >
+                <FileText className="w-5 h-5 mr-2" />
+                アンケート（Markdown）インポート
+            </button>
+            <button
+                onClick={() => setShowImportCsvModal(true)} 
+                className="bg-white/80 backdrop-blur-sm border border-purple-200 hover:border-purple-300 text-purple-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+            >
+                <Database className="w-5 h-5 mr-2" />
+                企業情報（CSV）一括インポート
+            </button>
+          </div>
+          {/* ★★★ 修正箇所ここまで ★★★ */}
+
 
           {/* Tab Navigation */}
           <div className="bg-white/80 backdrop-blur-sm rounded-t-2xl shadow-sm border border-purple-100 border-b-0">
@@ -333,7 +362,21 @@ export function AdminDashboard() {
         />
       )}
 
-      {/* ★★★ 追加: LINE連携モーダル ★★★ */}
+      {/* ★★★ 追加: インポートモーダル群 ★★★ */}
+      {showImportSurveyModal && (
+        <ImportSurveyModal
+          onClose={() => setShowImportSurveyModal(false)}
+          onImport={fetchStats} // 統計情報や企業情報一覧の再取得が必要であればこちらを呼び出す
+        />
+      )}
+      {showImportCsvModal && (
+        <ImportCsvModal
+          onClose={() => setShowImportCsvModal(false)}
+          onImport={fetchStats} // 企業情報管理画面の内容を更新する関数を呼び出す
+        />
+      )}
+
+      {/* LINE連携モーダル */}
       {showLineLinkModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
