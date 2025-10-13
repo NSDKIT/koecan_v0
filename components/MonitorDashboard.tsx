@@ -31,7 +31,6 @@ import {
   MapPin, // 新しいアイコン
   Calendar, // 新しいアイコン
   DollarSign, // 新しいアイコン
-  // ★★★ 修正箇所: BarChart3 を追加 ★★★
   BarChart3 
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
@@ -518,374 +517,460 @@ export default function MonitorDashboard() {
       {/* Sparkles Background */}
       <div className="w-full absolute inset-0 h-screen">
         <SparklesCore
-          id="tsparticlesclient"
+          id="tsparticlesmonitor"
           background="transparent"
           minSize={0.6}
           maxSize={1.4}
           particleDensity={60}
           className="w-full h-full"
-          particleColor="#3B82F6"
+          particleColor="#F97316"
           speed={0.5}
         />
       </div>
 
       {/* Subtle Gradient Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
       <div className="relative z-20">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-blue-100">
+        {/* ヘッダー */}
+        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-500">
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
                   声キャン！
                 </h1>
-                <span className="ml-3 px-3 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-full text-sm font-medium">
-                  クライアント
-                </span>
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* ★★★ LINE連携ボタン（モーダルを開く） ★★★ */}
+                {/* ★★★ LINE連携ボタンをヘッダーに配置 ★★★ */}
+                
+                {/* 1. LINE連携を直接ヘッダーに配置（モーダルを開くボタンとして） */}
                 <button 
-                  onClick={() => setShowLineLinkModal(true)} 
+                  onClick={() => setShowLineLinkModal(true)} // 新しいステートでモーダルを開く
                   className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
                 >
                   <MessageCircle className="w-4 h-4 mr-1" />
                   LINE連携
                 </button>
-                {/* ★★★ ここまで追加 ★★★ */}
-
+                
+                {/* 2. ハンバーガーメニューボタン */}
                 <button
-                  onClick={() => setShowChatModal(true)} // チャットモーダルを開くボタン
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
+                  ref={menuButtonRef}
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
                 >
-                  <Users className="w-5 h-5" />
-                  <span>チャット</span>
-                </button>
-                <button
-                  onClick={() => {}}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  <UserIcon className="w-5 h-5" />
-                  <span>{user?.name}</span>
-                </button>
-                <button
-                  onClick={signOut}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
+                  <Menu className="w-6 h-6" />
                 </button>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Welcome Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8 border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  ようこそ、{user?.name}さん！
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  アンケートを作成して学生の声を収集しましょう
-                </p>
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center">
-                    <BarChart3 className="w-5 h-5 text-blue-500 mr-2" />
-                    <span className="text-gray-700">作成済みアンケート: <strong>{surveys.length}件</strong></span>
-                  </div>
-                  <div className="flex items-center">
-                    <TrendingUp className="w-5 h-5 text-green-500 mr-2" />
-                    <span className="text-gray-700">アクティブ: <strong>{surveys.filter(s => s.status === 'active').length}件</strong></span>
-                  </div>
-                </div>
-              </div>
-              <div className="hidden md:block">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-4 shadow-lg">
-                  <BarChart3 className="w-12 h-12 text-white" />
-                </div>
-              </div>
+        {/* ハンバーガーメニュー ドロップダウン */}
+        {isMenuOpen && (
+          <div
+            id="hamburger-menu-dropdown" 
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg py-2 z-[1000] border border-gray-100" 
+            style={{ zIndex: 1000 }} 
+          >
+            <button
+              onClick={() => {
+                setShowProfileModal(true);
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <UserIcon className="w-5 h-5 mr-2" />
+              プロフィール設定
+            </button>
+            <button
+              onClick={() => {
+                setShowProfileSurveyModal(true); 
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <FileText className="w-5 h-5 mr-2" /> 
+              プロフィールアンケート
+            </button>
+            <button
+              onClick={() => {
+                signOut();
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+            >
+              <LogOut className="w-5 h-5 mr-2" />
+              ログアウト
+            </button>
+          </div>
+        )}
+
+        {/* メインコンテンツ */}
+        {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
+          {/* 獲得ポイントカード */}
+          <div
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
+            onClick={() => setShowPointExchangeModal(true)} 
+          >
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+              <Star className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <p className="text-gray-600 text-lg">獲得ポイント</p>
+              <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              新規アンケート作成
-            </button>
-            
-            {/* ★★★ 修正箇所: Markdownインポートボタンをクライアント向けに復活 ★★★ */}
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="bg-white/80 backdrop-blur-sm border border-blue-200 hover:border-blue-300 text-blue-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
-            >
-              <FileText className="w-5 h-5 mr-2" />
-              マークダウンから作成
-            </button>
-          </div>
-
-          {/* Surveys List */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-blue-100">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">アンケート一覧</h2>
-              <div className="flex items-center text-gray-600">
-                <FileText className="w-5 h-5 mr-2" />
-                <span>{surveys.length}件のアンケート</span>
-              </div>
-            </div>
-
-            {surveys.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-800 mb-2">アンケートがありません</h3>
-                <p className="text-gray-600 mb-4">最初のアンケートを作成してみましょう。</p>
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  アンケートを作成
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {surveys.map((survey) => (
-                  <div
-                    key={survey.id}
-                    className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-2">
-                          <h3 className="text-xl font-semibold text-gray-800 mr-3">
-                            {survey.title}
-                          </h3>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium flex items-center ${getStatusColor(survey.status)}`}>
-                            {getStatusIcon(survey.status)}
-                            <span className="ml-1">
-                              {survey.status === 'draft' && '下書き'}
-                              {survey.status === 'active' && 'アクティブ'}
-                              {survey.status === 'completed' && '完了'}
-                              {survey.status === 'rejected' && '却下'}
-                            </span>
-                          </span>
-                        </div>
-                        <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            <span>{new Date(survey.created_at).toLocaleDateString('ja-JP')}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-1" />
-                            <span>{survey.points_reward}ポイント報酬</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="ml-6 flex flex-col space-y-2">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => {
-                              setSelectedSurvey(survey);
-                              fetchSurveyResponses(survey.id);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="結果を見る"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {}}
-                            className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
-                            title="編集"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSurvey(survey.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="削除"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {survey.status === 'draft' && (
-                          <button
-                            onClick={() => handleStatusChange(survey.id, 'active')}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            公開
-                          </button>
-                        )}
-                        {survey.status === 'active' && (
-                          <button
-                            onClick={() => handleStatusChange(survey.id, 'completed')}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            終了
-                          </button>
-                        )}
-                      </div>
+          {/* タブコンテンツ */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8"> {/* border border-orange-100 削除 */}
+            {activeTab === 'surveys' && (
+              <>
+                {availableSurveys.length === 0 ? (
+                  <div className="text-center py-12 mb-8">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-gray-400" />
                     </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能な<br></br>アンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答して<br></br>ポイントを獲得しましょう。</p>
                   </div>
-                ))}
+                ) : (
+                  <div className="grid gap-6 mb-8">
+                    {availableSurveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6" // transition-all duration-300 hover:shadow-lg 削除
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-orange-50 rounded-full px-4 py-2 text-orange-700 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt</span>
+                            </div>
+                            <button
+                              onClick={() => handleSurveyClick(survey)}
+                              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-base font-semibold"
+                            >
+                              回答する
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8">回答済みアンケート</h2>
+                {answeredSurveys.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <History className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">まだ回答したアンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {answeredSurveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" 
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-500 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt 獲得済み</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'matching' && (
+              <MatchingFeature />
+            )}
+
+            {activeTab === 'recruitment' && ( 
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
+                {advertisements.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">現在、公開されている企業情報はありません。</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {advertisements.map((ad) => (
+                      <div
+                        key={ad.id}
+                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group" // transition-all duration-300 hover:shadow-lg 削除
+                        onClick={() => setSelectedAdvertisement(ad)} 
+                      >
+                        {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
+                        {(ad.image_url && ad.image_url.length > 0) ? (
+                          <div className="aspect-video bg-gray-100 overflow-hidden">
+                            <img
+                              src={ad.image_url}
+                              alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        ) : (
+                          // 画像がない場合のプレースホルダー
+                          <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                            <Briefcase className="w-12 h-12 text-gray-500" />
+                          </div>
+                        )}
+                        
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-2">
+                            {ad.company_name || 'N/A'}
+                          </h3>
+                          <p className="text-gray-600 text-sm line-clamp-2">
+                            {ad.company_vision || ad.title || ad.description || '詳細情報がありません'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            )}
+
+            {activeTab === 'services' && (
+              <>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* キャリア相談 */}
+                  <button
+                    onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
+                  >
+                     <div className="flex items-center justify-start w-full"> 
+                       <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
+                           <MessageCircle className="w-6 h-6 text-white" /> 
+                       </div>
+                       <div> 
+                           <h3 className="text-lg font-semibold text-gray-800">キャリア相談</h3> 
+                           <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
+                       </div>
+                    </div>
+                  </button>
+
+                  {/* チャット */}
+                  <button
+                    onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
+                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
+                  >
+                     <div className="flex items-center justify-start w-full"> 
+                       <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
+                           <MessageCircle className="w-6 h-6 text-white" /> 
+                       </div>
+                       <div> 
+                           <h3 className="text-lg font-semibold text-gray-800">チャット</h3> 
+                           <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
+                       </div>
+                    </div>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </main>
       </div>
 
-      {/* Create Survey Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">新規アンケート作成</h2>
-            
-            <form onSubmit={handleCreateSurvey} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  タイトル
-                </label>
-                <input
-                  type="text"
-                  value={newSurvey.title}
-                  onChange={(e) => setNewSurvey({ ...newSurvey, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="アンケートのタイトル"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  説明
-                </label>
-                <textarea
-                  value={newSurvey.description}
-                  onChange={(e) => setNewSurvey({ ...newSurvey, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="アンケートの説明"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ポイント報酬
-                </label>
-                <input
-                  type="number"
-                  value={newSurvey.points_reward}
-                  onChange={(e) => setNewSurvey({ ...newSurvey, points_reward: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div className="flex space-x-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  キャンセル
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  作成
-                </button>
-              </div>
-            </form>
-          </div>
+      {/* ボトムタブバー */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
+        <div className="max-w-7xl mx-auto flex justify-around h-16">
+          <button
+            onClick={() => setActiveTab('surveys')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <ClipboardList className="w-6 h-6 mb-1" />
+            アンケート
+          </button>
+          <button
+            onClick={() => setActiveTab('matching')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Sparkles className="w-6 h-6 mb-1" />
+            AIキャリア診断
+          </button>
+          <button
+            onClick={() => setActiveTab('recruitment')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Briefcase className="w-6 h-6 mb-1" />
+            企業情報
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'services' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <MessageCircle className="w-6 h-6 mb-1" />
+            サービス
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Survey Results Modal */}
-      {selectedSurvey && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">{selectedSurvey.title} - 結果</h2>
-              <button
-                onClick={() => setSelectedSurvey(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
 
-            <div className="mb-6">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{surveyResponses.length}</div>
-                  <div className="text-sm text-gray-600">回答数</div>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{selectedSurvey.points_reward}</div>
-                  <div className="text-sm text-gray-600">ポイント報酬</div>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-orange-600">{surveyResponses.length * selectedSurvey.points_reward}</div>
-                  <div className="text-sm text-gray-600">総ポイント</div>
-                </div>
-              </div>
-            </div>
-
-            {surveyResponses.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">まだ回答がありません。</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800">回答一覧</h3>
-                {surveyResponses.map((response, index) => (
-                  <div key={response.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">回答者 {index + 1}</span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(response.completed_at).toLocaleString('ja-JP')}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {response.answers.length}件の回答
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <ImportSurveyModal
-          onClose={() => setShowImportModal(false)}
-          onImport={fetchSurveys}
+      {/* モーダル群 */}
+      {showProfileModal && (
+        <ProfileModal
+          user={user}
+          profile={profile}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={fetchProfile}
         />
       )}
 
-      {/* Chat Modal */}
-      {showChatModal && (
+      {showCareerModal && (
+        <CareerConsultationModal
+          onClose={() => setShowCareerModal(false)}
+        />
+      )}
+
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
         <ChatModal
-          user={user}
-          otherUserId={SUPABASE_SUPPORT_USER_ID} // otherUserIdを渡す
+          user={user} 
+          otherUserId={SUPABASE_SUPPORT_USER_ID} 
           onClose={() => setShowChatModal(false)}
+        />
+      )}
+
+      {selectedAdvertisement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            
+            {/* ★★★ 企業詳細モーダルのコンテンツ ★★★ */}
+            <div className="p-6">
+              <div className="flex justify-between items-start border-b pb-4 mb-4">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-1">{selectedAdvertisement.company_name}</h2>
+                  <p className="text-gray-600">{selectedAdvertisement.company_vision}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedAdvertisement(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* 主要情報グリッド */}
+              <h3 className="text-xl font-semibold border-b pb-2 mb-4">企業概要</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div><p className="font-semibold">代表者名:</p><p>{selectedAdvertisement.representative_name || 'N/A'}</p></div>
+                <div><p className="font-semibold">設立年:</p><p>{selectedAdvertisement.establishment_year || 'N/A'}</p></div>
+                <div><p className="font-semibold">所在地 (本社):</p><p>{selectedAdvertisement.headquarters_location || 'N/A'}</p></div>
+                <div><p className="font-semibold">従業員数:</p><p>{selectedAdvertisement.employee_count || 'N/A'}</p></div>
+                <div><p className="font-semibold">男女比:</p><p>{selectedAdvertisement.employee_gender_ratio || 'N/A'}</p></div>
+                <div><p className="font-semibold">平均年齢:</p><p>{selectedAdvertisement.employee_avg_age || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">業界:</p><p>{selectedAdvertisement.industries?.join(', ') || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">イチオシポイント:</p><p className="text-orange-600">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</p></div>
+              </div>
+              
+              {/* 募集・待遇情報 */}
+              <h3 className="text-xl font-semibold border-b pb-2 mb-4">募集・待遇情報</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div><p className="font-semibold">初任給:</p><p>{selectedAdvertisement.starting_salary || 'N/A'}</p></div>
+                <div><p className="font-semibold">3年定着率:</p><p>{selectedAdvertisement.three_year_retention_rate || 'N/A'}</p></div>
+                <div><p className="font-semibold">20代平均年収:</p><p>{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</p></div>
+                <div><p className="font-semibold">30代平均年収:</p><p>{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">キャリアパス:</p><p>{selectedAdvertisement.promotion_model_case || 'N/A'}</p></div>
+              </div>
+
+              {/* 働き方・福利厚生 */}
+              <h3 className="text-xl font-semibold border-b pb-2 mb-4">働き方・福利厚生</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div><p className="font-semibold">リモートワーク:</p><p>{formatBoolean(selectedAdvertisement.remote_work_available)}</p></div>
+                <div><p className="font-semibold">副業:</p><p>{formatBoolean(selectedAdvertisement.side_job_allowed)}</p></div>
+                <div><p className="font-semibold">住宅手当:</p><p>{formatBoolean(selectedAdvertisement.housing_allowance_available)}</p></div>
+                <div><p className="font-semibold">女性育休取得率:</p><p>{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</p></div>
+                <div><p className="font-semibold">男性育休取得率:</p><p>{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</p></div>
+                <div><p className="font-semibold">異動/転勤:</p><p>{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</p></div>
+                <div className="col-span-2"><p className="font-semibold">健康経営の取り組み:</p><p>{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">イチオシ福利厚生:</p><p>{selectedAdvertisement.must_tell_welfare || 'N/A'}</p></div>
+              </div>
+
+              {/* 外部リンクボタン */}
+              {selectedAdvertisement.official_website_url && (
+                <a 
+                  href={selectedAdvertisement.official_website_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  公式ホームページを見る
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </a>
+              )}
+            </div>
+            {/* ★★★ 企業詳細モーダルのコンテンツここまで ★★★ */}
+            
+          </div>
+        </div>
+      )}
+
+      {/* ポイント交換モーダル */}
+      {showPointExchangeModal && profile && (
+        <PointExchangeModal
+          currentPoints={profile.points}
+          onClose={() => setShowPointExchangeModal(false)}
+          onExchangeSuccess={fetchProfile}
+        />
+      )}
+
+      {/* モニタープロフィールアンケートモーダル */}
+      {showProfileSurveyModal && (
+        <MonitorProfileSurveyModal
+          onClose={() => setShowProfileSurveyModal(false)}
+          onSaveSuccess={() => { /* ... */ }}
         />
       )}
       
@@ -903,6 +988,7 @@ export default function MonitorDashboard() {
               </div>
           </div>
       )}
+
     </div>
   );
 }
