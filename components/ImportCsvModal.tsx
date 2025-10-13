@@ -1,4 +1,4 @@
-// koecan_v0-main/components/ImportCsvModal.tsx
+// koecan_v0-main/components/ImportCsvModal.tsx (新規作成)
 
 'use client'
 
@@ -134,8 +134,8 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_target_students':
                 case 'internship_locations':
                 case 'internship_content_types':
-                    // 配列型: カンマ区切りを配列に変換
-                    const arrValue = value.split('、').map(s => s.trim()).filter(s => s !== ''); // 全角・半角カンマ両方対応
+                    // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
+                    const arrValue = value.split(/[、,]/).map(s => s.trim()).filter(s => s !== ''); 
                     (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null;
                     break;
                 case 'side_job_allowed':
@@ -172,7 +172,7 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
         if (ad.company_name) {
             results.push(ad);
         } else {
-            Logger.log(`WARNING: 行 ${i + 1} の企業名は空のためスキップされました。`);
+            console.log(`WARNING: 行 ${i + 1} の企業名は空のためスキップされました。`); // ★★★ 修正箇所: Logger.log -> console.log ★★★
         }
     }
     return results;
