@@ -626,7 +626,12 @@ export default function MonitorDashboard() {
           </div>
 
           {/* タブコンテンツ */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8"> {/* border border-orange-100 削除 */}
+          <div 
+            className={`
+              backdrop-blur-sm rounded-2xl p-8 transition-colors duration-300
+              ${activeTab === 'career_consultation' ? 'bg-blue-50/80' : 'bg-white/80'}
+            `}
+          > 
             {activeTab === 'surveys' && (
               <>
                 {availableSurveys.length === 0 ? (
@@ -777,7 +782,7 @@ export default function MonitorDashboard() {
 
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
-                {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え ★★★ */}
+                {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
                 <div className="flex items-center justify-center p-8">
                     <a
                         href="https://zenryoku-c8.com" // ★★★ URLを直接指定 ★★★
@@ -785,7 +790,7 @@ export default function MonitorDashboard() {
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
                     >
-                        <MessageCircle className="w-5 h-5 mr-3" />
+                        {/* アイコンを削除 */}
                         シーエイトに相談
                     </a>
                 </div>
