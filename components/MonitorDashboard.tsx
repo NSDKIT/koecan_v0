@@ -31,7 +31,7 @@ import {
   MapPin, // 新しいアイコン
   Calendar, // 新しいアイコン
   DollarSign, // 新しいアイコン
-  BarChart3 
+  BarChart3
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -43,10 +43,10 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 import { MatchingFeature } from '@/components/MatchingFeature'; // これを追加
 
 // アクティブなタブの型定義
-type ActiveTab = 'surveys' | 'recruitment' | 'services' | 'matching'; // 'matching' を追加
+type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching'; // 'services' -> 'career_consultation'
 
-// TODO: ここに、モニターがチャットしたいサポート担当者（例: zenryoku@gmail.com）の実際のユーザーIDを設定してください。
-const SUPABASE_SUPPORT_USER_ID = 'e6f087a8-5494-450a-97ad-7d5003445e88'; // 例: 実際のIDに置き換えてください。
+// TODO: ここに、クライアントがチャットしたいサポート担当者（例: koecan.koushiki@gmail.com）の実際のユーザーIDを設定してください。
+const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
 // boolean型の値を日本語文字列に変換するヘルパー関数
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
@@ -775,41 +775,21 @@ export default function MonitorDashboard() {
               </div>
             )}
 
-            {activeTab === 'services' && (
+            {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* キャリア相談 */}
-                  <button
-                    onClick={() => { setShowCareerModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
-                  >
-                     <div className="flex items-center justify-start w-full"> 
-                       <div className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
-                           <MessageCircle className="w-6 h-6 text-white" /> 
-                       </div>
-                       <div> 
-                           <h3 className="text-lg font-semibold text-gray-800">キャリア相談</h3> 
-                           <p className="text-gray-600 text-sm">専門カウンセラーに相談</p>
-                       </div>
-                    </div>
-                  </button>
-
-                  {/* チャット */}
-                  <button
-                    onClick={() => { setShowChatModal(true); setIsMenuOpen(false); }}
-                    className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-orange-100 group" // transition-all duration-300 transform hover:scale-105 hover:shadow-xl 削除
-                  >
-                     <div className="flex items-center justify-start w-full"> 
-                       <div className="flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 rounded-full p-3 group-hover:scale-110 transition-transform w-12 h-12 mr-4 shrink-0"> 
-                           <MessageCircle className="w-6 h-6 text-white" /> 
-                       </div>
-                       <div> 
-                           <h3 className="text-lg font-semibold text-gray-800">チャット</h3> 
-                           <p className="text-gray-600 text-sm">リアルタイムでやり取り</p>
-                       </div>
-                    </div>
-                  </button>
+                {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え ★★★ */}
+                <div className="flex items-center justify-center p-8">
+                    <a
+                        href="https://zenryoku-c8.com" // ★★★ URLを直接指定 ★★★
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+                    >
+                        <MessageCircle className="w-5 h-5 mr-3" />
+                        シーエイトに相談
+                    </a>
                 </div>
+                {/* ★★★ 修正箇所ここまで ★★★ */}
               </>
             )}
           </div>
@@ -835,7 +815,7 @@ export default function MonitorDashboard() {
             }`}
           >
             <Sparkles className="w-6 h-6 mb-1" />
-            AIキャリア診断
+            キャリア診断 {/* ★★★ 修正: タブ名変更 ★★★ */}
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
@@ -847,13 +827,13 @@ export default function MonitorDashboard() {
             企業情報
           </button>
           <button
-            onClick={() => setActiveTab('services')}
+            onClick={() => setActiveTab('career_consultation')} // ★★★ 修正: タブ名変更 ★★★
             className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-              activeTab === 'services' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+              activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
             <MessageCircle className="w-6 h-6 mb-1" />
-            サービス
+            キャリア相談 {/* ★★★ 修正: タブ名変更 ★★★ */}
           </button>
         </div>
       </div>
