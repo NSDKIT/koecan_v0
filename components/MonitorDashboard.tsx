@@ -629,8 +629,8 @@ export default function MonitorDashboard() {
           <div 
             className={`
               backdrop-blur-sm rounded-2xl p-8 transition-colors duration-300
-              ${activeTab === 'career_consultation' ? 'bg-blue-50/80' : 'bg-white/80'}
-            `}
+              bg-white/80
+            `} // ★★★ 修正: 背景色を固定 (bg-white/80) ★★★
           > 
             {activeTab === 'surveys' && (
               <>
@@ -976,4 +976,4 @@ export default function MonitorDashboard() {
 
     </div>
   );
-}
+}```
