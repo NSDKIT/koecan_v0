@@ -23,16 +23,22 @@ export default function Home() {
   // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
-  // ★★★ 修正箇所: 認証状態の変化を監視するログを維持 ★★★
+  // ★★★ 修正箇所: 遅延タイマーを設定する useEffect を維持 ★★★
   useEffect(() => {
-    if (!loading && (user || error)) {
-      console.log('PAGE.TSX RENDER: Final Auth State:', { 
-        loading: loading, 
-        user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
-        error: error
-      });
+    let timer: NodeJS.Timeout | null = null;
+    if (loading) {
+      // 3秒後に警告を表示 (useAuth側で強制リセットを行うため、この警告表示は不要ですが、コードは維持)
+      timer = setTimeout(() => {
+        setShowSlowLoadWarning(true);
+      }, 3000); 
+    } else {
+      setShowSlowLoadWarning(false);
     }
-  }, [loading, user, error]);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
   // ★★★ 修正箇所ここまで ★★★
 
   // Supabaseが設定されていない場合の表示
@@ -80,7 +86,8 @@ export default function Home() {
             {error}
           </p>
           <button
-            onClick={() => window.location.reload(true)} 
+            // ★★★ 修正箇所: window.location.reload() から引数 true を削除 ★★★
+            onClick={() => window.location.reload()} 
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             再試行（強制リセット）
