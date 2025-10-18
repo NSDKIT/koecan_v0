@@ -17,32 +17,27 @@ import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer';
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
-  const { user, loading, error, signOut } = useAuth(); // signOut を useAuth から取得
+  const { user, loading, error, signOut } = useAuth();
   const [showWelcome, setShowWelcome] = useState(true);
-  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
+  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); 
   // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
-  // ★★★ 修正箇所: 遅延タイマーを設定する useEffect を維持 ★★★
+  // ★★★ 修正箇所: 認証状態の変化を監視するログを維持 ★★★
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
-    if (loading) {
-      // 3秒後に警告を表示 (useAuth側で強制リセットを行うため、この警告表示は不要ですが、コードは維持)
-      timer = setTimeout(() => {
-        setShowSlowLoadWarning(true);
-      }, 3000); 
-    } else {
-      setShowSlowLoadWarning(false);
+    if (!loading && (user || error)) {
+      console.log('PAGE.TSX RENDER: Final Auth State:', { 
+        loading: loading, 
+        user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
+        error: error
+      });
     }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [loading]);
+  }, [loading, user, error]);
   // ★★★ 修正箇所ここまで ★★★
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
+    // ... (中略) ...
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
@@ -71,7 +66,7 @@ export default function Home() {
     );
   }
 
-  // エラーがある場合の表示
+  // エラーがある場合の表示 (useAuth側でエラーが設定された場合)
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -86,7 +81,6 @@ export default function Home() {
             {error}
           </p>
           <button
-            // ★★★ 修正箇所: window.location.reload() から引数 true を削除 ★★★
             onClick={() => window.location.reload()} 
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
@@ -108,6 +102,14 @@ export default function Home() {
       </div>
     );
   }
+
+  // ★★★ 修正箇所: loading=false かつ user=null の場合に、強制リロードを走らせる ★★★
+  if (!user && !showWelcome) {
+     console.log("FINAL FAIL PATH: Loading is false but user is null. Triggering forced reload.");
+     window.location.reload(); // キャッシュクリア後にこのパスを通ると、認証画面が表示される
+     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">リロード中...</div>;
+  }
+  // ★★★ 修正箇所ここまで ★★★
 
   // 認証チェックが完了し、ユーザーがいない場合の処理
   if (!user) {
