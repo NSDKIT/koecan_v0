@@ -123,7 +123,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-4">認証情報を確認中...</p>
+          <p className="text-gray-600 mb-4"> </p>
           {/* ★★★ 追加: タイムアウト時に表示されるエスケープハッチ ★★★ */}
           {loadingTimeout && (
             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
