@@ -1,5 +1,5 @@
 // koecan_v0-main/hooks/useAuth.ts
-// 修正版: タイムアウト機構とセッション検証を追加
+// 修正版: タイムアウト機構、セッション検証、自動リトライを追加
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
@@ -11,8 +11,9 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウト時間を設定（5秒）
-const AUTH_TIMEOUT_MS = 5000;
+// リトライ間隔（ミリ秒）
+const RETRY_INTERVALS = [1000, 2000, 3000, 4000, 5000]; // 1秒、2秒、3秒、4秒、5秒
+const AUTH_TIMEOUT_MS = 3000; // 各試行のタイムアウト時間を3秒に短縮
 
 export function useAuth() {
   const supabase = useSupabase();
@@ -22,6 +23,7 @@ export function useAuth() {
 
   // コンポーネントのマウント状態を追跡するためのref
   const mountedRef = useRef(true);
+  const retryCountRef = useRef(0); // リトライ回数を追跡
 
   useEffect(() => {
     mountedRef.current = true;
@@ -97,9 +99,9 @@ export function useAuth() {
     console.log('--- useAuth useEffect START ---');
     console.log('useAuth useEffect triggered. Supabase client:', supabase ? 'Available' : 'Null', 'Loading state:', loading);
 
-    // 初期セッションを取得し、ローディング状態を設定するメイン関数
-    const getInitialSession = async () => {
-      console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
+    // ★★★ 新機能: 自動リトライ機構 ★★★
+    const getInitialSessionWithRetry = async () => {
+      console.log('getInitialSessionWithRetry: START');
 
       if (!supabase) {
         if (mountedRef.current) {
@@ -109,87 +111,115 @@ export function useAuth() {
         return;
       }
 
-      try {
-        console.log('getInitialSession: Attempting to get session with timeout.');
-        
-        // ★★★ 修正1: タイムアウト機構を追加 ★★★
-        const { data: { session }, error: sessionError } = await withTimeout(
-          supabase.auth.getSession(),
-          AUTH_TIMEOUT_MS
-        );
-
-        if (sessionError) {
-          console.error('getInitialSession: ERROR getting session:', sessionError.message);
-          throw sessionError;
+      // リトライループ
+      for (let attempt = 0; attempt <= RETRY_INTERVALS.length; attempt++) {
+        if (!mountedRef.current) {
+          console.log('Component unmounted, stopping retry loop');
+          return;
         }
 
-        if (session?.user) {
-          console.log('getInitialSession: Active session found for user ID:', session.user.id);
-          
-          // ★★★ 修正2: セッションの有効性を検証 ★★★
-          try {
-            const { data: { user: validUser }, error: userError } = await withTimeout(
-              supabase.auth.getUser(),
-              AUTH_TIMEOUT_MS
-            );
+        try {
+          console.log(`getInitialSession: Attempt ${attempt + 1}/${RETRY_INTERVALS.length + 1}`);
 
-            if (userError || !validUser) {
-              console.warn('getInitialSession: Session exists but user validation failed. Clearing session.');
+          const { data: { session }, error: sessionError } = await withTimeout(
+            supabase.auth.getSession(),
+            AUTH_TIMEOUT_MS
+          );
+
+          if (sessionError) {
+            console.error('getInitialSession: ERROR getting session:', sessionError.message);
+            throw sessionError;
+          }
+
+          if (session?.user) {
+            console.log('getInitialSession: Active session found for user ID:', session.user.id);
+
+            // セッションの有効性を検証
+            try {
+              const { data: { user: validUser }, error: userError } = await withTimeout(
+                supabase.auth.getUser(),
+                AUTH_TIMEOUT_MS
+              );
+
+              if (userError || !validUser) {
+                console.warn('getInitialSession: Session exists but user validation failed. Clearing session.');
+                await supabase.auth.signOut();
+                if (mountedRef.current) {
+                  setUser(null);
+                  setLoading(false);
+                }
+                return;
+              }
+
+              // セッションが有効な場合のみユーザーデータを取得
+              const userData = await fetchUserData(supabase, session.user.id);
+              if (mountedRef.current) {
+                setUser(userData);
+                setLoading(false);
+              }
+              console.log('getInitialSession: SUCCESS');
+              return; // 成功したらリトライループを終了
+            } catch (validationError) {
+              console.error('getInitialSession: User validation error:', validationError);
+              // 検証に失敗した場合はセッションをクリア
               await supabase.auth.signOut();
               if (mountedRef.current) {
                 setUser(null);
+                setLoading(false);
               }
               return;
             }
-
-            // セッションが有効な場合のみユーザーデータを取得
-            const userData = await fetchUserData(supabase, session.user.id);
-            if (mountedRef.current) {
-              setUser(userData);
-            }
-          } catch (validationError) {
-            console.error('getInitialSession: User validation error:', validationError);
-            // 検証に失敗した場合はセッションをクリア
-            await supabase.auth.signOut();
+          } else {
+            console.log('getInitialSession: No active session found. User is not logged in.');
             if (mountedRef.current) {
               setUser(null);
+              setLoading(false);
             }
+            return; // セッションがない場合も終了
           }
-        } else {
-          console.log('getInitialSession: No active session found. User is not logged in.');
-          if (mountedRef.current) {
-            setUser(null);
+        } catch (err) {
+          console.error(`getInitialSession: ERROR on attempt ${attempt + 1}:`, err);
+
+          // 最後の試行の場合
+          if (attempt === RETRY_INTERVALS.length) {
+            console.error('getInitialSession: All retry attempts failed. Clearing session.');
+            
+            // タイムアウトエラーの場合はセッションをクリア
+            if (err instanceof Error && err.message.includes('タイムアウト')) {
+              console.warn('getInitialSession: Timeout detected. Clearing potentially stale session.');
+              try {
+                await supabase.auth.signOut();
+                // ★★★ 最終手段: ローカルストレージをクリアして強制リロード ★★★
+                console.warn('getInitialSession: Clearing localStorage and reloading...');
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+                return;
+              } catch (signOutError) {
+                console.error('getInitialSession: Failed to sign out after timeout:', signOutError);
+              }
+            }
+
+            if (mountedRef.current) {
+              setError('認証セッションが不安定です。再試行してください。');
+              setUser(null);
+              setLoading(false);
+            }
+            return;
           }
-        }
-      } catch (err) {
-        console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
-        
-        // ★★★ 修正3: タイムアウトエラーの場合はセッションをクリア ★★★
-        if (err instanceof Error && err.message.includes('タイムアウト')) {
-          console.warn('getInitialSession: Timeout detected. Clearing potentially stale session.');
-          try {
-            await supabase.auth.signOut();
-          } catch (signOutError) {
-            console.error('getInitialSession: Failed to sign out after timeout:', signOutError);
-          }
-        }
-        
-        if (mountedRef.current) {
-          setError('認証セッションが不安定です。再試行してください。');
-          setUser(null);
-        }
-      } finally {
-        // ★★★ 修正4: 必ずloadingをfalseにする ★★★
-        if (mountedRef.current) {
-          console.log('getInitialSession: Finished. Setting loading to false.');
-          setLoading(false);
+
+          // 次の試行まで待機
+          const waitTime = RETRY_INTERVALS[attempt];
+          console.log(`getInitialSession: Waiting ${waitTime}ms before retry ${attempt + 2}...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
-      console.log('getInitialSession: END.');
+
+      console.log('getInitialSessionWithRetry: END');
     };
 
     // 初期セッションチェックを実行
-    getInitialSession();
+    getInitialSessionWithRetry();
 
     // onAuthStateChange のリスナー設定
     let subscription: { unsubscribe: () => void } | undefined;
