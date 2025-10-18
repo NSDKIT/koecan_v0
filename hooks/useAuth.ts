@@ -10,8 +10,8 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウト時間を定義 (3秒)
-const AUTH_TIMEOUT_MS = 3000;
+// タイムアウトロジックを削除し、標準的な挙動に戻す
+// const AUTH_TIMEOUT_MS = 3000;
 
 export function useAuth() {
   const supabase = useSupabase();
@@ -100,30 +100,10 @@ export function useAuth() {
         return;
       }
       
-      let timeoutId: NodeJS.Timeout | null = null;
-      let isTimedOut = false;
-
+      // ★★★ 修正箇所: シンプルなセッション取得に戻す (タイムアウト競争ロジックを削除) ★★★
       try {
-        const timeoutPromise = new Promise<void>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            isTimedOut = true;
-            reject(new Error('AUTH_TIMEOUT: Supabaseセッションの検証に時間がかかりすぎました。'));
-          }, AUTH_TIMEOUT_MS);
-        });
-
-        console.log('getInitialSession: Attempting to get session with timeout.');
-        
-        const sessionResult = await Promise.race([
-          supabase.auth.getSession(),
-          timeoutPromise.then(() => ({ data: { session: null }, error: new Error('AUTH_TIMEOUT_INNER') })),
-        ]);
-
-        if (isTimedOut || (sessionResult as any).error?.message === 'AUTH_TIMEOUT_INNER') {
-            throw new Error('AUTH_TIMEOUT');
-        }
-
-        const sessionError = (sessionResult as any).error;
-        const session = (sessionResult as any).data.session;
+        console.log('getInitialSession: Attempting to get session.');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error('getInitialSession: ERROR getting session:', sessionError.message);
@@ -143,33 +123,12 @@ export function useAuth() {
           }
         }
       } catch (err) {
-        console.error('getInitialSession: CRITICAL ERROR during initial session check or timeout:', err);
-        
-        // タイムアウトエラーの場合、セッションを強制的にクリーンアップし、エラー画面に遷移
-        if (err instanceof Error && err.message.includes('AUTH_TIMEOUT')) {
-            console.warn('Handling AUTH TIMEOUT: Forcing signOut to display error and prompt manual reload.');
-            if (mountedRef.current) {
-              
-              // サインアウトを待ち、エラーメッセージをセットして画面を解放
-              const success = await performSignOut(); // ローカルセッションをクリーンアップ
-              
-              // サインアウトに成功したら、エラーを設定して page.tsx のエラー表示画面に遷移させる
-              if (success && mountedRef.current) {
-                  // エラーを設定することで page.tsx がエラー画面（再試行ボタン付き）に切り替わる
-                  setError('セッション情報が無効または古くなっています。下のボタンで認証を再試行してください。');
-              } else {
-                  setError('致命的な認証エラーが発生しました。');
-              }
-              // loading: false は finally で行われるため return
-              return; 
-            }
-        } else if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
+        console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
+        // ★★★ 修正箇所: エラーがタイムアウトでなくても、一律でサインアウトを促すエラー画面へ遷移させる ★★★
+        if (mountedRef.current) {
+          setError('認証セッションが不安定です。再試行してください。');
         }
       } finally {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
         if (mountedRef.current) {
           console.log('getInitialSession: Finished. Setting loading to false.');
           setLoading(false);
