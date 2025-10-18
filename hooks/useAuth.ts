@@ -1,4 +1,5 @@
 // koecan_v0-main/hooks/useAuth.ts
+// 修正版: タイムアウト機構とセッション検証を追加
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,8 +11,8 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウトロジックを削除し、標準的な挙動に戻す
-// const AUTH_TIMEOUT_MS = 3000;
+// タイムアウト時間を設定（5秒）
+const AUTH_TIMEOUT_MS = 5000;
 
 export function useAuth() {
   const supabase = useSupabase();
@@ -29,7 +30,17 @@ export function useAuth() {
     };
   }, []);
 
-  // 独立した signOut 関数 (タイムアウトループ対策)
+  // タイムアウト付きのPromiseラッパー
+  const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error('認証チェックがタイムアウトしました')), timeoutMs)
+      )
+    ]);
+  };
+
+  // 独立した signOut 関数
   const performSignOut = async () => {
     if (!supabase) return false;
     try {
@@ -37,16 +48,15 @@ export function useAuth() {
       if (mountedRef.current) {
         setUser(null);
         setError(null);
-        setLoading(false); 
+        setLoading(false);
       }
       console.log('signOut: Successfully performed sign out after error.');
-      return true; // 成功を返す
+      return true;
     } catch (e) {
       console.error('Sign Out Failed in performSignOut:', e);
-      return false; // 失敗を返す
+      return false;
     }
   }
-
 
   // ヘルパー関数: ユーザーデータとプロファイルを取得
   const fetchUserData = async (client: SupabaseClient, userId: string): Promise<AuthUser | null> => {
@@ -62,12 +72,12 @@ export function useAuth() {
         console.error('fetchUserData: ERROR fetching user profile (Non-PGRST116):', profileError.message);
         throw profileError;
       }
-      
+
       const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
       if (authUserError) throw authUserError;
 
       if (!authUser) return null;
-      
+
       console.log('fetchUserData: END successfully.');
       return {
         ...authUser,
@@ -82,7 +92,6 @@ export function useAuth() {
       return null;
     }
   };
-
 
   useEffect(() => {
     console.log('--- useAuth useEffect START ---');
@@ -99,12 +108,16 @@ export function useAuth() {
         }
         return;
       }
-      
-      // ★★★ 修正箇所: シンプルなセッション取得に戻す (タイムアウト競争ロジックを削除) ★★★
+
       try {
-        console.log('getInitialSession: Attempting to get session.');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('getInitialSession: Attempting to get session with timeout.');
         
+        // ★★★ 修正1: タイムアウト機構を追加 ★★★
+        const { data: { session }, error: sessionError } = await withTimeout(
+          supabase.auth.getSession(),
+          AUTH_TIMEOUT_MS
+        );
+
         if (sessionError) {
           console.error('getInitialSession: ERROR getting session:', sessionError.message);
           throw sessionError;
@@ -112,9 +125,35 @@ export function useAuth() {
 
         if (session?.user) {
           console.log('getInitialSession: Active session found for user ID:', session.user.id);
-          const userData = await fetchUserData(supabase, session.user.id);
-          if (mountedRef.current) {
-            setUser(userData);
+          
+          // ★★★ 修正2: セッションの有効性を検証 ★★★
+          try {
+            const { data: { user: validUser }, error: userError } = await withTimeout(
+              supabase.auth.getUser(),
+              AUTH_TIMEOUT_MS
+            );
+
+            if (userError || !validUser) {
+              console.warn('getInitialSession: Session exists but user validation failed. Clearing session.');
+              await supabase.auth.signOut();
+              if (mountedRef.current) {
+                setUser(null);
+              }
+              return;
+            }
+
+            // セッションが有効な場合のみユーザーデータを取得
+            const userData = await fetchUserData(supabase, session.user.id);
+            if (mountedRef.current) {
+              setUser(userData);
+            }
+          } catch (validationError) {
+            console.error('getInitialSession: User validation error:', validationError);
+            // 検証に失敗した場合はセッションをクリア
+            await supabase.auth.signOut();
+            if (mountedRef.current) {
+              setUser(null);
+            }
           }
         } else {
           console.log('getInitialSession: No active session found. User is not logged in.');
@@ -124,11 +163,23 @@ export function useAuth() {
         }
       } catch (err) {
         console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
-        // ★★★ 修正箇所: エラーがタイムアウトでなくても、一律でサインアウトを促すエラー画面へ遷移させる ★★★
+        
+        // ★★★ 修正3: タイムアウトエラーの場合はセッションをクリア ★★★
+        if (err instanceof Error && err.message.includes('タイムアウト')) {
+          console.warn('getInitialSession: Timeout detected. Clearing potentially stale session.');
+          try {
+            await supabase.auth.signOut();
+          } catch (signOutError) {
+            console.error('getInitialSession: Failed to sign out after timeout:', signOutError);
+          }
+        }
+        
         if (mountedRef.current) {
           setError('認証セッションが不安定です。再試行してください。');
+          setUser(null);
         }
       } finally {
+        // ★★★ 修正4: 必ずloadingをfalseにする ★★★
         if (mountedRef.current) {
           console.log('getInitialSession: Finished. Setting loading to false.');
           setLoading(false);
@@ -140,31 +191,31 @@ export function useAuth() {
     // 初期セッションチェックを実行
     getInitialSession();
 
-    // ... (onAuthStateChange のリスナー設定は変更なし) ...
+    // onAuthStateChange のリスナー設定
     let subscription: { unsubscribe: () => void } | undefined;
-    if (supabase) { 
-        console.log('useEffect: Setting up onAuthStateChange listener.');
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-              if (!mountedRef.current) return;
-              console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
-              try {
-                if (session?.user) {
-                  const userData = await fetchUserData(supabase, session.user.id);
-                  if (mountedRef.current) setUser(userData);
-                } else {
-                  if (mountedRef.current) setUser(null);
-                }
-              } catch(err) {
-                  console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
-                  if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
-              }
-              console.log('onAuthStateChange: END of event processing.');
+    if (supabase) {
+      console.log('useEffect: Setting up onAuthStateChange listener.');
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (_event, session) => {
+          if (!mountedRef.current) return;
+          console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
+          try {
+            if (session?.user) {
+              const userData = await fetchUserData(supabase, session.user.id);
+              if (mountedRef.current) setUser(userData);
+            } else {
+              if (mountedRef.current) setUser(null);
             }
-          );
-          subscription = authListener.subscription;
+          } catch (err) {
+            console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
+            if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
+          }
+          console.log('onAuthStateChange: END of event processing.');
+        }
+      );
+      subscription = authListener.subscription;
     } else {
-        console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
+      console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
     }
 
     console.log('--- useAuth useEffect END ---');
@@ -177,9 +228,9 @@ export function useAuth() {
       }
       console.log('useEffect: Cleanup complete.');
     };
-  }, [supabase]); 
+  }, [supabase]);
 
-  // 公開する signOut 関数はそのまま維持
+  // 公開する signOut 関数
   const signOut = async () => {
     if (!supabase) return;
     try {
@@ -204,3 +255,4 @@ export function useAuth() {
     signOut,
   };
 }
+

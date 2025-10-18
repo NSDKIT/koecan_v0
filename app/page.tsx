@@ -1,4 +1,5 @@
 // koecan_v0-main/app/page.tsx
+// 修正版: エラーバウンダリーを追加
 
 'use client'
 
@@ -12,28 +13,39 @@ import MonitorDashboard from '@/components/MonitorDashboard';
 import { ClientDashboard } from '@/components/ClientDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import SupportDashboard from '@/components/SupportDashboard';
-// 新しい閲覧用コンポーネントをインポート
-import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer'; 
+import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer';
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
-  const { user, loading, error, signOut } = useAuth(); // signOut を useAuth から取得
+  const { user, loading, error, signOut } = useAuth();
   const [showWelcome, setShowWelcome] = useState(true);
-  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
-  // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
+  // ★★★ 追加: ローディングタイムアウトを検出するためのステート ★★★
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // ★★★ 修正箇所: 認証状態の変化を監視するログを維持 ★★★
   useEffect(() => {
     if (!loading && (user || error)) {
-      console.log('PAGE.TSX RENDER: Final Auth State:', { 
-        loading: loading, 
+      console.log('PAGE.TSX RENDER: Final Auth State:', {
+        loading: loading,
         user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
         error: error
       });
     }
   }, [loading, user, error]);
-  // ★★★ 修正箇所ここまで ★★★
+
+  // ★★★ 追加: ローディングが10秒以上続く場合にタイムアウトフラグを立てる ★★★
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
+      }, 10000); // 10秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -80,7 +92,7 @@ export default function Home() {
             {error}
           </p>
           <button
-            onClick={() => window.location.reload()} 
+            onClick={() => window.location.reload()}
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             再試行（強制リセット）
@@ -96,37 +108,50 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">認証情報を確認中...</p>
+          <p className="text-gray-600 mb-4">認証情報を確認中...</p>
+          {/* ★★★ 追加: タイムアウト時に表示されるエスケープハッチ ★★★ */}
+          {loadingTimeout && (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800 mb-3">
+                読み込みに時間がかかっています。<br />
+                古い認証情報が原因の可能性があります。
+              </p>
+              <button
+                onClick={() => {
+                  console.log('User clicked emergency clear button');
+                  localStorage.clear();
+                  sessionStorage.clear();
+                  window.location.reload();
+                }}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                認証情報をクリアして再読み込み
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // ★★★ 修正箇所: 認証タイムアウト後の強制リロードをここで処理 (ローディング後に AuthForm をスキップさせるため) ★★★
-  // loading=false かつ user=null の場合に、showWelcome が false であれば、以前のログイン試行が AuthForm に進んでいた証拠
+  // loading=false かつ user=null の場合の処理
   if (!user && !showWelcome) {
-     console.log("FINAL FAIL PATH: Loading is false but user is null. Returning AuthForm.");
-     // AuthForm に戻る前に、AuthForm の onBack を利用して Welcome に戻るロジックを排除
-     return <AuthForm onBack={() => setShowWelcome(true)} />; // <- onBack は残す
+    console.log("FINAL FAIL PATH: Loading is false but user is null. Returning AuthForm.");
+    return <AuthForm onBack={() => setShowWelcome(true)} />;
   }
-  // ★★★ 修正箇所ここまで ★★★
-
 
   // 認証チェックが完了し、ユーザーがいない場合の処理
   if (!user) {
     if (showWelcome) {
       return <WelcomeScreen onGetStarted={() => setShowWelcome(false)} />;
     }
-    
-    // ★★★ 修正箇所: AuthForm の onBack は維持し、AuthForm 内の戻るボタンで Welcome に戻れるようにする ★★★
+
     return <AuthForm onBack={() => setShowWelcome(true)} />;
   }
-
 
   // 認証チェックが完了し、ユーザーがいる場合の処理
   // AdminまたはSupportロールの場合のルーティング
   if (user.role === 'admin' || user.role === 'support') {
-    // admin@example.comがAdminDashboardとSupportDashboardのどちらかを選択
     if (user.role === 'admin' && selectedAdminPanel === null) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
@@ -153,7 +178,6 @@ export default function Home() {
       );
     }
 
-    // パネルが選択された、またはsupportロールでログインした場合
     if (user.role === 'admin' && selectedAdminPanel === 'admin') {
       return <AdminDashboard />;
     } else if (user.role === 'admin' && selectedAdminPanel === 'support') {
@@ -162,7 +186,6 @@ export default function Home() {
       return <SupportDashboard />;
     }
   }
-
 
   // その他のユーザー役割のルーティング (monitor, client)
   switch (user.role) {
@@ -186,3 +209,4 @@ export default function Home() {
       );
   }
 }
+
