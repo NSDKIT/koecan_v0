@@ -107,9 +107,8 @@ export function ChatModal({ user, otherUserId, onClose, readOnly = false, roomId
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `room_id=eq.${currentRoomId}` },
-          (payload) => {
+          (payload: any) => {
             const newMessage = payload.new as Message;
-            // 自分のメッセージは即時反映されるため、相手のメッセージのみ追加
             if (newMessage.sender_id !== user.id) {
                  setMessages((prev) => [...prev, newMessage]);
             }

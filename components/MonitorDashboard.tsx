@@ -185,12 +185,12 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      const answeredSurveyIds = new Set(userResponses?.map(res => res.survey_id));
+      const answeredSurveyIds = new Set(userResponses?.map((res: any) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
 
-      allActiveSurveys?.forEach(survey => {
+      allActiveSurveys?.forEach((survey: any) => {
         if (answeredSurveyIds.has(survey.id)) {
           newAnsweredSurveys.push(survey);
         } else {
@@ -319,7 +319,7 @@ export default function MonitorDashboard() {
 
       setSelectedSurvey(survey);
       setSurveyQuestions(questions || []);
-      setAnswers(questions?.map(q => ({ question_id: q.id, answer: '' })) || []);
+      setAnswers(questions?.map((q: any) => ({ question_id: q.id, answer: '' })) || []);
     } catch (error) {
       console.error('アンケート質問の取得エラー:', error);
       alert('アンケートの読み込みに失敗しました。');

@@ -55,11 +55,8 @@ export function AdminSupportChatViewer({ onBack }: AdminSupportChatViewerProps) 
           table: 'chat_messages',
           filter: `room_id=eq.${selectedRoom.id}`,
         },
-        (payload) => {
-          // 新しいメッセージをリアルタイムで追加
-          // このままでは送信者名が取得できないため、再度fetchするか、
-          // payload.newに必要な情報を付加するDB関数(Trigger)を用意するのが望ましい
-          fetchMessages(selectedRoom.id, false); // ローディング表示なしで再取得
+        (payload: any) => {
+          fetchMessages(selectedRoom.id, false);
         }
       )
       .subscribe();
@@ -106,7 +103,7 @@ export function AdminSupportChatViewer({ onBack }: AdminSupportChatViewerProps) 
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      const formattedMessages = data?.map(msg => ({
+      const formattedMessages = data?.map((msg: any) => ({
         ...msg,
         sender: Array.isArray(msg.sender) ? msg.sender[0] : msg.sender,
       })) || [];
