@@ -39,6 +39,71 @@ export default function Home() {
       const timer = setTimeout(() => {
         console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
         setLoadingTimeout(true);
+      }, 1000); // 1秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
+      }, 2000); // 2秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
+      }, 3000); // 3秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
+      }, 4000); // 4秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
+      }, 5000); // 5秒
+
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [loading]);
+  
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        setLoadingTimeout(true);
       }, 10000); // 10秒
 
       return () => clearTimeout(timer);
