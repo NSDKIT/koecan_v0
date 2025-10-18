@@ -1,5 +1,5 @@
 // koecan_v0-main/app/page.tsx
-// 修正版: エラーバウンダリーを追加
+// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加
 
 'use client'
 
@@ -33,11 +33,11 @@ export default function Home() {
     }
   }, [loading, user, error]);
 
-  // ★★★ 追加: ローディングが10秒以上続く場合にタイムアウトフラグを立てる ★★★
+  // ★★★ 修正: ローディングが1秒以上続く場合にタイムアウトフラグを立てる ★★★
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
+        console.warn('PAGE.TSX: Loading timeout detected after 1 second');
         setLoadingTimeout(true);
       }, 1000); // 1秒
 
@@ -47,70 +47,20 @@ export default function Home() {
     }
   }, [loading]);
 
+  // ★★★ 追加: タイムアウト後3秒で自動クリア ★★★
   useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
-        setLoadingTimeout(true);
-      }, 2000); // 2秒
+    if (loadingTimeout) {
+      console.log('PAGE.TSX: Auto-clearing auth in 3 seconds...');
+      const autoClearTimer = setTimeout(() => {
+        console.log('PAGE.TSX: Auto-executing emergency clear');
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+      }, 3000); // 3秒後に自動実行
 
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
+      return () => clearTimeout(autoClearTimer);
     }
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
-        setLoadingTimeout(true);
-      }, 3000); // 3秒
-
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
-        setLoadingTimeout(true);
-      }, 4000); // 4秒
-
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
-
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
-        setLoadingTimeout(true);
-      }, 5000); // 5秒
-
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
-  
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 10 seconds');
-        setLoadingTimeout(true);
-      }, 10000); // 10秒
-
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
+  }, [loadingTimeout]);
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -179,7 +129,7 @@ export default function Home() {
             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800 mb-3">
                 読み込みに時間がかかっています。<br />
-                古い認証情報が原因の可能性があります。
+                3秒後に認証情報を自動クリアします...
               </p>
               <button
                 onClick={() => {
@@ -190,7 +140,7 @@ export default function Home() {
                 }}
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
               >
-                認証情報をクリアして再読み込み
+                今すぐクリアして再読み込み
               </button>
             </div>
           )}
@@ -274,4 +224,3 @@ export default function Home() {
       );
   }
 }
-
