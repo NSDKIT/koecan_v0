@@ -1,3 +1,6 @@
+// koecan_v0-main/app/page.tsx
+// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加（合計2秒）
+
 'use client'
 
 import React from 'react';
@@ -44,16 +47,16 @@ export default function Home() {
     }
   }, [loading]);
 
-  // ★★★ 追加: タイムアウト後3秒で自動クリア ★★★
+  // ★★★ 追加: タイムアウト後1秒で自動クリア（合計2秒） ★★★
   useEffect(() => {
     if (loadingTimeout) {
-      console.log('PAGE.TSX: Auto-clearing auth in 3 seconds...');
+      console.log('PAGE.TSX: Auto-clearing auth in 1 second...');
       const autoClearTimer = setTimeout(() => {
         console.log('PAGE.TSX: Auto-executing emergency clear');
         localStorage.clear();
         sessionStorage.clear();
         window.location.reload();
-      }, 3000); // 3秒後に自動実行
+      }, 1000); // 1秒後に自動実行（合計2秒）
 
       return () => clearTimeout(autoClearTimer);
     }
@@ -126,7 +129,7 @@ export default function Home() {
             <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800 mb-3">
                 読み込みに時間がかかっています。<br />
-                3秒後に認証情報を自動クリアします...
+                1秒後に認証情報を自動クリアします...
               </p>
               <button
                 onClick={() => {
