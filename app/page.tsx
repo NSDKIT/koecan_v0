@@ -17,9 +17,9 @@ import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer';
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
-  const { user, loading, error, signOut } = useAuth();
+  const { user, loading, error, signOut } = useAuth(); // signOut を useAuth から取得
   const [showWelcome, setShowWelcome] = useState(true);
-  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); 
+  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
   // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
@@ -37,7 +37,6 @@ export default function Home() {
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
-    // ... (中略) ...
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
@@ -66,7 +65,7 @@ export default function Home() {
     );
   }
 
-  // エラーがある場合の表示 (useAuth側でエラーが設定された場合)
+  // エラーがある場合の表示
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -103,21 +102,26 @@ export default function Home() {
     );
   }
 
-  // ★★★ 修正箇所: loading=false かつ user=null の場合に、強制リロードを走らせる ★★★
+  // ★★★ 修正箇所: 認証タイムアウト後の強制リロードをここで処理 (ローディング後に AuthForm をスキップさせるため) ★★★
+  // loading=false かつ user=null の場合に、showWelcome が false であれば、以前のログイン試行が AuthForm に進んでいた証拠
   if (!user && !showWelcome) {
-     console.log("FINAL FAIL PATH: Loading is false but user is null. Triggering forced reload.");
-     window.location.reload(); // キャッシュクリア後にこのパスを通ると、認証画面が表示される
-     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">リロード中...</div>;
+     console.log("FINAL FAIL PATH: Loading is false but user is null. Returning AuthForm.");
+     // AuthForm に戻る前に、AuthForm の onBack を利用して Welcome に戻るロジックを排除
+     return <AuthForm onBack={() => setShowWelcome(true)} />; // <- onBack は残す
   }
   // ★★★ 修正箇所ここまで ★★★
+
 
   // 認証チェックが完了し、ユーザーがいない場合の処理
   if (!user) {
     if (showWelcome) {
       return <WelcomeScreen onGetStarted={() => setShowWelcome(false)} />;
     }
+    
+    // ★★★ 修正箇所: AuthForm の onBack は維持し、AuthForm 内の戻るボタンで Welcome に戻れるようにする ★★★
     return <AuthForm onBack={() => setShowWelcome(true)} />;
   }
+
 
   // 認証チェックが完了し、ユーザーがいる場合の処理
   // AdminまたはSupportロールの場合のルーティング
