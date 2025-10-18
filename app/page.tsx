@@ -1,5 +1,5 @@
 // koecan_v0-main/app/page.tsx
-// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加（合計1秒）
+// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加（合計1秒、サイレント実行）
 
 'use client'
 
@@ -124,26 +124,6 @@ export default function Home() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
           <p className="text-gray-600 mb-4"> </p>
-          {/* ★★★ 追加: タイムアウト時に表示されるエスケープハッチ ★★★ */}
-          {loadingTimeout && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 mb-3">
-                読み込みに時間がかかっています。<br />
-                まもなく認証情報を自動クリアします...
-              </p>
-              <button
-                onClick={() => {
-                  console.log('User clicked emergency clear button');
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.reload();
-                }}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
-              >
-                今すぐクリアして再読み込み
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
