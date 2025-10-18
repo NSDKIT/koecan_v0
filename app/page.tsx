@@ -1,6 +1,3 @@
-// koecan_v0-main/app/page.tsx
-// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加
-
 'use client'
 
 import React from 'react';
