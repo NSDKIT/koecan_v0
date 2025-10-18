@@ -3,7 +3,7 @@
 'use client'
 
 import React from 'react';
-import { useState, useEffect } from 'react'; // ★★★ useEffect を追加 ★★★
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { isSupabaseConfigured } from '@/config/supabase';
 import { AuthForm } from '@/components/AuthForm';
@@ -17,18 +17,21 @@ import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer';
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
 
 export default function Home() {
-  const { user, loading, error } = useAuth();
+  const { user, loading, error, signOut } = useAuth(); // signOut を useAuth から取得
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
   // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
-  // ★★★ 修正箇所: 認証状態の変化を監視するログを追加 ★★★
+  // ★★★ 修正箇所: 認証状態の変化を監視するログを維持 ★★★
   useEffect(() => {
-    console.log('PAGE.TSX RENDER: Current Auth State:', { 
-      loading: loading, 
-      user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
-      error: error
-    });
+    if (!loading && (user || error)) {
+      console.log('PAGE.TSX RENDER: Final Auth State:', { 
+        loading: loading, 
+        user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
+        error: error
+      });
+    }
   }, [loading, user, error]);
   // ★★★ 修正箇所ここまで ★★★
 
@@ -77,10 +80,10 @@ export default function Home() {
             {error}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => window.location.reload(true)} 
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
-            再試行
+            再試行（強制リセット）
           </button>
         </div>
       </div>
@@ -138,12 +141,9 @@ export default function Home() {
     }
 
     // パネルが選択された、またはsupportロールでログインした場合
-    // admin@example.comは選択したパネル、support@example.comはSupportDashboardへ
     if (user.role === 'admin' && selectedAdminPanel === 'admin') {
       return <AdminDashboard />;
     } else if (user.role === 'admin' && selectedAdminPanel === 'support') {
-      // SupportDashboardの代わりに、新しい閲覧用コンポーネントを表示
-      // onBackプロパティを渡して、選択画面に戻れるようにする
       return <AdminSupportChatViewer onBack={() => setSelectedAdminPanel(null)} />;
     } else if (user.role === 'support') {
       return <SupportDashboard />;
