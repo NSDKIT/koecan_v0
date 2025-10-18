@@ -10,7 +10,7 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// タイムアウト時間を定義 (例: 3秒)
+// タイムアウト時間を定義 (3秒)
 const AUTH_TIMEOUT_MS = 3000;
 
 export function useAuth() {
@@ -150,7 +150,7 @@ export function useAuth() {
             console.warn('Handling AUTH TIMEOUT: Forcing signOut to display error and prompt manual reload.');
             if (mountedRef.current) {
               
-              // ★★★ 修正: サインアウトを待ち、エラーメッセージをセットして画面を解放 ★★★
+              // サインアウトを待ち、エラーメッセージをセットして画面を解放
               const success = await performSignOut(); // ローカルセッションをクリーンアップ
               
               // サインアウトに成功したら、エラーを設定して page.tsx のエラー表示画面に遷移させる
@@ -160,7 +160,7 @@ export function useAuth() {
               } else {
                   setError('致命的な認証エラーが発生しました。');
               }
-              // loading: false は finally で行われる
+              // loading: false は finally で行われるため return
               return; 
             }
         } else if (mountedRef.current) {
@@ -181,7 +181,7 @@ export function useAuth() {
     // 初期セッションチェックを実行
     getInitialSession();
 
-    // ... (onAuthStateChange のリスナー設定) ...
+    // ... (onAuthStateChange のリスナー設定は変更なし) ...
     let subscription: { unsubscribe: () => void } | undefined;
     if (supabase) { 
         console.log('useEffect: Setting up onAuthStateChange listener.');
