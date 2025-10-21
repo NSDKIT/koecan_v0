@@ -48,10 +48,8 @@ type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 // TODO: ここに、クライアントがチャットしたいサポート担当者（例: koecan.koushiki@gmail.com）の実際のユーザーIDを設定してください。
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
-// ★★★ 修正箇所: シーエイトのLINE公式アカウントIDを定義 ★★★
-const SUPABASE_C8_LINE_ID = '581zsfiu'; // 指定されたLINE ID
-// @ を含む場合、R/ti/p/@ID の形式は @ を除去してエンコードする必要があります。
-const C8_LINE_ADD_URL = `https://line.me/R/ti/p/${SUPABASE_C8_LINE_ID.replace('@', '')}`;
+// ★★★ 修正箇所: シーエイトのLINE公式アカウントの短縮URLを定義 ★★★
+const C8_LINE_ADD_URL = 'https://lin.ee/lSd66NX';
 // ★★★ 修正箇所ここまで ★★★
 
 
