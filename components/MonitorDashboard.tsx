@@ -182,7 +182,7 @@ export default function MonitorDashboard() {
         throw surveysError;
       }
 
-      // ★★★ 修正箇所: selectで survey_id のみを取得するよう明示 ★★★
+      // Response オブジェクトから survey_id のみを取得する最小のデータ構造
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -193,13 +193,14 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      // ★★★ 修正箇所: mapの引数に ResponseLite 型を明示的に指定 ★★★
+      // ★★★ 修正箇所: mapの引数に明示的に型 (ResponseLite) を指定 ★★★
       const answeredSurveyIds = new Set(userResponses?.map((res: {survey_id: string}) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
 
-      allActiveSurveys?.forEach(survey => {
+      // ★★★ 修正箇所: forEachの引数に明示的に型 (Survey) を指定 ★★★
+      allActiveSurveys?.forEach((survey: Survey) => {
         if (answeredSurveyIds.has(survey.id)) {
           newAnsweredSurveys.push(survey);
         } else {
@@ -794,7 +795,7 @@ export default function MonitorDashboard() {
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
                 <div className="flex items-center justify-center p-8">
                     <a
-                        href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
+                        href={C8_LINE_ADD_URL} // ★★★ URLを直接指定 ★★★
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
