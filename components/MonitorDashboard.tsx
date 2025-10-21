@@ -49,7 +49,7 @@ type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
 // ★★★ 修正箇所: シーエイトのLINE公式アカウントIDを定義 ★★★
-const SUPABASE_C8_LINE_ID = '521dhtmu'; // 指定されたLINE ID
+const SUPABASE_C8_LINE_ID = '581zsfiu'; // 指定されたLINE ID
 // @ を含む場合、R/ti/p/@ID の形式は @ を除去してエンコードする必要があります。
 const C8_LINE_ADD_URL = `https://line.me/R/ti/p/${SUPABASE_C8_LINE_ID.replace('@', '')}`;
 // ★★★ 修正箇所ここまで ★★★
