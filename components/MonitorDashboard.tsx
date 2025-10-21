@@ -48,12 +48,6 @@ type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 // TODO: ここに、クライアントがチャットしたいサポート担当者（例: koecan.koushiki@gmail.com）の実際のユーザーIDを設定してください。
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
-// ★★★ 修正箇所: シーエイトのLINE公式アカウントIDを定義 ★★★
-const SUPABASE_C8_LINE_ID = '@521dhtmu'; // 例: @c8_support のように @ を含むLINE IDに置き換えてください。
-const C8_LINE_ADD_URL = `https://line.me/R/ti/p/${SUPABASE_C8_LINE_ID}`;
-// ★★★ 修正箇所ここまで ★★★
-
-
 // boolean型の値を日本語文字列に変換するヘルパー関数
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
     if (val === true) return yes;
@@ -181,7 +175,6 @@ export default function MonitorDashboard() {
         throw surveysError;
       }
 
-      // responsesテーブルから survey_id を取得
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -192,15 +185,12 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      // ★★★ 修正箇所: res の型を明示的に指定 ★★★
-      type UserResponseData = { survey_id: string };
-      const answeredSurveyIds = new Set(userResponses?.map((res: UserResponseData) => res.survey_id));
-      // ★★★ 修正箇所ここまで ★★★
+      const answeredSurveyIds = new Set(userResponses?.map((res: any) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
 
-      allActiveSurveys?.forEach(survey => {
+      allActiveSurveys?.forEach((survey: any) => {
         if (answeredSurveyIds.has(survey.id)) {
           newAnsweredSurveys.push(survey);
         } else {
@@ -329,7 +319,7 @@ export default function MonitorDashboard() {
 
       setSelectedSurvey(survey);
       setSurveyQuestions(questions || []);
-      setAnswers(questions?.map(q => ({ question_id: q.id, answer: '' })) || []);
+      setAnswers(questions?.map((q: any) => ({ question_id: q.id, answer: '' })) || []);
     } catch (error) {
       console.error('アンケート質問の取得エラー:', error);
       alert('アンケートの読み込みに失敗しました。');
