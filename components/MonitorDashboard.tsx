@@ -181,6 +181,7 @@ export default function MonitorDashboard() {
         throw surveysError;
       }
 
+      // responsesテーブルから survey_id を取得
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -191,7 +192,10 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      const answeredSurveyIds = new Set(userResponses?.map(res => res.survey_id));
+      // ★★★ 修正箇所: res の型を明示的に指定 ★★★
+      type UserResponseData = { survey_id: string };
+      const answeredSurveyIds = new Set(userResponses?.map((res: UserResponseData) => res.survey_id));
+      // ★★★ 修正箇所ここまで ★★★
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
