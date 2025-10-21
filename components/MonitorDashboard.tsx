@@ -49,8 +49,9 @@ type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
 // ★★★ 修正箇所: シーエイトのLINE公式アカウントIDを定義 ★★★
-const SUPABASE_C8_LINE_ID = '@521dhtmu'; // 例: @c8_support のように @ を含むLINE IDに置き換えてください。
-const C8_LINE_ADD_URL = `https://line.me/R/ti/p/${SUPABASE_C8_LINE_ID}`;
+const SUPABASE_C8_LINE_ID = '@521dhtmu'; // 指定されたLINE ID
+// @ を含む場合、R/ti/p/@ID の形式は @ を除去してエンコードする必要があります。
+const C8_LINE_ADD_URL = `https://line.me/R/ti/p/${SUPABASE_C8_LINE_ID.replace('@', '')}`;
 // ★★★ 修正箇所ここまで ★★★
 
 
@@ -181,6 +182,7 @@ export default function MonitorDashboard() {
         throw surveysError;
       }
 
+      // ★★★ 修正箇所: selectで survey_id のみを取得するよう明示 ★★★
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -191,7 +193,8 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      const answeredSurveyIds = new Set(userResponses?.map(res => res.survey_id));
+      // ★★★ 修正箇所: mapの引数に ResponseLite 型を明示的に指定 ★★★
+      const answeredSurveyIds = new Set(userResponses?.map((res: {survey_id: string}) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
@@ -791,7 +794,7 @@ export default function MonitorDashboard() {
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
                 <div className="flex items-center justify-center p-8">
                     <a
-                        href="https://zenryoku-c8.com" // ★★★ URLを直接指定 ★★★
+                        href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
