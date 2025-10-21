@@ -20,7 +20,7 @@ import {
   Target,
   Award,
   Users, // アンケートの対象者アイコン
-  Menu, // ハンバーガーアイコン
+  Menu, // ハンバーガーメニュー
   ExternalLink, // 外部リンクアイコン
   X, // 閉じるアイコン
   History, // 回答済みアンケートのアイコン
@@ -193,7 +193,7 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      // ★★★ 修正箇所: mapの引数に明示的に型 (ResponseLite) を指定 ★★★
+      // ★★★ 修正箇所: mapの引数に明示的に型 ({survey_id: string}) を指定 ★★★
       const answeredSurveyIds = new Set(userResponses?.map((res: {survey_id: string}) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
@@ -328,8 +328,9 @@ export default function MonitorDashboard() {
       if (error) throw error;
 
       setSelectedSurvey(survey);
+      // ★★★ 修正箇所: mapの引数に明示的に型 (Question) を指定 ★★★
       setSurveyQuestions(questions || []);
-      setAnswers(questions?.map(q => ({ question_id: q.id, answer: '' })) || []);
+      setAnswers(questions?.map((q: Question) => ({ question_id: q.id, answer: '' })) || []);
     } catch (error) {
       console.error('アンケート質問の取得エラー:', error);
       alert('アンケートの読み込みに失敗しました。');
@@ -795,7 +796,7 @@ export default function MonitorDashboard() {
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
                 <div className="flex items-center justify-center p-8">
                     <a
-                        href={C8_LINE_ADD_URL} // ★★★ URLを直接指定 ★★★
+                        href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
