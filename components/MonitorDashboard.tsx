@@ -623,7 +623,7 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? 'bg-cover bg-center bg-no-repeat min-h-screen' : ''
         }`}
         style={activeTab === 'career_consultation' ? {
-          backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v2.png)'
+          backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v3.png)'
         } : {}}
         > 
           {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
