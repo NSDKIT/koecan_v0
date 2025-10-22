@@ -7,7 +7,6 @@ import { X, FileText, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-r
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Advertisement } from '@/types';
-import Papa from 'papaparse';
 
 interface ImportCsvModalProps {
   onClose: () => void;
@@ -90,36 +89,81 @@ const toBoolean = (val: string) => {
     return lower === 'あり' || lower === '有' || lower === '可' || lower === 'true';
 };
 
+// 独自のCSVパーサー（ダブルクォート内の改行とカンマを正しく処理）
+const parseCSV = (csvText: string): { headers: string[], rows: string[][] } => {
+    const lines: string[][] = [];
+    let currentRow: string[] = [];
+    let currentField = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < csvText.length; i++) {
+        const char = csvText[i];
+        const nextChar = csvText[i + 1];
+        
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                // エスケープされたダブルクォート
+                currentField += '"';
+                i++; // 次の文字をスキップ
+            } else {
+                // クォートの開始または終了
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // フィールドの区切り
+            currentRow.push(currentField);
+            currentField = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+            // 行の終わり（クォート外の改行のみ）
+            if (char === '\r' && nextChar === '\n') {
+                i++; // \r\nの場合、\nをスキップ
+            }
+            if (currentField || currentRow.length > 0) {
+                currentRow.push(currentField);
+                lines.push(currentRow);
+                currentRow = [];
+                currentField = '';
+            }
+        } else {
+            // 通常の文字
+            currentField += char;
+        }
+    }
+    
+    // 最後のフィールドと行を追加
+    if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField);
+        lines.push(currentRow);
+    }
+    
+    if (lines.length === 0) {
+        throw new Error("CSVファイルが空です");
+    }
+    
+    const headers = lines[0].map(h => h.trim());
+    const rows = lines.slice(1);
+    
+    return { headers, rows };
+};
+
 // CSVテキストをAdvertisementオブジェクトの配列に変換する関数
 const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<Advertisement>[] => {
-    // ヘッダーの重複を追跡
-    const headerCounts: { [key: string]: number } = {};
+    // 独自のCSVパーサーでCSVを解析
+    const { headers, rows } = parseCSV(csvText);
     
-    // PapaParseでCSVを解析（ダブルクォート内の改行とカンマを正しく処理）
-    const parseResult = Papa.parse(csvText, {
-        header: true, // 1行目をヘッダーとして扱う
-        skipEmptyLines: true, // 空行をスキップ
-        transformHeader: (header: string, index: number) => {
-            const trimmedHeader = header.trim();
-            
-            // 重複ヘッダーの処理
-            if (headerCounts[trimmedHeader]) {
-                headerCounts[trimmedHeader]++;
-                // 2回目以降は "_2", "_3" などを付加
-                return `${trimmedHeader}_${headerCounts[trimmedHeader]}`;
-            } else {
-                headerCounts[trimmedHeader] = 1;
-                return trimmedHeader;
-            }
-        },
+    // 重複ヘッダーの処理
+    const headerCounts: { [key: string]: number } = {};
+    const processedHeaders = headers.map(header => {
+        const trimmedHeader = header.trim();
+        if (headerCounts[trimmedHeader]) {
+            headerCounts[trimmedHeader]++;
+            return `${trimmedHeader}_${headerCounts[trimmedHeader]}`;
+        } else {
+            headerCounts[trimmedHeader] = 1;
+            return trimmedHeader;
+        }
     });
 
-    if (parseResult.errors.length > 0) {
-        console.error('CSV解析エラー:', parseResult.errors);
-        throw new Error(`CSV解析エラー: ${parseResult.errors[0].message}`);
-    }
-
-    const rows = parseResult.data as any[];
     const results: Partial<Advertisement>[] = [];
     const now = new Date().toISOString();
 
@@ -134,8 +178,12 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
         };
 
         // 各フィールドをマッピング
-        for (const [csvHeader, dbField] of Object.entries(FIELD_MAPPING)) {
-            const value = row[csvHeader];
+        for (let j = 0; j < processedHeaders.length && j < row.length; j++) {
+            const csvHeader = processedHeaders[j];
+            const value = row[j];
+            const dbField = FIELD_MAPPING[csvHeader];
+
+            if (!dbField) continue;
             if (value === undefined || value === null || value === '') continue;
 
             const trimmedValue = typeof value === 'string' ? value.trim() : value;
