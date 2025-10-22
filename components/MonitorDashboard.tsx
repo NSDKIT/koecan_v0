@@ -815,7 +815,7 @@ export default function MonitorDashboard() {
         <div className="max-w-7xl mx-auto flex justify-around h-16">
           <button
             onClick={() => setActiveTab('surveys')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -824,7 +824,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('matching')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -833,7 +833,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -842,7 +842,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('career_consultation')} // ★★★ 修正: タブ名変更 ★★★
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
