@@ -7,6 +7,7 @@ import { X, FileText, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-r
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Advertisement } from '@/types';
+import Papa from 'papaparse';
 
 interface ImportCsvModalProps {
   onClose: () => void;
@@ -91,37 +92,53 @@ const toBoolean = (val: string) => {
 
 // CSVテキストをAdvertisementオブジェクトの配列に変換する関数
 const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<Advertisement>[] => {
-    const lines = csvText.trim().split('\n');
-    if (lines.length < 2) throw new Error("CSVにはヘッダーとデータ行が必要です。");
-
-    let headers = lines[0].split(',').map(h => h.trim());
+    // ヘッダーの重複を追跡
+    const headerCounts: { [key: string]: number } = {};
     
-    // CSVのヘッダーが重複している部分を修正
-    if (headers[13] === "イチオシポイント①") headers[13] = "イチオシポイント①_2";
-    if (headers[51] === "イチオシポイント③") headers[51] = "イチオシポイント③_重複";
-    if (headers[52] === "イチオシポイント②") headers[52] = "イチオシポイント②_重複";
+    // PapaParseでCSVを解析（ダブルクォート内の改行とカンマを正しく処理）
+    const parseResult = Papa.parse(csvText, {
+        header: true, // 1行目をヘッダーとして扱う
+        skipEmptyLines: true, // 空行をスキップ
+        transformHeader: (header: string, index: number) => {
+            const trimmedHeader = header.trim();
+            
+            // 重複ヘッダーの処理
+            if (headerCounts[trimmedHeader]) {
+                headerCounts[trimmedHeader]++;
+                // 2回目以降は "_2", "_3" などを付加
+                return `${trimmedHeader}_${headerCounts[trimmedHeader]}`;
+            } else {
+                headerCounts[trimmedHeader] = 1;
+                return trimmedHeader;
+            }
+        },
+    });
 
+    if (parseResult.errors.length > 0) {
+        console.error('CSV解析エラー:', parseResult.errors);
+        throw new Error(`CSV解析エラー: ${parseResult.errors[0].message}`);
+    }
 
+    const rows = parseResult.data as any[];
     const results: Partial<Advertisement>[] = [];
     const now = new Date().toISOString();
 
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',');
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const ad: Partial<Advertisement> = {
-            is_active: true, // デフォルトでアクティブ
+            is_active: true,
             priority: 100,
             created_by: creatorId,
             created_at: now,
             updated_at: now,
         };
-        
-        for (let j = 0; j < values.length && j < headers.length; j++) {
-            const header = headers[j];
-            const value = values[j].trim();
-            const dbField = FIELD_MAPPING[header];
 
-            if (!dbField) continue;
-            if (value === '') continue; // 空値はスキップ
+        // 各フィールドをマッピング
+        for (const [csvHeader, dbField] of Object.entries(FIELD_MAPPING)) {
+            const value = row[csvHeader];
+            if (value === undefined || value === null || value === '') continue;
+
+            const trimmedValue = typeof value === 'string' ? value.trim() : value;
 
             switch (dbField) {
                 case 'industries':
@@ -130,45 +147,45 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_target_students':
                 case 'internship_locations':
                 case 'internship_content_types':
-                    // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
-                    const arrValue = value.split(/[、,]/).map(s => s.trim()).filter(s => s !== ''); 
-                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null; // 空配列は null に変換
+                    // 配列型: カンマ区切りを配列に変換
+                    const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== '');
+                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null;
                     break;
                 case 'side_job_allowed':
                 case 'remote_work_available':
                 case 'housing_allowance_available':
                 case 'transfer_existence':
                 case 'transport_lodging_stipend':
-                    // ブーリアン型: 特定の文字列を boolean に変換
-                    (ad as any)[dbField] = toBoolean(value);
+                    // ブーリアン型
+                    (ad as any)[dbField] = toBoolean(trimmedValue);
                     break;
                 case 'establishment_year':
                 case 'employee_count':
                 case 'employee_avg_age':
                     // 数値型
-                    (ad as any)[dbField] = parseInt(value) || null;
+                    (ad as any)[dbField] = parseInt(trimmedValue) || null;
                     break;
                 case 'company_vision':
-                    // description の NOT NULL 制約への対応（優先度高）
-                    if (value.length > 100) {
-                        ad.company_vision = value.substring(0, 100) + '...';
+                    // 100文字制限
+                    if (trimmedValue.length > 100) {
+                        ad.company_vision = trimmedValue.substring(0, 100) + '...';
                     } else {
-                        ad.company_vision = value;
+                        ad.company_vision = trimmedValue;
                     }
-                    ad.description = ad.company_vision; // 旧 description にも設定
-                    ad.title = ad.company_name; // 旧 title にも設定
+                    ad.description = ad.company_vision;
+                    ad.title = ad.company_name;
                     break;
                 default:
                     // その他のテキスト型
-                    (ad as any)[dbField] = value;
+                    (ad as any)[dbField] = trimmedValue;
             }
         }
-        
+
         // 会社名が必須
         if (ad.company_name) {
             results.push(ad);
         } else {
-            console.log(`WARNING: 行 ${i + 1} の企業名は空のためスキップされました。`); 
+            console.log(`WARNING: 行 ${i + 2} の企業名は空のためスキップされました。`);
         }
     }
     return results;
@@ -333,7 +350,7 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  プレビュー ({csvText.split('\n').length - 1}件)
+                  プレビュー
                 </button>
               </div>
             </div>
