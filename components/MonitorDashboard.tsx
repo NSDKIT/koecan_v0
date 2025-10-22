@@ -800,7 +800,7 @@ export default function MonitorDashboard() {
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
-                <div className="flex items-center justify-center pt-[calc(100vh-100px)]">
+                <div className="flex items-center justify-center pt-[calc(100vh-200px)]">
                     <a
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
