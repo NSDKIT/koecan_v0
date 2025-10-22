@@ -61,19 +61,22 @@ const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', 
 };
 
 // HTTP画像をHTTPS経由で配信するためのプロキシURL変換関数
+// HTTPSの画像はそのまま、HTTPの画像のみプロキシ経由に変換
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     
-    // すでにHTTPSの場合はそのまま返す
-    if (url.startsWith('https://')) return url;
+    // HTTPSの場合は何も処理せず、そのまま返す（従来通りの動作）
+    if (url.startsWith('https://')) {
+        return url;
+    }
     
-    // HTTPの場合はプロキシ経由に変換
+    // HTTPの場合のみプロキシ経由に変換
     if (url.startsWith('http://')) {
-        // 無料の画像プロキシサービス（wsrv.nl）を使用
-        // または、独自のプロキシサーバーを使用することも可能
+        // 無料の画像プロキシサービス（wsrv.nl）を使用してHTTPSに変換
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
     }
     
+    // その他の場合はそのまま返す
     return url;
 };
 
@@ -785,9 +788,10 @@ export default function MonitorDashboard() {
                       >
                         {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
                         {(() => {
-                          const secureUrl = getSecureImageUrl(ad.image_url);
-                          console.log(`企業: ${ad.company_name}, 元URL: ${ad.image_url}, プロキシURL: ${secureUrl}`);
-                          return secureUrl;
+                          const imageUrl = ad.image_url;
+                          const secureUrl = getSecureImageUrl(imageUrl);
+                          console.log(`企業: ${ad.company_name}, 元URL: ${imageUrl}, 処理後URL: ${secureUrl}`);
+                          return (imageUrl && imageUrl.length > 0);
                         })() ? (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
                             <img
