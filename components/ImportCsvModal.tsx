@@ -81,8 +81,6 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "交通費・宿泊費の支給": "transport_lodging_stipend",
     "インターンシップ申込URL": "internship_application_url",
     "従業員様の働く様子や、集合写真、オフィス等、会社の雰囲気が伝わる画像を１枚ご提供ください。": "image_url",
-    // 以下の項目はDBに定義がないが、CSVに存在するため無視（または別のカラムにマッピングが必要）
-    // "考え方の傾向": null, "2.視野の広げ方": null, "1.仕事のエネルギーの使い方": null, ...
 };
 
 // 特定の文字列をブーリアンに変換するヘルパー関数
@@ -199,7 +197,7 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_content_types':
                     // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
                     const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== ''); 
-                    // ★★★ 修正箇所: nullを許可しているため、空配列の場合はnullを挿入 ★★★
+                    // 空配列の場合はnullを挿入
                     (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null; 
                     break;
                 case 'side_job_allowed':
@@ -208,7 +206,8 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'transfer_existence':
                 case 'transport_lodging_stipend':
                     // ブーリアン型: 特定の文字列を boolean に変換
-                    (ad as any)[dbField] = toBoolean(trimmedValue);
+                    // ★★★ toBoolean は boolean を返すため、そのまま設定（Supabase-jsが "t"/"f"に変換することを期待） ★★★
+                    (ad as any)[dbField] = toBoolean(trimmedValue); 
                     break;
                 case 'establishment_year':
                 case 'employee_count':
