@@ -84,9 +84,12 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
 };
 
 // 特定の文字列をブーリアンに変換するヘルパー関数
-const toBoolean = (val: string): boolean => {
+const toBoolean = (val: string | undefined | null): boolean => {
+    if (!val) return false;
     const lower = val.toLowerCase().trim();
-    return lower === 'あり' || lower === '有' || lower === '可' || lower === 'true'; 
+    // 完全一致または部分一致で判定
+    return lower === 'あり' || lower === '有' || lower === '可' || lower === 'true' ||
+           lower.includes('あり') || lower.includes('有') || lower.includes('可') || lower === 'yes';
 };
 
 // 独自のCSVパーサー（ダブルクォート内の改行とカンマを正しく処理）
@@ -183,7 +186,13 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
             const value = row[j];
             const dbField = FIELD_MAPPING[csvHeader];
 
-            if (!dbField) continue;
+            if (!dbField) {
+                // マッピングされないフィールドを警告
+                if (value && value.trim()) {
+                    console.log(`WARNING: ヘッダー "${csvHeader}" はマッピングに存在しません (値: ${value.substring(0, 50)})`);
+                }
+                continue;
+            }
             if (value === undefined || value === null || value === '') continue;
 
             const trimmedValue = typeof value === 'string' ? value.trim() : value;
@@ -195,19 +204,18 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_target_students':
                 case 'internship_locations':
                 case 'internship_content_types':
-                    // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
-                    const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== ''); 
-                    // 空配列の場合はnullを挿入
-                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null; 
+                    // 配列型: カンマ区切りを配列に変換
+                    const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== '');
+                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null;
                     break;
                 case 'side_job_allowed':
                 case 'remote_work_available':
                 case 'housing_allowance_available':
                 case 'transfer_existence':
                 case 'transport_lodging_stipend':
-                    // ブーリアン型: 特定の文字列を boolean に変換
-                    // ★★★ toBoolean は boolean を返すため、そのまま設定（Supabase-jsが "t"/"f"に変換することを期待） ★★★
-                    (ad as any)[dbField] = toBoolean(trimmedValue); 
+                case 'internship_scheduled':
+                    // ブーリアン型
+                    (ad as any)[dbField] = toBoolean(trimmedValue);
                     break;
                 case 'establishment_year':
                 case 'employee_count':
@@ -216,14 +224,14 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                     (ad as any)[dbField] = parseInt(trimmedValue) || null;
                     break;
                 case 'company_vision':
-                    // description の NOT NULL 制約への対応（優先度高）
+                    // 100文字制限
                     if (trimmedValue.length > 100) {
                         ad.company_vision = trimmedValue.substring(0, 100) + '...';
                     } else {
                         ad.company_vision = trimmedValue;
                     }
-                    ad.description = ad.company_vision; // 旧 description にも設定
-                    ad.title = ad.company_name; // 旧 title にも設定
+                    ad.description = ad.company_vision;
+                    ad.title = ad.company_name;
                     break;
                 default:
                     // その他のテキスト型
@@ -233,9 +241,21 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
 
         // 会社名が必須
         if (ad.company_name) {
+            // ブーリアン型フィールドの最終確認（文字列が残っていたら変換）
+            const booleanFields = [
+                'side_job_allowed', 'remote_work_available', 'housing_allowance_available',
+                'transfer_existence', 'transport_lodging_stipend', 'internship_scheduled'
+            ];
+            for (const field of booleanFields) {
+                if (typeof (ad as any)[field] === 'string') {
+                    console.log(`WARNING: ${field}が文字列型です。変換します: "${(ad as any)[field]}"`);
+                    (ad as any)[field] = toBoolean((ad as any)[field]);
+                }
+            }
+            
             results.push(ad);
         } else {
-            console.log(`WARNING: 行 ${i + 2} の企業名は空のためスキップされました。`); 
+            console.log(`WARNING: 行 ${i + 2} の企業名は空のためスキップされました。`);
         }
     }
     return results;
@@ -302,6 +322,9 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
     // ここではシンプルに一括挿入を試みます。
 
     try {
+      // デバッグ: boolean型フィールドの値を確認
+      console.log('挿入前のデータサンプル:', preview[0]);
+      
       // データベースへの挿入
       const { error: insertError } = await supabase
         .from('advertisements')
@@ -314,12 +337,7 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
       onClose();
     } catch (err) {
       console.error('Error importing advertisements:', err);
-      // ★★★ 修正箇所: Supabaseエラーオブジェクトから詳細を抽出するロジックを強化 ★★★
-      const errorDetail = (err as any).details || (err as any).message;
-      const errorCode = (err as any).code || 'UNKNOWN';
-
-      setError(`データベースへの挿入に失敗しました: ${errorDetail} (Code: ${errorCode})`);
-      // ★★★ 修正箇所ここまで ★★★
+      setError(`データベースへの挿入に失敗しました: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
