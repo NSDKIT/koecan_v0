@@ -626,26 +626,28 @@ export default function MonitorDashboard() {
           backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back.jpg)'
         } : {}}
         > 
-          {/* 獲得ポイントカード */}
-          <div
-            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
-            onClick={() => setShowPointExchangeModal(true)} 
-          >
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-              <Star className="w-10 h-10 text-white" />
+          {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
+          {activeTab !== 'career_consultation' && (
+            <div
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
+              onClick={() => setShowPointExchangeModal(true)} 
+            >
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+                <Star className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <p className="text-gray-600 text-lg">獲得ポイント</p>
+                <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-600 text-lg">獲得ポイント</p>
-              <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
-            </div>
-          </div>
+          )}
 
           {/* タブコンテンツ */}
           <div 
             className={`
               backdrop-blur-sm rounded-2xl p-8 transition-colors duration-300
-              bg-white/80
-            `} // ★★★ 修正: 背景色を固定 (bg-white/80) ★★★
+              ${activeTab === 'career_consultation' ? 'bg-transparent' : 'bg-white/80'}
+            `}
           > 
             {activeTab === 'surveys' && (
               <>
