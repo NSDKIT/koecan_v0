@@ -645,8 +645,8 @@ export default function MonitorDashboard() {
           {/* タブコンテンツ */}
           <div 
             className={`
-              backdrop-blur-sm rounded-2xl p-8 transition-colors duration-300
-              ${activeTab === 'career_consultation' ? 'bg-transparent' : 'bg-white/80'}
+              p-8 transition-colors duration-300
+              ${activeTab === 'career_consultation' ? 'bg-transparent' : 'backdrop-blur-sm rounded-2xl bg-white/80'}
             `}
           > 
             {activeTab === 'surveys' && (
@@ -800,15 +800,15 @@ export default function MonitorDashboard() {
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
-                <div className="flex items-center justify-center p-8">
+                <div className="flex items-center justify-center pt-[calc(100vh-400px)] pb-24">
                     <a
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
                     >
-                        {/* アイコンを削除 */}
-                        シーエイトに相談
+                        <span className="text-sm mb-1">キャリア支援のプロ</span>
+                        <span className="text-lg">シーエイトに相談</span>
                     </a>
                 </div>
                 {/* ★★★ 修正箇所ここまで ★★★ */}
