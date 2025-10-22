@@ -70,7 +70,7 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "採用情報ページ": "recruitment_info_page_url",
     "Instagram": "instagram_url",
     "TikTok": "tiktok_url",
-    "その他掲載サイトやSNSがあればご入力ください。", "other_sns_sites": "other_sns_sites",
+    "その他掲載サイトやSNSがあればご入力ください。": "other_sns_sites",
     "インターンシップ実施予定": "internship_scheduled",
     "インターンシップ実施日程": "internship_schedule",
     "定員（目安でも可）": "internship_capacity",
