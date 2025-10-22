@@ -81,12 +81,14 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "交通費・宿泊費の支給": "transport_lodging_stipend",
     "インターンシップ申込URL": "internship_application_url",
     "従業員様の働く様子や、集合写真、オフィス等、会社の雰囲気が伝わる画像を１枚ご提供ください。": "image_url",
+    // 以下の項目はDBに定義がないが、CSVに存在するため無視（または別のカラムにマッピングが必要）
+    // "考え方の傾向": null, "2.視野の広げ方": null, "1.仕事のエネルギーの使い方": null, ...
 };
 
 // 特定の文字列をブーリアンに変換するヘルパー関数
-const toBoolean = (val: string) => {
+const toBoolean = (val: string): boolean => {
     const lower = val.toLowerCase().trim();
-    return lower === 'あり' || lower === '有' || lower === '可' || lower === 'true';
+    return lower === 'あり' || lower === '有' || lower === '可' || lower === 'true'; 
 };
 
 // 独自のCSVパーサー（ダブルクォート内の改行とカンマを正しく処理）
@@ -195,16 +197,17 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_target_students':
                 case 'internship_locations':
                 case 'internship_content_types':
-                    // 配列型: カンマ区切りを配列に変換
-                    const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== '');
-                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null;
+                    // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
+                    const arrValue = trimmedValue.split(/[、,]/).map((s: string) => s.trim()).filter((s: string) => s !== ''); 
+                    // ★★★ 修正箇所: nullを許可しているため、空配列の場合はnullを挿入 ★★★
+                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null; 
                     break;
                 case 'side_job_allowed':
                 case 'remote_work_available':
                 case 'housing_allowance_available':
                 case 'transfer_existence':
                 case 'transport_lodging_stipend':
-                    // ブーリアン型
+                    // ブーリアン型: 特定の文字列を boolean に変換
                     (ad as any)[dbField] = toBoolean(trimmedValue);
                     break;
                 case 'establishment_year':
@@ -214,14 +217,14 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                     (ad as any)[dbField] = parseInt(trimmedValue) || null;
                     break;
                 case 'company_vision':
-                    // 100文字制限
+                    // description の NOT NULL 制約への対応（優先度高）
                     if (trimmedValue.length > 100) {
                         ad.company_vision = trimmedValue.substring(0, 100) + '...';
                     } else {
                         ad.company_vision = trimmedValue;
                     }
-                    ad.description = ad.company_vision;
-                    ad.title = ad.company_name;
+                    ad.description = ad.company_vision; // 旧 description にも設定
+                    ad.title = ad.company_name; // 旧 title にも設定
                     break;
                 default:
                     // その他のテキスト型
@@ -233,7 +236,7 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
         if (ad.company_name) {
             results.push(ad);
         } else {
-            console.log(`WARNING: 行 ${i + 2} の企業名は空のためスキップされました。`);
+            console.log(`WARNING: 行 ${i + 2} の企業名は空のためスキップされました。`); 
         }
     }
     return results;
@@ -312,7 +315,12 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
       onClose();
     } catch (err) {
       console.error('Error importing advertisements:', err);
-      setError(`データベースへの挿入に失敗しました: ${err instanceof Error ? err.message : String(err)}`);
+      // ★★★ 修正箇所: Supabaseエラーオブジェクトから詳細を抽出するロジックを強化 ★★★
+      const errorDetail = (err as any).details || (err as any).message;
+      const errorCode = (err as any).code || 'UNKNOWN';
+
+      setError(`データベースへの挿入に失敗しました: ${errorDetail} (Code: ${errorCode})`);
+      // ★★★ 修正箇所ここまで ★★★
     } finally {
       setLoading(false);
     }
