@@ -792,7 +792,8 @@ export default function MonitorDashboard() {
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
-                <div className="flex items-center justify-center p-8">
+                <div className="flex items-center justify-center p-8 bg-cover bg-center bg-no-repeat min-h-[calc(100vh-200px)]" 
+                     style={{ backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back.jpg)' }}>
                     <a
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
