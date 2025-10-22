@@ -60,20 +60,19 @@ const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', 
     return '未設定';
 };
 
-// HTTP画像をHTTPS経由で配信するためのプロキシURL変換関数
-// HTTPSの画像はそのまま、HTTPの画像のみプロキシ経由に変換
+// 画像を最適化して配信するためのプロキシURL変換関数
+// すべての画像を最適化して高速化
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     
-    // HTTPSの場合は何も処理せず、そのまま返す（従来通りの動作）
-    if (url.startsWith('https://')) {
-        return url;
-    }
-    
-    // HTTPの場合のみプロキシ経由に変換
-    if (url.startsWith('http://')) {
-        // 無料の画像プロキシサービス（wsrv.nl）を使用してHTTPSに変換
-        return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+    // すべての画像をプロキシ経由で最適化
+    // wsrv.nlは画像のリサイズ、圧縮、WebP変換を自動で行う
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        // 最適化パラメータ：
+        // w=800: 幅を800pxに制限（サムネイル用）
+        // output=webp: WebP形式で配信（より軽量）
+        // q=85: 品質85%（バランス重視）
+        return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=800&output=webp&q=85`;
     }
     
     // その他の場合はそのまま返す
@@ -789,8 +788,10 @@ export default function MonitorDashboard() {
                         {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
                         {(() => {
                           const imageUrl = ad.image_url;
-                          const secureUrl = getSecureImageUrl(imageUrl);
-                          console.log(`企業: ${ad.company_name}, 元URL: ${imageUrl}, 処理後URL: ${secureUrl}`);
+                          const optimizedUrl = getSecureImageUrl(imageUrl);
+                          if (imageUrl && optimizedUrl !== imageUrl) {
+                            console.log(`🖼️ 画像最適化: ${ad.company_name}\n元URL: ${imageUrl}\n最適化URL: ${optimizedUrl}`);
+                          }
                           return (imageUrl && imageUrl.length > 0);
                         })() ? (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
@@ -798,6 +799,7 @@ export default function MonitorDashboard() {
                               src={getSecureImageUrl(ad.image_url) || ''}
                               alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
                               referrerPolicy="no-referrer"
                               crossOrigin="anonymous"
                               onError={(e) => {
