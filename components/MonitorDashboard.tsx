@@ -811,11 +811,11 @@ export default function MonitorDashboard() {
       </div>
 
       {/* ボトムタブバー */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="max-w-7xl mx-auto flex justify-around h-16">
           <button
             onClick={() => setActiveTab('surveys')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
               activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -824,7 +824,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('matching')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
               activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -833,7 +833,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
               activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
@@ -842,7 +842,7 @@ export default function MonitorDashboard() {
           </button>
           <button
             onClick={() => setActiveTab('career_consultation')} // ★★★ 修正: タブ名変更 ★★★
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors py-4 ${ // ★★★ 修正: py-4 を追加 ★★★
               activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
