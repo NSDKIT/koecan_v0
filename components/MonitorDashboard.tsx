@@ -60,6 +60,23 @@ const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', 
     return '未設定';
 };
 
+// HTTP画像をHTTPS経由で配信するためのプロキシURL変換関数
+const getSecureImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    
+    // すでにHTTPSの場合はそのまま返す
+    if (url.startsWith('https://')) return url;
+    
+    // HTTPの場合はプロキシ経由に変換
+    if (url.startsWith('http://')) {
+        // 無料の画像プロキシサービス（wsrv.nl）を使用
+        // または、独自のプロキシサーバーを使用することも可能
+        return `https://wsrv.nl/?url=${encodeURIComponent(url)}`;
+    }
+    
+    return url;
+};
+
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); 
   const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
@@ -767,12 +784,24 @@ export default function MonitorDashboard() {
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
                         {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
-                        {(ad.image_url && ad.image_url.length > 0) ? (
+                        {(() => {
+                          const secureUrl = getSecureImageUrl(ad.image_url);
+                          console.log(`企業: ${ad.company_name}, 元URL: ${ad.image_url}, プロキシURL: ${secureUrl}`);
+                          return secureUrl;
+                        })() ? (
                           <div className="aspect-video bg-gray-100 overflow-hidden">
                             <img
-                              src={ad.image_url}
+                              src={getSecureImageUrl(ad.image_url) || ''}
                               alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                console.error(`画像読み込みエラー: ${ad.company_name}`, ad.image_url);
+                                // エラー時はプレースホルダーを表示
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
                             />
                           </div>
                         ) : (
