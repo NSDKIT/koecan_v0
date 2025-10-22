@@ -619,7 +619,13 @@ export default function MonitorDashboard() {
 
         {/* メインコンテンツ */}
         {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
+        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 ${
+          activeTab === 'career_consultation' ? 'bg-cover bg-center bg-no-repeat min-h-screen' : ''
+        }`}
+        style={activeTab === 'career_consultation' ? {
+          backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back.jpg)'
+        } : {}}
+        > 
           {/* 獲得ポイントカード */}
           <div
             className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
@@ -792,8 +798,7 @@ export default function MonitorDashboard() {
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
                 {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
-                <div className="flex items-center justify-center p-8 bg-cover bg-center bg-no-repeat min-h-[calc(100vh-200px)]" 
-                     style={{ backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back.jpg)' }}>
+                <div className="flex items-center justify-center p-8">
                     <a
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
