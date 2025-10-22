@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useState, useRef } from 'react'; // useRef を追加
+import React, { useState, useRef } from 'react';
 import { X, FileText, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,6 @@ interface ImportCsvModalProps {
   onImport: () => void; // 成功時のコールバック (AdminDashboardのリスト再取得)
 }
 
-// ... (中略: CSV_HEADERS と FIELD_MAPPING の定義は変更なし) ...
 // CSVヘッダーの配列（CSVファイルと完全に一致させる）
 const CSV_HEADERS = [
     "タイムスタンプ", "会社名", "公式ホームページのURL", "代表者名", "貴社が目指す未来（100文字以内）", 
@@ -71,7 +70,7 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "採用情報ページ": "recruitment_info_page_url",
     "Instagram": "instagram_url",
     "TikTok": "tiktok_url",
-    "その他掲載サイトやSNSがあればご入力ください。": "other_sns_sites",
+    "その他掲載サイトやSNSがあればご入力ください。", "other_sns_sites": "other_sns_sites",
     "インターンシップ実施予定": "internship_scheduled",
     "インターンシップ実施日程": "internship_schedule",
     "定員（目安でも可）": "internship_capacity",
@@ -82,8 +81,6 @@ const FIELD_MAPPING: { [key: string]: keyof Advertisement } = {
     "交通費・宿泊費の支給": "transport_lodging_stipend",
     "インターンシップ申込URL": "internship_application_url",
     "従業員様の働く様子や、集合写真、オフィス等、会社の雰囲気が伝わる画像を１枚ご提供ください。": "image_url",
-    // 以下の項目はDBに定義がないが、CSVに存在するため無視（または別のカラムにマッピングが必要）
-    // "考え方の傾向": null, "2.視野の広げ方": null, "1.仕事のエネルギーの使い方": null, ...
 };
 
 // 特定の文字列をブーリアンに変換するヘルパー関数
@@ -97,7 +94,6 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
     const lines = csvText.trim().split('\n');
     if (lines.length < 2) throw new Error("CSVにはヘッダーとデータ行が必要です。");
 
-    // ヘッダー行を読み込み（CSVヘッダーと一致していることを前提とする）
     let headers = lines[0].split(',').map(h => h.trim());
     
     // CSVのヘッダーが重複している部分を修正
@@ -136,7 +132,7 @@ const parseCsvToAdvertisements = (csvText: string, creatorId: string): Partial<A
                 case 'internship_content_types':
                     // 配列型: カンマ区切りを配列に変換 (全角・半角カンマ両方対応)
                     const arrValue = value.split(/[、,]/).map(s => s.trim()).filter(s => s !== ''); 
-                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null;
+                    (ad as any)[dbField] = arrValue.length > 0 ? arrValue : null; // 空配列は null に変換
                     break;
                 case 'side_job_allowed':
                 case 'remote_work_available':
@@ -187,7 +183,7 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null); // ファイル入力要素への参照
 
-  // ★★★ 修正箇所: ファイル選択ハンドラを追加 ★★★
+  // ファイル選択ハンドラ
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     const file = event.target.files?.[0];
@@ -209,7 +205,6 @@ export function ImportCsvModal({ onClose, onImport }: ImportCsvModalProps) {
 
     reader.readAsText(file, 'UTF-8');
   };
-  // ★★★ 修正箇所ここまで ★★★
 
   const handlePreview = () => {
     setError(null);
