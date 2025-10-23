@@ -638,13 +638,7 @@ export default function MonitorDashboard() {
 
         {/* メインコンテンツ */}
         {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
-        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 ${
-          activeTab === 'career_consultation' ? 'bg-cover bg-center bg-no-repeat min-h-screen' : ''
-        }`}
-        style={activeTab === 'career_consultation' ? {
-          backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v3.png)'
-        } : {}}
-        > 
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
           {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
           {activeTab !== 'career_consultation' && (
             <div
@@ -834,8 +828,16 @@ export default function MonitorDashboard() {
 
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
-                {/* ★★★ 修正箇所: シーエイトに相談ボタンのみに置き換え (アイコン削除済み) ★★★ */}
-                <div className="flex items-center justify-center pt-[calc(100vh-295px)]">
+                {/* ★★★ 修正箇所: 画像とボタンを縦に並べる ★★★ */}
+                <div className="flex flex-col items-center">
+                    {/* 背景画像 */}
+                    <img 
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v3.png"
+                        alt="キャリア相談"
+                        className="w-full max-w-3xl h-auto mb-6 rounded-lg"
+                    />
+                    
+                    {/* ボタン */}
                     <a
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
