@@ -638,7 +638,7 @@ export default function MonitorDashboard() {
 
         {/* メインコンテンツ */}
         {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
-        <main className={`mx-auto pb-16 ${
+        <main className={`mx-auto pb-20 ${
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
@@ -877,7 +877,7 @@ export default function MonitorDashboard() {
 
       {/* ボトムタブバー */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
-        <div className="max-w-7xl mx-auto flex justify-around h-16">
+        <div className="max-w-7xl mx-auto flex justify-around h-20">
           <button
             onClick={() => setActiveTab('surveys')}
             className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
