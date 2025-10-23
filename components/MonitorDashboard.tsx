@@ -49,7 +49,7 @@ type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
 
 // ★★★ 修正箇所: シーエイトのLINE公式アカウントの短縮URLを定義 ★★★
-const C8_LINE_ADD_URL = 'https://lin.ee/2iYeJgS';
+const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
 // ★★★ 修正箇所ここまで ★★★
 
 
