@@ -834,27 +834,36 @@ export default function MonitorDashboard() {
                 <div className="flex flex-col items-center w-full">
                     {/* 上部画像 */}
                     <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top.png"
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
                         alt="キャリア相談 上部"
                         className="w-full h-auto object-cover"
                     />
                     
-                    {/* ボタン */}
-                    <div className="py-8 px-4">
-                        <a
-                            href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
-                        >
-                            <span className="text-sm mb-1">キャリア支援のプロ</span>
-                            <span className="text-lg">シーエイトに相談</span>
-                        </a>
+                    {/* 中部画像 + ボタン（ボタンを画像の上に重ねる） */}
+                    <div className="relative w-full">
+                        <img 
+                            src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
+                            alt="キャリア相談 中部"
+                            className="w-full h-auto object-cover"
+                        />
+                        
+                        {/* ボタンを画像の上に配置 */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <a
+                                href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
+                            >
+                                <span className="text-sm mb-1">キャリア支援のプロ</span>
+                                <span className="text-lg">シーエイトに相談</span>
+                            </a>
+                        </div>
                     </div>
 
                     {/* 下部画像 */}
                     <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down.png"
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
                         alt="キャリア相談 下部"
                         className="w-full h-auto object-cover"
                     />
