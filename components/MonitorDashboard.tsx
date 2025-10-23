@@ -638,7 +638,13 @@ export default function MonitorDashboard() {
 
         {/* メインコンテンツ */}
         {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16"> 
+        <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 ${
+          activeTab === 'career_consultation' ? 'bg-cover bg-center bg-no-repeat min-h-screen' : ''
+        }`}
+        style={activeTab === 'career_consultation' ? {
+          backgroundImage: 'url(https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v4.png)'
+        } : {}}
+        > 
           {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
           {activeTab !== 'career_consultation' && (
             <div
@@ -828,13 +834,13 @@ export default function MonitorDashboard() {
 
             {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
               <>
-                {/* ★★★ 修正箇所: 画像とボタンを縦に並べる ★★★ */}
+                {/* ★★★ 修正箇所: 画像 → ボタン → 画像の順に配置 ★★★ */}
                 <div className="flex flex-col items-center">
-                    {/* 背景画像 */}
+                    {/* 上部画像 */}
                     <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_back_v3.png"
-                        alt="キャリア相談"
-                        className="w-full max-w-3xl h-auto mb-6 rounded-lg"
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top.png"
+                        alt="キャリア相談 上部"
+                        className="w-full max-w-3xl h-auto mb-6"
                     />
                     
                     {/* ボタン */}
@@ -842,11 +848,18 @@ export default function MonitorDashboard() {
                         href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
+                        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center mb-6"
                     >
                         <span className="text-sm mb-1">キャリア支援のプロ</span>
                         <span className="text-lg">シーエイトに相談</span>
                     </a>
+
+                    {/* 下部画像 */}
+                    <img 
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down.png"
+                        alt="キャリア相談 下部"
+                        className="w-full max-w-3xl h-auto"
+                    />
                 </div>
                 {/* ★★★ 修正箇所ここまで ★★★ */}
               </>
