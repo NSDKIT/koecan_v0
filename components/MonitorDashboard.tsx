@@ -948,18 +948,37 @@ export default function MonitorDashboard() {
             
             {/* ★★★ 企業詳細モーダルのコンテンツ ★★★ */}
             <div className="p-6">
-              <div className="flex justify-between items-start border-b pb-4 mb-4">
-                <div className="flex-1 mr-4">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedAdvertisement.company_name}</h2>
-                  <p className="text-gray-600 whitespace-pre-wrap">{selectedAdvertisement.company_vision}</p>
-                </div>
+              {/* ヘッダー部分 */}
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-3xl font-bold text-gray-800 flex-1">{selectedAdvertisement.company_name}</h2>
                 <button
                   onClick={() => setSelectedAdvertisement(null)}
-                  className="text-gray-500 hover:text-gray-700 flex-shrink-0"
+                  className="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-4"
                 >
                   ✕
                 </button>
               </div>
+
+              {/* 企業画像 */}
+              {selectedAdvertisement.image_url && (
+                <div className="mb-4 rounded-lg overflow-hidden">
+                  <img
+                    src={getSecureImageUrl(selectedAdvertisement.image_url)}
+                    alt={selectedAdvertisement.company_name}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* 企業ビジョン */}
+              {selectedAdvertisement.company_vision && (
+                <div className="mb-6 pb-4 border-b">
+                  <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.company_vision}</p>
+                </div>
+              )}
               
               {/* 企業概要 */}
               <h3 className="text-xl font-semibold border-b pb-2 mb-4">企業概要</h3>
