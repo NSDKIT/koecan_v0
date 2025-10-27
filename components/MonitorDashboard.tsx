@@ -53,7 +53,6 @@ const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', 
     return '';
 };
 
-// N/A を空文字列に変換するヘルパー関数
 const displayValue = (value: any): string => {
     if (value === null || value === undefined || value === 'N/A') return '';
     if (Array.isArray(value)) {
@@ -909,12 +908,13 @@ export default function MonitorDashboard() {
                 <X className="w-6 h-6" />
               </button>
 
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-3xl p-8 pb-6">
-                <h2 className="text-4xl font-bold text-white drop-shadow-lg">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+              {/* ヘッダー - 白背景にオレンジテキスト */}
+              <div className="bg-white rounded-t-3xl p-8 pb-6 border-b-2 border-orange-500">
+                <h2 className="text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
               </div>
 
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                <div className="px-8 -mt-6 relative z-10">
+                <div className="px-8 pt-6 relative z-10">
                   <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
                     <img
                       src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
