@@ -50,7 +50,16 @@ const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
     if (val === true) return yes;
     if (val === false) return no;
-    return '未設定';
+    return '';
+};
+
+// N/A を空文字列に変換するヘルパー関数
+const displayValue = (value: any): string => {
+    if (value === null || value === undefined || value === 'N/A') return '';
+    if (Array.isArray(value)) {
+        return value.length > 0 ? value.join(', ') : '';
+    }
+    return String(value);
 };
 
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
@@ -770,10 +779,10 @@ export default function MonitorDashboard() {
                         
                         <div className="p-4">
                           <h3 className="font-semibold text-gray-800 mb-2">
-                            {ad.company_name || 'N/A'}
+                            {displayValue(ad.company_name) || '企業名未設定'}
                           </h3>
                           <p className="text-gray-600 text-sm line-clamp-2">
-                            {ad.company_vision || ad.title || ad.description || '詳細情報がありません'}
+                            {displayValue(ad.company_vision) || displayValue(ad.title) || displayValue(ad.description) || ''}
                           </p>
                         </div>
                       </div>
@@ -893,7 +902,6 @@ export default function MonitorDashboard() {
           <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             
             <div className="relative">
-              {/* 閉じるボタン */}
               <button
                 onClick={() => setSelectedAdvertisement(null)}
                 className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
@@ -901,18 +909,16 @@ export default function MonitorDashboard() {
                 <X className="w-6 h-6" />
               </button>
 
-              {/* ヘッダー - オレンジグラデーション */}
               <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-3xl p-8 pb-6">
-                <h2 className="text-4xl font-bold text-white drop-shadow-lg">{selectedAdvertisement.company_name}</h2>
+                <h2 className="text-4xl font-bold text-white drop-shadow-lg">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
               </div>
 
-              {/* 企業画像 */}
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
                 <div className="px-8 -mt-6 relative z-10">
                   <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
                     <img
                       src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
-                      alt={selectedAdvertisement.company_name}
+                      alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
                       className="w-auto h-full object-cover mx-auto"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -922,22 +928,19 @@ export default function MonitorDashboard() {
                 </div>
               )}
 
-              {/* メインコンテンツ */}
               <div className="p-8">
-                {/* 企業ビジョン */}
-                {selectedAdvertisement.company_vision && (
+                {displayValue(selectedAdvertisement.company_vision) && (
                   <div className="mb-8">
                     <div className="bg-orange-50 rounded-2xl p-6 border-l-4 border-orange-500">
                       <div className="flex items-start mb-2">
                         <Sparkles className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-1" />
                         <h3 className="text-lg font-bold text-orange-600">目指す未来</h3>
                       </div>
-                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{selectedAdvertisement.company_vision}</p>
+                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{displayValue(selectedAdvertisement.company_vision)}</p>
                     </div>
                   </div>
                 )}
               
-                {/* 企業概要 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
                     <Building className="w-6 h-6 text-orange-600 mr-2" />
@@ -948,46 +951,51 @@ export default function MonitorDashboard() {
                       <tbody>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">代表者名</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.representative_name || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.representative_name)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">設立年</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.establishment_year || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.establishment_year)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（本社）</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.headquarters_location || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.headquarters_location)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（支社）</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.branch_office_location || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.branch_office_location)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">従業員数</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_count || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_count)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男女比</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_gender_ratio || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_gender_ratio)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">平均年齢</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_avg_age || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_avg_age)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">業界</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.industries?.join(', ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.industries)}</td>
                         </tr>
                         <tr>
                           <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシポイント</td>
-                          <td className="px-6 py-4 text-orange-800 font-medium">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</td>
+                          <td className="px-6 py-4 text-orange-800 font-medium">
+                            {[
+                              displayValue(selectedAdvertisement.highlight_point_1),
+                              displayValue(selectedAdvertisement.highlight_point_2),
+                              displayValue(selectedAdvertisement.highlight_point_3)
+                            ].filter(Boolean).join(' / ') || ''}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
               
-              {/* 募集・待遇情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
                     <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
@@ -998,42 +1006,45 @@ export default function MonitorDashboard() {
                       <tbody>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">初任給</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.starting_salary || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.starting_salary)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">3年定着率</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.three_year_retention_rate || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.three_year_retention_rate)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">20代平均年収</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_20s)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">30代平均年収</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_30s)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">キャリアパス</td>
-                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.promotion_model_case || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.promotion_model_case)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">募集職種とその人数</td>
-                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_roles_count || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_roles_count)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">選考フロー</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {selectedAdvertisement.selection_flow_steps && selectedAdvertisement.selection_flow_steps.length > 0 
+                              ? selectedAdvertisement.selection_flow_steps.join(' → ') 
+                              : ''}
+                          </td>
                         </tr>
                         <tr>
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">必須資格・免許</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.required_qualifications || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.required_qualifications)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
 
-                {/* 働き方・福利厚生 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
                     <Sparkles className="w-6 h-6 text-orange-600 mr-2" />
@@ -1044,15 +1055,15 @@ export default function MonitorDashboard() {
                       <tbody>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">勤務時間</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.working_hours || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.working_hours)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">休日</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.holidays || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.holidays)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">年間休日数</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.annual_holidays || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.annual_holidays)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">リモートワーク</td>
@@ -1068,34 +1079,36 @@ export default function MonitorDashboard() {
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">女性育休取得率</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.female_parental_leave_rate)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男性育休取得率</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.male_parental_leave_rate)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">異動/転勤</td>
-                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {formatBoolean(selectedAdvertisement.transfer_existence)}
+                            {displayValue(selectedAdvertisement.transfer_frequency) && ` (${displayValue(selectedAdvertisement.transfer_frequency)})`}
+                          </td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">社内イベント頻度</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internal_event_frequency || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internal_event_frequency)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">健康経営の取り組み</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.health_management_practices)}</td>
                         </tr>
                         <tr>
                           <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシ福利厚生</td>
-                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.must_tell_welfare || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.must_tell_welfare)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
 
-                {/* 採用情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
                     <Users className="w-6 h-6 text-orange-600 mr-2" />
@@ -1106,11 +1119,11 @@ export default function MonitorDashboard() {
                       <tbody>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">採用担当部署（担当者）</td>
-                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_department || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_department)}</td>
                         </tr>
-                        <tr className="border-b border-gray-200">
+                        <tr className={selectedAdvertisement.recruitment_info_page_url ? "border-b border-gray-200" : ""}>
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用に関する問い合わせ先</td>
-                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_contact || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_contact)}</td>
                         </tr>
                         {selectedAdvertisement.recruitment_info_page_url && (
                           <tr>
@@ -1133,7 +1146,6 @@ export default function MonitorDashboard() {
                   </div>
                 </div>
 
-                {/* インターンシップ情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
                     <Target className="w-6 h-6 text-orange-600 mr-2" />
@@ -1148,29 +1160,29 @@ export default function MonitorDashboard() {
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施日程</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_schedule || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_schedule)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">定員</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_capacity || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_capacity)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">対象学生</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_target_students)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施場所</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_locations)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">内容</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_content_types)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">報酬</td>
-                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_paid_unpaid)}</td>
                         </tr>
-                        <tr className="border-b border-gray-200">
+                        <tr className={selectedAdvertisement.internship_application_url ? "border-b border-gray-200" : ""}>
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">交通費・宿泊費</td>
                           <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</td>
                         </tr>
@@ -1195,7 +1207,6 @@ export default function MonitorDashboard() {
                   </div>
                 </div>
 
-                {/* SNS・外部リンク */}
                 <div className="mb-6">
                   <div className="flex items-center mb-4">
                     <MessageCircle className="w-6 h-6 text-orange-600 mr-2" />
@@ -1247,12 +1258,12 @@ export default function MonitorDashboard() {
                           <ExternalLink className="w-4 h-4 ml-2" />
                         </a>
                       )}
-                      {selectedAdvertisement.other_sns_sites && (
+                      {displayValue(selectedAdvertisement.other_sns_sites) && (
                         <div className="w-full mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
                           <p className="font-semibold text-gray-700 mb-2 flex items-center">
                             🔗 その他のリンク
                           </p>
-                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedAdvertisement.other_sns_sites}</p>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{displayValue(selectedAdvertisement.other_sns_sites)}</p>
                         </div>
                       )}
                     </div>
