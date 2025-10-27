@@ -967,7 +967,7 @@ export default function MonitorDashboard() {
                 <div><p className="font-semibold">代表者名:</p><p>{selectedAdvertisement.representative_name || 'N/A'}</p></div>
                 <div><p className="font-semibold">設立年:</p><p>{selectedAdvertisement.establishment_year || 'N/A'}</p></div>
                 <div><p className="font-semibold">所在地 (本社):</p><p>{selectedAdvertisement.headquarters_location || 'N/A'}</p></div>
-                <div><p className="font-semibold">所在地 (支社):</p><p>{selectedAdvertisement.branch_locations || 'N/A'}</p></div>
+                <div><p className="font-semibold">所在地 (支社):</p><p>{selectedAdvertisement.branch_office_location || 'N/A'}</p></div>
                 <div><p className="font-semibold">従業員数:</p><p>{selectedAdvertisement.employee_count || 'N/A'}</p></div>
                 <div><p className="font-semibold">男女比:</p><p>{selectedAdvertisement.employee_gender_ratio || 'N/A'}</p></div>
                 <div><p className="font-semibold">平均年齢:</p><p>{selectedAdvertisement.employee_avg_age || 'N/A'}</p></div>
@@ -983,8 +983,8 @@ export default function MonitorDashboard() {
                 <div><p className="font-semibold">20代平均年収:</p><p>{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</p></div>
                 <div><p className="font-semibold">30代平均年収:</p><p>{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</p></div>
                 <div className="col-span-2"><p className="font-semibold">キャリアパス:</p><p>{selectedAdvertisement.promotion_model_case || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">募集職種とその人数:</p><p>{selectedAdvertisement.job_positions || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">選考フロー:</p><p>{selectedAdvertisement.selection_process?.join(' → ') || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">募集職種とその人数:</p><p>{selectedAdvertisement.recruitment_roles_count || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">選考フロー:</p><p>{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</p></div>
                 <div><p className="font-semibold">必須資格・免許:</p><p>{selectedAdvertisement.required_qualifications || 'N/A'}</p></div>
               </div>
 
@@ -1000,7 +1000,7 @@ export default function MonitorDashboard() {
                 <div><p className="font-semibold">女性育休取得率:</p><p>{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</p></div>
                 <div><p className="font-semibold">男性育休取得率:</p><p>{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</p></div>
                 <div><p className="font-semibold">異動/転勤:</p><p>{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</p></div>
-                <div><p className="font-semibold">社内イベント頻度:</p><p>{selectedAdvertisement.company_event_frequency || 'N/A'}</p></div>
+                <div><p className="font-semibold">社内イベント頻度:</p><p>{selectedAdvertisement.internal_event_frequency || 'N/A'}</p></div>
                 <div className="col-span-2"><p className="font-semibold">健康経営の取り組み:</p><p>{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</p></div>
                 <div className="col-span-2"><p className="font-semibold">イチオシ福利厚生:</p><p>{selectedAdvertisement.must_tell_welfare || 'N/A'}</p></div>
               </div>
@@ -1008,13 +1008,12 @@ export default function MonitorDashboard() {
               {/* 採用情報 */}
               <h3 className="text-xl font-semibold border-b pb-2 mb-4">採用情報</h3>
               <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">採用担当部署:</p><p>{selectedAdvertisement.recruitment_department || 'N/A'}</p></div>
-                <div><p className="font-semibold">採用担当者:</p><p>{selectedAdvertisement.recruitment_contact_person || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">採用に関する問い合わせ先:</p><p>{selectedAdvertisement.recruitment_contact_info || 'N/A'}</p></div>
-                {selectedAdvertisement.recruitment_page_url && (
+                <div className="col-span-2"><p className="font-semibold">採用担当部署（担当者）:</p><p>{selectedAdvertisement.recruitment_department || 'N/A'}</p></div>
+                <div className="col-span-2"><p className="font-semibold">採用に関する問い合わせ先:</p><p>{selectedAdvertisement.recruitment_contact || 'N/A'}</p></div>
+                {selectedAdvertisement.recruitment_info_page_url && (
                   <div className="col-span-2">
                     <a 
-                      href={selectedAdvertisement.recruitment_page_url} 
+                      href={selectedAdvertisement.recruitment_info_page_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex items-center text-blue-600 hover:text-blue-800"
@@ -1029,14 +1028,14 @@ export default function MonitorDashboard() {
               {/* インターンシップ情報 */}
               <h3 className="text-xl font-semibold border-b pb-2 mb-4">インターンシップ情報</h3>
               <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">実施予定:</p><p>{formatBoolean(selectedAdvertisement.internship_available, '実施予定あり', '実施予定なし')}</p></div>
+                <div><p className="font-semibold">実施予定:</p><p>{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</p></div>
                 <div><p className="font-semibold">実施日程:</p><p>{selectedAdvertisement.internship_schedule || 'N/A'}</p></div>
                 <div><p className="font-semibold">定員:</p><p>{selectedAdvertisement.internship_capacity || 'N/A'}</p></div>
                 <div><p className="font-semibold">対象学生:</p><p>{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</p></div>
                 <div><p className="font-semibold">実施場所:</p><p>{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</p></div>
-                <div><p className="font-semibold">内容:</p><p>{selectedAdvertisement.internship_content?.join(', ') || 'N/A'}</p></div>
-                <div><p className="font-semibold">報酬:</p><p>{selectedAdvertisement.internship_paid ? '有償' : '無償'}</p></div>
-                <div><p className="font-semibold">交通費・宿泊費:</p><p>{formatBoolean(selectedAdvertisement.internship_transportation_provided, '支給あり', '支給なし')}</p></div>
+                <div><p className="font-semibold">内容:</p><p>{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</p></div>
+                <div><p className="font-semibold">報酬:</p><p>{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</p></div>
+                <div><p className="font-semibold">交通費・宿泊費:</p><p>{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</p></div>
                 {selectedAdvertisement.internship_application_url && (
                   <div className="col-span-2">
                     <a 
@@ -1099,10 +1098,10 @@ export default function MonitorDashboard() {
                     <ExternalLink className="w-4 h-4 ml-2" />
                   </a>
                 )}
-                {selectedAdvertisement.other_sns_urls && (
+                {selectedAdvertisement.other_sns_sites && (
                   <div className="w-full">
                     <p className="font-semibold text-sm mb-2">その他のリンク:</p>
-                    <p className="text-sm text-gray-600">{selectedAdvertisement.other_sns_urls}</p>
+                    <p className="text-sm text-gray-600">{selectedAdvertisement.other_sns_sites}</p>
                   </div>
                 )}
               </div>
