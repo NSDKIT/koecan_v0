@@ -147,6 +147,13 @@ export interface Advertisement {
   recruitment_roles_count?: string | null; // 募集職種とその人数
   selection_flow_steps?: string[] | null; // 選考フロー（複数回答）
 
+  // ★★★ 新規追加フィールド ★★★
+  required_qualifications?: string | null; // 必須資格・免許
+  working_hours?: string | null; // 勤務時間
+  holidays?: string | null; // 休日
+  annual_holidays?: string | null; // 年間休日数
+  official_line_url?: string | null; // 公式LINE
+
   // 問い合わせ・採用情報
   recruitment_contact?: string | null; // 採用に関する問い合わせ先
   recruitment_department?: string | null; // 採用担当部署（担当者）
