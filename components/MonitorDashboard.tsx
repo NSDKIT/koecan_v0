@@ -960,10 +960,10 @@ export default function MonitorDashboard() {
               </div>
 
               {/* 企業画像 */}
-              {selectedAdvertisement.image_url && (
+              {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
                 <div className="mb-4 rounded-lg overflow-hidden">
                   <img
-                    src={getSecureImageUrl(selectedAdvertisement.image_url)}
+                    src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
                     alt={selectedAdvertisement.company_name}
                     className="w-full h-64 object-cover"
                     onError={(e) => {
