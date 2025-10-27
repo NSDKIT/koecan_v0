@@ -19,63 +19,47 @@ import {
   Sparkles,
   Target,
   Award,
-  Users, // アンケートの対象者アイコン
-  Menu, // ハンバーガーメニュー
-  ExternalLink, // 外部リンクアイコン
-  X, // 閉じるアイコン
-  History, // 回答済みアンケートのアイコン
-  FileText, // プロフィールアンケートのアイコン
-  Briefcase, // 就職情報のアイコン
-  ClipboardList, // アンケートのアイコン
-  Building, // 新しいアイコン
-  MapPin, // 新しいアイコン
-  Calendar, // 新しいアイコン
-  DollarSign, // 新しいアイコン
+  Users,
+  Menu,
+  ExternalLink,
+  X,
+  History,
+  FileText,
+  Briefcase,
+  ClipboardList,
+  Building,
+  MapPin,
+  Calendar,
+  DollarSign,
   BarChart3
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
 import { ChatModal } from '@/components/ChatModal';
-import { LineLinkButton } from '@/components/LineLinkButton'; // LINE連携ボタン
+import { LineLinkButton } from '@/components/LineLinkButton';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
-import { MatchingFeature } from '@/components/MatchingFeature'; // これを追加
+import { MatchingFeature } from '@/components/MatchingFeature';
 
-// アクティブなタブの型定義
-type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching'; // 'services' -> 'career_consultation'
+type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
-// TODO: ここに、クライアントがチャットしたいサポート担当者（例: koecan.koushiki@gmail.com）の実際のユーザーIDを設定してください。
-const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // 声キャン！運営のIDに仮変更
-
-// ★★★ 修正箇所: シーエイトのLINE公式アカウントの短縮URLを定義 ★★★
+const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
-// ★★★ 修正箇所ここまで ★★★
 
-
-// boolean型の値を日本語文字列に変換するヘルパー関数
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
     if (val === true) return yes;
     if (val === false) return no;
     return '未設定';
 };
 
-// 画像を最適化して配信するためのプロキシURL変換関数
-// すべての画像を最適化して高速化
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     
-    // すべての画像をプロキシ経由で最適化
-    // wsrv.nlは画像のリサイズ、圧縮、WebP変換を自動で行う
     if (url.startsWith('http://') || url.startsWith('https://')) {
-        // 最適化パラメータ：
-        // w=800: 幅を800pxに制限（サムネイル用）
-        // output=webp: WebP形式で配信（より軽量）
-        // q=85: 品質85%（バランス重視）
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=800&output=webp&q=85`;
     }
     
-    // その他の場合はそのまま返す
     return url;
 };
 
@@ -92,15 +76,14 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('matching'); // 'surveys' から 'matching' に変更
+  const [activeTab, setActiveTab] = useState<ActiveTab>('matching');
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
-  const [showLineLinkModal, setShowLineLinkModal] = useState(false); // ★★★ LINE連携モーダル用の新規ステート ★★★
-
+  const [showLineLinkModal, setShowLineLinkModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -132,7 +115,6 @@ export default function MonitorDashboard() {
     if (!user?.id) throw new Error("User ID is missing.");
     
     try {
-      // 1. 基本プロフィール情報（モニターの属性情報）を取得
       const { data: profileData, error: profileError } = await supabase
         .from('monitor_profiles')
         .select('*') 
@@ -141,7 +123,6 @@ export default function MonitorDashboard() {
 
       if (profileError) throw profileError;
 
-      // 2. 累積ポイント残高をビューから取得
       const { data: pointsData, error: pointsError } = await supabase
         .from('monitor_points_view') 
         .select('points_balance')
@@ -154,12 +135,11 @@ export default function MonitorDashboard() {
       
       const pointsBalance = pointsData ? pointsData.points_balance : 0;
       
-      // profileステートに結合してセット
       const combinedProfile: MonitorProfile = {
           ...profileData, 
           points: pointsBalance, 
           monitor_id: profileData.id 
-      } as MonitorProfile; // MonitorProfile型へのキャストを明示
+      } as MonitorProfile;
 
       setProfile(combinedProfile);
 
@@ -167,7 +147,6 @@ export default function MonitorDashboard() {
       return combinedProfile; 
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
-      // エラーが発生した場合も、ダッシュボードの表示が止まらないよう、最低限のデータで設定を試みる
       setProfile({ 
           id: user.id, 
           user_id: user.id,
@@ -199,7 +178,6 @@ export default function MonitorDashboard() {
         throw surveysError;
       }
 
-      // Response オブジェクトから survey_id のみを取得する最小のデータ構造
       const { data: userResponses, error: responsesError } = await supabase
         .from('responses')
         .select('survey_id')
@@ -210,13 +188,11 @@ export default function MonitorDashboard() {
         throw responsesError;
       }
 
-      // ★★★ 修正箇所: mapの引数に明示的に型 ({survey_id: string}) を指定 ★★★
       const answeredSurveyIds = new Set(userResponses?.map((res: {survey_id: string}) => res.survey_id));
 
       const newAvailableSurveys: Survey[] = [];
       const newAnsweredSurveys: Survey[] = [];
 
-      // ★★★ 修正箇所: forEachの引数に明示的に型 (Survey) を指定 ★★★
       allActiveSurveys?.forEach((survey: Survey) => {
         if (answeredSurveyIds.has(survey.id)) {
           newAnsweredSurveys.push(survey);
@@ -238,7 +214,6 @@ export default function MonitorDashboard() {
   const fetchAdvertisements = async () => {
     console.log("MonitorDashboard: fetchAdvertisements started.");
     try {
-      // 全ての新しいカラムを取得するように修正 (types/index.ts の Advertisement 型に対応)
       const { data, error } = await supabase
         .from('advertisements')
         .select(`*`) 
@@ -301,9 +276,7 @@ export default function MonitorDashboard() {
     };
   }, [user, authLoading]); 
 
-  // ★★★ LINE連携リダイレクト処理のuseEffect (既存) ★★★
   useEffect(() => {
-    // URLからクエリパラメータを取得
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('line_link_status');
     const errorMsg = urlParams.get('error');
@@ -314,13 +287,11 @@ export default function MonitorDashboard() {
       alert(`❌ LINE連携に失敗しました。\nエラー: ${errorMsg || '不明なエラー'}`);
     }
 
-    // クエリパラメータを削除してURLをクリーンアップ
     if (status) {
         history.replaceState(null, '', window.location.pathname);
     }
     
   }, []);
-
 
   const handleSurveyClick = async (survey: Survey) => {
     try {
@@ -345,7 +316,6 @@ export default function MonitorDashboard() {
       if (error) throw error;
 
       setSelectedSurvey(survey);
-      // ★★★ 修正箇所: mapの引数に明示的に型 (Question) を指定 ★★★
       setSurveyQuestions(questions || []);
       setAnswers(questions?.map((q: Question) => ({ question_id: q.id, answer: '' })) || []);
     } catch (error) {
@@ -456,7 +426,7 @@ export default function MonitorDashboard() {
                             onChange={(e) => {
                               const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
                               if (question.is_multiple_select) {
-                                const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : []; // ★★★ 修正済み ★★★
+                                const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : [];
                                 if (e.target.checked) {
                                   handleAnswerChange(question.id, [...currentAnswersArray, option].join(','));
                                 } else {
@@ -542,7 +512,6 @@ export default function MonitorDashboard() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Sparkles Background */}
       <div className="w-full absolute inset-0 h-screen">
         <SparklesCore
           id="tsparticlesmonitor"
@@ -556,12 +525,10 @@ export default function MonitorDashboard() {
         />
       </div>
 
-      {/* Subtle Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30"></div>
       <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
       <div className="relative z-20">
-        {/* ヘッダー */}
         <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -572,18 +539,14 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                {/* ★★★ LINE連携ボタンをヘッダーに配置 ★★★ */}
-                
-                {/* 1. LINE連携を直接ヘッダーに配置（モーダルを開くボタンとして） */}
                 <button 
-                  onClick={() => setShowLineLinkModal(true)} // 新しいステートでモーダルを開く
+                  onClick={() => setShowLineLinkModal(true)}
                   className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
                 >
                   <MessageCircle className="w-4 h-4 mr-1" />
                   LINE連携
                 </button>
                 
-                {/* 2. ハンバーガーメニューボタン */}
                 <button
                   ref={menuButtonRef}
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -596,7 +559,6 @@ export default function MonitorDashboard() {
           </div>
         </header>
 
-        {/* ハンバーガーメニュー ドロップダウン */}
         {isMenuOpen && (
           <div
             id="hamburger-menu-dropdown" 
@@ -636,15 +598,12 @@ export default function MonitorDashboard() {
           </div>
         )}
 
-        {/* メインコンテンツ */}
-        {/* ボトムタブバーの高さ分、下部にパディングを追加 */}
         <main className={`mx-auto pb-20 ${
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
-          {/* 獲得ポイントカード - キャリア相談タブ以外で表示 */}
           {activeTab !== 'career_consultation' && (
             <div
-              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer" // shadow-xl transition-shadow 削除
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer"
               onClick={() => setShowPointExchangeModal(true)} 
             >
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
@@ -657,7 +616,6 @@ export default function MonitorDashboard() {
             </div>
           )}
 
-          {/* タブコンテンツ */}
           <div 
             className={`
               transition-colors duration-300
@@ -679,7 +637,7 @@ export default function MonitorDashboard() {
                     {availableSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-6" // transition-all duration-300 hover:shadow-lg 削除
+                        className="border border-gray-200 rounded-xl p-6"
                       >
                         <div className="flex flex-col md:flex-row items-start justify-between">
                           <div className="flex-1 mb-4 md:mb-0">
@@ -778,10 +736,9 @@ export default function MonitorDashboard() {
                     {advertisements.map((ad) => (
                       <div
                         key={ad.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group" // transition-all duration-300 hover:shadow-lg 削除
+                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
                         onClick={() => setSelectedAdvertisement(ad)} 
                       >
-                        {/* ★★★ 修正箇所: image_url が null/undefined の場合のフォールバックを追加 ★★★ */}
                         {(() => {
                           const imageUrl = ad.image_url;
                           const optimizedUrl = getSecureImageUrl(imageUrl);
@@ -800,14 +757,12 @@ export default function MonitorDashboard() {
                               crossOrigin="anonymous"
                               onError={(e) => {
                                 console.error(`画像読み込みエラー: ${ad.company_name}`, ad.image_url);
-                                // エラー時はプレースホルダーを表示
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';
                               }}
                             />
                           </div>
                         ) : (
-                          // 画像がない場合のプレースホルダー
                           <div className="aspect-video bg-gray-200 flex items-center justify-center">
                             <Briefcase className="w-12 h-12 text-gray-500" />
                           </div>
@@ -828,18 +783,15 @@ export default function MonitorDashboard() {
               </div>
             )}
 
-            {activeTab === 'career_consultation' && ( // ★★★ 修正: タブ名変更 ★★★
+            {activeTab === 'career_consultation' && (
               <>
-                {/* ★★★ 修正箇所: 画像を画面横幅いっぱいに配置 ★★★ */}
                 <div className="flex flex-col items-center w-full">
-                    {/* 上部画像 */}
                     <img 
                         src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
                         alt="キャリア相談 上部"
                         className="w-full h-auto object-cover"
                     />
                     
-                    {/* 中部画像 + ボタン（ボタンを画像の上に重ねる） */}
                     <div className="relative w-full">
                         <img 
                             src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
@@ -847,10 +799,9 @@ export default function MonitorDashboard() {
                             className="w-full h-auto object-cover"
                         />
                         
-                        {/* ボタンを画像の上に配置 */}
                         <div className="absolute inset-0 flex items-center justify-center">
                             <a
-                                href={C8_LINE_ADD_URL} // ★★★ URLをLINE友だち追加リンクに変更 ★★★
+                                href={C8_LINE_ADD_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
@@ -861,22 +812,19 @@ export default function MonitorDashboard() {
                         </div>
                     </div>
 
-                    {/* 下部画像 */}
                     <img 
                         src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
                         alt="キャリア相談 下部"
                         className="w-full h-auto object-cover"
                     />
                 </div>
-                {/* ★★★ 修正箇所ここまで ★★★ */}
               </>
             )}
           </div>
         </main>
       </div>
 
-      {/* ボトムタブバー */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40"> {/* shadow-lg 削除 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="max-w-7xl mx-auto flex justify-around h-20">
           <button
             onClick={() => setActiveTab('surveys')}
@@ -894,7 +842,7 @@ export default function MonitorDashboard() {
             }`}
           >
             <Sparkles className="w-6 h-6 mb-1" />
-            キャリア診断 {/* ★★★ 修正: タブ名変更 ★★★ */}
+            キャリア診断
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
@@ -906,19 +854,17 @@ export default function MonitorDashboard() {
             企業情報
           </button>
           <button
-            onClick={() => setActiveTab('career_consultation')} // ★★★ 修正: タブ名変更 ★★★
+            onClick={() => setActiveTab('career_consultation')}
             className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
             <MessageCircle className="w-6 h-6 mb-1" />
-            キャリア相談 {/* ★★★ 修正: タブ名変更 ★★★ */}
+            キャリア相談
           </button>
         </div>
       </div>
 
-
-      {/* モーダル群 */}
       {showProfileModal && (
         <ProfileModal
           user={user}
@@ -944,11 +890,10 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gradient-to-br from-orange-50 via-white to-blue-50 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             
-            {/* ★★★ 企業詳細モーダルのコンテンツ ★★★ */}
             <div className="relative">
-              {/* 閉じるボタン - 右上に固定 */}
+              {/* 閉じるボタン */}
               <button
                 onClick={() => setSelectedAdvertisement(null)}
                 className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
@@ -956,16 +901,12 @@ export default function MonitorDashboard() {
                 <X className="w-6 h-6" />
               </button>
 
-              {/* ヘッダー部分 - グラデーション背景 */}
-              <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-t-3xl p-8 pb-6 relative overflow-hidden">
-                {/* 装飾的な背景パターン */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
-                
-                <h2 className="text-4xl font-bold text-white mb-2 relative z-10 drop-shadow-lg">{selectedAdvertisement.company_name}</h2>
+              {/* ヘッダー - オレンジグラデーション */}
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-t-3xl p-8 pb-6">
+                <h2 className="text-4xl font-bold text-white drop-shadow-lg">{selectedAdvertisement.company_name}</h2>
               </div>
 
-              {/* 企業画像 - カード風 */}
+              {/* 企業画像 */}
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
                 <div className="px-8 -mt-6 relative z-10">
                   <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
@@ -983,12 +924,12 @@ export default function MonitorDashboard() {
 
               {/* メインコンテンツ */}
               <div className="p-8">
-                {/* 企業ビジョン - 吹き出し風 */}
+                {/* 企業ビジョン */}
                 {selectedAdvertisement.company_vision && (
-                  <div className="mb-8 relative">
-                    <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-400">
+                  <div className="mb-8">
+                    <div className="bg-orange-50 rounded-2xl p-6 border-l-4 border-orange-500">
                       <div className="flex items-start mb-2">
-                        <Sparkles className="w-6 h-6 text-orange-500 mr-2 flex-shrink-0 mt-1" />
+                        <Sparkles className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-1" />
                         <h3 className="text-lg font-bold text-orange-600">目指す未来</h3>
                       </div>
                       <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{selectedAdvertisement.company_vision}</p>
@@ -996,274 +937,278 @@ export default function MonitorDashboard() {
                   </div>
                 )}
               
-                {/* 企業概要 - カラフルなカード */}
+                {/* 企業概要 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <Building className="w-6 h-6 text-orange-500 mr-2" />
+                    <Building className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">企業概要</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-orange-50 rounded-xl p-4">
-                        <p className="font-semibold text-orange-600 mb-1">👤 代表者名</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.representative_name || 'N/A'}</p>
-                      </div>
-                      <div className="bg-blue-50 rounded-xl p-4">
-                        <p className="font-semibold text-blue-600 mb-1">📅 設立年</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.establishment_year || 'N/A'}</p>
-                      </div>
-                      <div className="bg-green-50 rounded-xl p-4">
-                        <p className="font-semibold text-green-600 mb-1">📍 所在地 (本社)</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.headquarters_location || 'N/A'}</p>
-                      </div>
-                      <div className="bg-purple-50 rounded-xl p-4">
-                        <p className="font-semibold text-purple-600 mb-1">🏢 所在地 (支社)</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.branch_office_location || 'N/A'}</p>
-                      </div>
-                      <div className="bg-pink-50 rounded-xl p-4">
-                        <p className="font-semibold text-pink-600 mb-1">👥 従業員数</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_count || 'N/A'}</p>
-                      </div>
-                      <div className="bg-indigo-50 rounded-xl p-4">
-                        <p className="font-semibold text-indigo-600 mb-1">⚖️ 男女比</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_gender_ratio || 'N/A'}</p>
-                      </div>
-                      <div className="bg-yellow-50 rounded-xl p-4">
-                        <p className="font-semibold text-yellow-600 mb-1">🎂 平均年齢</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_avg_age || 'N/A'}</p>
-                      </div>
-                      <div className="bg-cyan-50 rounded-xl p-4">
-                        <p className="font-semibold text-cyan-600 mb-1">🏭 業界</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.industries?.join(', ') || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-xl p-4 border-2 border-orange-300">
-                        <p className="font-semibold text-orange-700 mb-2 flex items-center">
-                          <Star className="w-5 h-5 mr-2" />
-                          イチオシポイント
-                        </p>
-                        <p className="text-orange-800 font-medium whitespace-pre-wrap">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</p>
-                      </div>
-                    </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">代表者名</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.representative_name || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">設立年</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.establishment_year || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（本社）</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.headquarters_location || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（支社）</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.branch_office_location || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">従業員数</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_count || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男女比</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_gender_ratio || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">平均年齢</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.employee_avg_age || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">業界</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.industries?.join(', ') || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシポイント</td>
+                          <td className="px-6 py-4 text-orange-800 font-medium">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               
-              {/* 募集・待遇情報 */}
+              {/* 募集・待遇情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <DollarSign className="w-6 h-6 text-green-500 mr-2" />
+                    <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">募集・待遇情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-green-50 rounded-xl p-4">
-                        <p className="font-semibold text-green-600 mb-1">💰 初任給</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.starting_salary || 'N/A'}</p>
-                      </div>
-                      <div className="bg-blue-50 rounded-xl p-4">
-                        <p className="font-semibold text-blue-600 mb-1">📊 3年定着率</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.three_year_retention_rate || 'N/A'}</p>
-                      </div>
-                      <div className="bg-emerald-50 rounded-xl p-4">
-                        <p className="font-semibold text-emerald-600 mb-1">💵 20代平均年収</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</p>
-                      </div>
-                      <div className="bg-teal-50 rounded-xl p-4">
-                        <p className="font-semibold text-teal-600 mb-1">💴 30代平均年収</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-purple-50 rounded-xl p-4">
-                        <p className="font-semibold text-purple-600 mb-2 flex items-center">
-                          <Trophy className="w-5 h-5 mr-2" />
-                          キャリアパス
-                        </p>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.promotion_model_case || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-indigo-50 rounded-xl p-4">
-                        <p className="font-semibold text-indigo-600 mb-2 flex items-center">
-                          <Briefcase className="w-5 h-5 mr-2" />
-                          募集職種とその人数
-                        </p>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_roles_count || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-pink-50 rounded-xl p-4">
-                        <p className="font-semibold text-pink-600 mb-2">🔄 選考フロー</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-orange-50 rounded-xl p-4">
-                        <p className="font-semibold text-orange-600 mb-2">📜 必須資格・免許</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.required_qualifications || 'N/A'}</p>
-                      </div>
-                    </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">初任給</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.starting_salary || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">3年定着率</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.three_year_retention_rate || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">20代平均年収</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">30代平均年収</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">キャリアパス</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.promotion_model_case || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">募集職種とその人数</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_roles_count || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">選考フロー</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">必須資格・免許</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.required_qualifications || 'N/A'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
-                {/* 働き方・福利厚生 */}
+                {/* 働き方・福利厚生 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <Sparkles className="w-6 h-6 text-purple-500 mr-2" />
+                    <Sparkles className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">働き方・福利厚生</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-blue-50 rounded-xl p-4">
-                        <p className="font-semibold text-blue-600 mb-1">⏰ 勤務時間</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.working_hours || 'N/A'}</p>
-                      </div>
-                      <div className="bg-green-50 rounded-xl p-4">
-                        <p className="font-semibold text-green-600 mb-1">🌴 休日</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.holidays || 'N/A'}</p>
-                      </div>
-                      <div className="bg-purple-50 rounded-xl p-4">
-                        <p className="font-semibold text-purple-600 mb-1">📅 年間休日数</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.annual_holidays || 'N/A'}</p>
-                      </div>
-                      <div className="bg-cyan-50 rounded-xl p-4">
-                        <p className="font-semibold text-cyan-600 mb-1">💻 リモートワーク</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.remote_work_available)}</p>
-                      </div>
-                      <div className="bg-pink-50 rounded-xl p-4">
-                        <p className="font-semibold text-pink-600 mb-1">💼 副業</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.side_job_allowed)}</p>
-                      </div>
-                      <div className="bg-yellow-50 rounded-xl p-4">
-                        <p className="font-semibold text-yellow-600 mb-1">🏠 住宅手当</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</p>
-                      </div>
-                      <div className="bg-rose-50 rounded-xl p-4">
-                        <p className="font-semibold text-rose-600 mb-1">👩‍👧 女性育休取得率</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</p>
-                      </div>
-                      <div className="bg-indigo-50 rounded-xl p-4">
-                        <p className="font-semibold text-indigo-600 mb-1">👨‍👧 男性育休取得率</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</p>
-                      </div>
-                      <div className="bg-amber-50 rounded-xl p-4">
-                        <p className="font-semibold text-amber-600 mb-1">🚗 異動/転勤</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</p>
-                      </div>
-                      <div className="bg-lime-50 rounded-xl p-4">
-                        <p className="font-semibold text-lime-600 mb-1">🎉 社内イベント頻度</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internal_event_frequency || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-emerald-50 rounded-xl p-4">
-                        <p className="font-semibold text-emerald-600 mb-2">💪 健康経営の取り組み</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</p>
-                      </div>
-                      <div className="col-span-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 border-2 border-purple-300">
-                        <p className="font-semibold text-purple-700 mb-2 flex items-center">
-                          <Gift className="w-5 h-5 mr-2" />
-                          イチオシ福利厚生
-                        </p>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.must_tell_welfare || 'N/A'}</p>
-                      </div>
-                    </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">勤務時間</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.working_hours || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">休日</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.holidays || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">年間休日数</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.annual_holidays || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">リモートワーク</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.remote_work_available)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">副業</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.side_job_allowed)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">住宅手当</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">女性育休取得率</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男性育休取得率</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">異動/転勤</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">社内イベント頻度</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internal_event_frequency || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">健康経営の取り組み</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシ福利厚生</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.must_tell_welfare || 'N/A'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
-                {/* 採用情報 */}
+                {/* 採用情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <Users className="w-6 h-6 text-blue-500 mr-2" />
+                    <Users className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">採用情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
-                    <div className="grid grid-cols-1 gap-4 text-sm">
-                      <div className="bg-blue-50 rounded-xl p-4">
-                        <p className="font-semibold text-blue-600 mb-2">📞 採用担当部署（担当者）</p>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_department || 'N/A'}</p>
-                      </div>
-                      <div className="bg-green-50 rounded-xl p-4">
-                        <p className="font-semibold text-green-600 mb-2">✉️ 採用に関する問い合わせ先</p>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_contact || 'N/A'}</p>
-                      </div>
-                      {selectedAdvertisement.recruitment_info_page_url && (
-                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4">
-                          <a 
-                            href={selectedAdvertisement.recruitment_info_page_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
-                          >
-                            🔗 採用情報ページを見る
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">採用担当部署（担当者）</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_department || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用に関する問い合わせ先</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.recruitment_contact || 'N/A'}</td>
+                        </tr>
+                        {selectedAdvertisement.recruitment_info_page_url && (
+                          <tr>
+                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用情報ページ</td>
+                            <td className="px-6 py-4">
+                              <a 
+                                href={selectedAdvertisement.recruitment_info_page_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                採用情報ページを見る
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
-                {/* インターンシップ情報 */}
+                {/* インターンシップ情報 - 表形式 */}
                 <div className="mb-8">
                   <div className="flex items-center mb-4">
-                    <Target className="w-6 h-6 text-orange-500 mr-2" />
+                    <Target className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">インターンシップ情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-orange-50 rounded-xl p-4">
-                        <p className="font-semibold text-orange-600 mb-1">✅ 実施予定</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</p>
-                      </div>
-                      <div className="bg-blue-50 rounded-xl p-4">
-                        <p className="font-semibold text-blue-600 mb-1">📅 実施日程</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_schedule || 'N/A'}</p>
-                      </div>
-                      <div className="bg-purple-50 rounded-xl p-4">
-                        <p className="font-semibold text-purple-600 mb-1">👥 定員</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_capacity || 'N/A'}</p>
-                      </div>
-                      <div className="bg-pink-50 rounded-xl p-4">
-                        <p className="font-semibold text-pink-600 mb-1">🎓 対象学生</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</p>
-                      </div>
-                      <div className="bg-green-50 rounded-xl p-4">
-                        <p className="font-semibold text-green-600 mb-1">📍 実施場所</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</p>
-                      </div>
-                      <div className="bg-cyan-50 rounded-xl p-4">
-                        <p className="font-semibold text-cyan-600 mb-1">📝 内容</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</p>
-                      </div>
-                      <div className="bg-yellow-50 rounded-xl p-4">
-                        <p className="font-semibold text-yellow-600 mb-1">💰 報酬</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</p>
-                      </div>
-                      <div className="bg-indigo-50 rounded-xl p-4">
-                        <p className="font-semibold text-indigo-600 mb-1">🚃 交通費・宿泊費</p>
-                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</p>
-                      </div>
-                      {selectedAdvertisement.internship_application_url && (
-                        <div className="col-span-2 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl p-4">
-                          <a 
-                            href={selectedAdvertisement.internship_application_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center text-orange-600 hover:text-orange-800 font-semibold"
-                          >
-                            🎯 インターンシップに申し込む
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">実施予定</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施日程</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_schedule || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">定員</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_capacity || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">対象学生</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施場所</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">内容</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">報酬</td>
+                          <td className="px-6 py-4 text-gray-700">{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">交通費・宿泊費</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</td>
+                        </tr>
+                        {selectedAdvertisement.internship_application_url && (
+                          <tr>
+                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">申込</td>
+                            <td className="px-6 py-4">
+                              <a 
+                                href={selectedAdvertisement.internship_application_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                インターンシップに申し込む
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
                 {/* SNS・外部リンク */}
                 <div className="mb-6">
                   <div className="flex items-center mb-4">
-                    <MessageCircle className="w-6 h-6 text-green-500 mr-2" />
+                    <MessageCircle className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">SNS・外部リンク</h3>
                   </div>
-                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
                     <div className="flex flex-wrap gap-3">
                       {selectedAdvertisement.official_website_url && (
                         <a 
                           href={selectedAdvertisement.official_website_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                          className="inline-flex items-center px-5 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
                         >
                           🌐 公式ホームページ
                           <ExternalLink className="w-4 h-4 ml-2" />
@@ -1274,7 +1219,7 @@ export default function MonitorDashboard() {
                           href={selectedAdvertisement.official_line_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                          className="inline-flex items-center px-5 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
                         >
                           💬 公式LINE
                           <ExternalLink className="w-4 h-4 ml-2" />
@@ -1285,7 +1230,7 @@ export default function MonitorDashboard() {
                           href={selectedAdvertisement.instagram_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:from-pink-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                          className="inline-flex items-center px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
                         >
                           📸 Instagram
                           <ExternalLink className="w-4 h-4 ml-2" />
@@ -1296,14 +1241,14 @@ export default function MonitorDashboard() {
                           href={selectedAdvertisement.tiktok_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-gray-800 to-black text-white rounded-full hover:from-black hover:to-gray-900 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                          className="inline-flex items-center px-5 py-3 bg-gray-800 hover:bg-black text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
                         >
                           🎵 TikTok
                           <ExternalLink className="w-4 h-4 ml-2" />
                         </a>
                       )}
                       {selectedAdvertisement.other_sns_sites && (
-                        <div className="w-full mt-4 bg-gray-50 rounded-xl p-4">
+                        <div className="w-full mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
                           <p className="font-semibold text-gray-700 mb-2 flex items-center">
                             🔗 その他のリンク
                           </p>
@@ -1315,13 +1260,11 @@ export default function MonitorDashboard() {
                 </div>
               </div>
             </div>
-            {/* ★★★ 企業詳細モーダルのコンテンツここまで ★★★ */}
             
           </div>
         </div>
       )}
 
-      {/* ポイント交換モーダル */}
       {showPointExchangeModal && profile && (
         <PointExchangeModal
           currentPoints={profile.points}
@@ -1330,7 +1273,6 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {/* モニタープロフィールアンケートモーダル */}
       {showProfileSurveyModal && (
         <MonitorProfileSurveyModal
           onClose={() => setShowProfileSurveyModal(false)}
@@ -1338,7 +1280,6 @@ export default function MonitorDashboard() {
         />
       )}
       
-      {/* LINE連携モーダル */}
       {showLineLinkModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
@@ -1347,7 +1288,6 @@ export default function MonitorDashboard() {
                           <X className="w-6 h-6" />
                       </button>
                   </div>
-                  {/* LineLinkButtonは、自身でリダイレクトを行うため、ここで直接レンダリング */}
                   <LineLinkButton /> 
               </div>
           </div>
