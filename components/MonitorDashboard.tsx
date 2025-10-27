@@ -944,200 +944,375 @@ export default function MonitorDashboard() {
 
       {selectedAdvertisement && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-gradient-to-br from-orange-50 via-white to-blue-50 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             
             {/* ★★★ 企業詳細モーダルのコンテンツ ★★★ */}
-            <div className="p-6">
-              {/* ヘッダー部分 */}
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-3xl font-bold text-gray-800 flex-1">{selectedAdvertisement.company_name}</h2>
-                <button
-                  onClick={() => setSelectedAdvertisement(null)}
-                  className="text-gray-500 hover:text-gray-700 flex-shrink-0 ml-4"
-                >
-                  ✕
-                </button>
+            <div className="relative">
+              {/* 閉じるボタン - 右上に固定 */}
+              <button
+                onClick={() => setSelectedAdvertisement(null)}
+                className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* ヘッダー部分 - グラデーション背景 */}
+              <div className="bg-gradient-to-r from-orange-400 to-orange-500 rounded-t-3xl p-8 pb-6 relative overflow-hidden">
+                {/* 装飾的な背景パターン */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-32 -mt-32"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-10 rounded-full -ml-24 -mb-24"></div>
+                
+                <h2 className="text-4xl font-bold text-white mb-2 relative z-10 drop-shadow-lg">{selectedAdvertisement.company_name}</h2>
               </div>
 
-              {/* 企業画像 */}
+              {/* 企業画像 - カード風 */}
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                <div className="mb-4 rounded-lg overflow-hidden h-96">
-                  <img
-                    src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
-                    alt={selectedAdvertisement.company_name}
-                    className="w-auto h-full object-cover mx-auto"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                <div className="px-8 -mt-6 relative z-10">
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
+                    <img
+                      src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
+                      alt={selectedAdvertisement.company_name}
+                      className="w-auto h-full object-cover mx-auto"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* 企業ビジョン */}
-              {selectedAdvertisement.company_vision && (
-                <div className="mb-6 pb-4 border-b">
-                  <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.company_vision}</p>
-                </div>
-              )}
+              {/* メインコンテンツ */}
+              <div className="p-8">
+                {/* 企業ビジョン - 吹き出し風 */}
+                {selectedAdvertisement.company_vision && (
+                  <div className="mb-8 relative">
+                    <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-orange-400">
+                      <div className="flex items-start mb-2">
+                        <Sparkles className="w-6 h-6 text-orange-500 mr-2 flex-shrink-0 mt-1" />
+                        <h3 className="text-lg font-bold text-orange-600">目指す未来</h3>
+                      </div>
+                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{selectedAdvertisement.company_vision}</p>
+                    </div>
+                  </div>
+                )}
               
-              {/* 企業概要 */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">企業概要</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">代表者名:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.representative_name || 'N/A'}</p></div>
-                <div><p className="font-semibold">設立年:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.establishment_year || 'N/A'}</p></div>
-                <div><p className="font-semibold">所在地 (本社):</p><p className="whitespace-pre-wrap">{selectedAdvertisement.headquarters_location || 'N/A'}</p></div>
-                <div><p className="font-semibold">所在地 (支社):</p><p className="whitespace-pre-wrap">{selectedAdvertisement.branch_office_location || 'N/A'}</p></div>
-                <div><p className="font-semibold">従業員数:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.employee_count || 'N/A'}</p></div>
-                <div><p className="font-semibold">男女比:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.employee_gender_ratio || 'N/A'}</p></div>
-                <div><p className="font-semibold">平均年齢:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.employee_avg_age || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">業界:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.industries?.join(', ') || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">イチオシポイント:</p><p className="text-orange-600 whitespace-pre-wrap">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</p></div>
-              </div>
+                {/* 企業概要 - カラフルなカード */}
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Building className="w-6 h-6 text-orange-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">企業概要</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-orange-50 rounded-xl p-4">
+                        <p className="font-semibold text-orange-600 mb-1">👤 代表者名</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.representative_name || 'N/A'}</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <p className="font-semibold text-blue-600 mb-1">📅 設立年</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.establishment_year || 'N/A'}</p>
+                      </div>
+                      <div className="bg-green-50 rounded-xl p-4">
+                        <p className="font-semibold text-green-600 mb-1">📍 所在地 (本社)</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.headquarters_location || 'N/A'}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-xl p-4">
+                        <p className="font-semibold text-purple-600 mb-1">🏢 所在地 (支社)</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.branch_office_location || 'N/A'}</p>
+                      </div>
+                      <div className="bg-pink-50 rounded-xl p-4">
+                        <p className="font-semibold text-pink-600 mb-1">👥 従業員数</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_count || 'N/A'}</p>
+                      </div>
+                      <div className="bg-indigo-50 rounded-xl p-4">
+                        <p className="font-semibold text-indigo-600 mb-1">⚖️ 男女比</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_gender_ratio || 'N/A'}</p>
+                      </div>
+                      <div className="bg-yellow-50 rounded-xl p-4">
+                        <p className="font-semibold text-yellow-600 mb-1">🎂 平均年齢</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.employee_avg_age || 'N/A'}</p>
+                      </div>
+                      <div className="bg-cyan-50 rounded-xl p-4">
+                        <p className="font-semibold text-cyan-600 mb-1">🏭 業界</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.industries?.join(', ') || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-xl p-4 border-2 border-orange-300">
+                        <p className="font-semibold text-orange-700 mb-2 flex items-center">
+                          <Star className="w-5 h-5 mr-2" />
+                          イチオシポイント
+                        </p>
+                        <p className="text-orange-800 font-medium whitespace-pre-wrap">{selectedAdvertisement.highlight_point_1 || 'N/A'} {selectedAdvertisement.highlight_point_2 && ` / ${selectedAdvertisement.highlight_point_2}`} {selectedAdvertisement.highlight_point_3 && ` / ${selectedAdvertisement.highlight_point_3}`}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               
               {/* 募集・待遇情報 */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">募集・待遇情報</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">初任給:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.starting_salary || 'N/A'}</p></div>
-                <div><p className="font-semibold">3年定着率:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.three_year_retention_rate || 'N/A'}</p></div>
-                <div><p className="font-semibold">20代平均年収:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</p></div>
-                <div><p className="font-semibold">30代平均年収:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</p></div>
-                <div className="col-span-2">
-                  <p className="font-semibold mb-2">キャリアパス:</p>
-                  <p className="whitespace-pre-wrap">{selectedAdvertisement.promotion_model_case || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="font-semibold mb-2">募集職種とその人数:</p>
-                  <p className="whitespace-pre-wrap">{selectedAdvertisement.recruitment_roles_count || 'N/A'}</p>
-                </div>
-                <div className="col-span-2"><p className="font-semibold">選考フロー:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">必須資格・免許:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.required_qualifications || 'N/A'}</p></div>
-              </div>
-
-              {/* 働き方・福利厚生 */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">働き方・福利厚生</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">勤務時間:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.working_hours || 'N/A'}</p></div>
-                <div><p className="font-semibold">休日:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.holidays || 'N/A'}</p></div>
-                <div><p className="font-semibold">年間休日数:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.annual_holidays || 'N/A'}</p></div>
-                <div><p className="font-semibold">リモートワーク:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.remote_work_available)}</p></div>
-                <div><p className="font-semibold">副業:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.side_job_allowed)}</p></div>
-                <div><p className="font-semibold">住宅手当:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</p></div>
-                <div><p className="font-semibold">女性育休取得率:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</p></div>
-                <div><p className="font-semibold">男性育休取得率:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</p></div>
-                <div><p className="font-semibold">異動/転勤:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</p></div>
-                <div><p className="font-semibold">社内イベント頻度:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internal_event_frequency || 'N/A'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">健康経営の取り組み:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</p></div>
-                <div className="col-span-2">
-                  <p className="font-semibold mb-2">イチオシ福利厚生:</p>
-                  <p className="whitespace-pre-wrap">{selectedAdvertisement.must_tell_welfare || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* 採用情報 */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">採用情報</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div className="col-span-2">
-                  <p className="font-semibold mb-2">採用担当部署（担当者）:</p>
-                  <p className="whitespace-pre-wrap">{selectedAdvertisement.recruitment_department || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="font-semibold mb-2">採用に関する問い合わせ先:</p>
-                  <p className="whitespace-pre-wrap">{selectedAdvertisement.recruitment_contact || 'N/A'}</p>
-                </div>
-                {selectedAdvertisement.recruitment_info_page_url && (
-                  <div className="col-span-2">
-                    <a 
-                      href={selectedAdvertisement.recruitment_info_page_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                    >
-                      採用情報ページを見る
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </a>
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <DollarSign className="w-6 h-6 text-green-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">募集・待遇情報</h3>
                   </div>
-                )}
-              </div>
-
-              {/* インターンシップ情報 */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">インターンシップ情報</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div><p className="font-semibold">実施予定:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</p></div>
-                <div><p className="font-semibold">実施日程:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_schedule || 'N/A'}</p></div>
-                <div><p className="font-semibold">定員:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_capacity || 'N/A'}</p></div>
-                <div><p className="font-semibold">対象学生:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</p></div>
-                <div><p className="font-semibold">実施場所:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</p></div>
-                <div><p className="font-semibold">内容:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</p></div>
-                <div><p className="font-semibold">報酬:</p><p className="whitespace-pre-wrap">{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</p></div>
-                <div><p className="font-semibold">交通費・宿泊費:</p><p className="whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</p></div>
-                {selectedAdvertisement.internship_application_url && (
-                  <div className="col-span-2">
-                    <a 
-                      href={selectedAdvertisement.internship_application_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                    >
-                      インターンシップに申し込む
-                      <ExternalLink className="w-4 h-4 ml-2" />
-                    </a>
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-green-50 rounded-xl p-4">
+                        <p className="font-semibold text-green-600 mb-1">💰 初任給</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.starting_salary || 'N/A'}</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <p className="font-semibold text-blue-600 mb-1">📊 3年定着率</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.three_year_retention_rate || 'N/A'}</p>
+                      </div>
+                      <div className="bg-emerald-50 rounded-xl p-4">
+                        <p className="font-semibold text-emerald-600 mb-1">💵 20代平均年収</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_20s || 'N/A'}</p>
+                      </div>
+                      <div className="bg-teal-50 rounded-xl p-4">
+                        <p className="font-semibold text-teal-600 mb-1">💴 30代平均年収</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.avg_annual_income_30s || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-purple-50 rounded-xl p-4">
+                        <p className="font-semibold text-purple-600 mb-2 flex items-center">
+                          <Trophy className="w-5 h-5 mr-2" />
+                          キャリアパス
+                        </p>
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.promotion_model_case || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-indigo-50 rounded-xl p-4">
+                        <p className="font-semibold text-indigo-600 mb-2 flex items-center">
+                          <Briefcase className="w-5 h-5 mr-2" />
+                          募集職種とその人数
+                        </p>
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_roles_count || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-pink-50 rounded-xl p-4">
+                        <p className="font-semibold text-pink-600 mb-2">🔄 選考フロー</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.selection_flow_steps?.join(' → ') || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-orange-50 rounded-xl p-4">
+                        <p className="font-semibold text-orange-600 mb-2">📜 必須資格・免許</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.required_qualifications || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {/* SNS・外部リンク */}
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">SNS・外部リンク</h3>
-              <div className="flex flex-wrap gap-3 mb-6">
-                {selectedAdvertisement.official_website_url && (
-                  <a 
-                    href={selectedAdvertisement.official_website_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    公式ホームページ
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
-                )}
-                {selectedAdvertisement.official_line_url && (
-                  <a 
-                    href={selectedAdvertisement.official_line_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-                  >
-                    公式LINE
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
-                )}
-                {selectedAdvertisement.instagram_url && (
-                  <a 
-                    href={selectedAdvertisement.instagram_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors text-sm"
-                  >
-                    Instagram
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
-                )}
-                {selectedAdvertisement.tiktok_url && (
-                  <a 
-                    href={selectedAdvertisement.tiktok_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm"
-                  >
-                    TikTok
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </a>
-                )}
-                {selectedAdvertisement.other_sns_sites && (
-                  <div className="w-full">
-                    <p className="font-semibold text-sm mb-2">その他のリンク:</p>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedAdvertisement.other_sns_sites}</p>
+                {/* 働き方・福利厚生 */}
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Sparkles className="w-6 h-6 text-purple-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">働き方・福利厚生</h3>
                   </div>
-                )}
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <p className="font-semibold text-blue-600 mb-1">⏰ 勤務時間</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.working_hours || 'N/A'}</p>
+                      </div>
+                      <div className="bg-green-50 rounded-xl p-4">
+                        <p className="font-semibold text-green-600 mb-1">🌴 休日</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.holidays || 'N/A'}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-xl p-4">
+                        <p className="font-semibold text-purple-600 mb-1">📅 年間休日数</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.annual_holidays || 'N/A'}</p>
+                      </div>
+                      <div className="bg-cyan-50 rounded-xl p-4">
+                        <p className="font-semibold text-cyan-600 mb-1">💻 リモートワーク</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.remote_work_available)}</p>
+                      </div>
+                      <div className="bg-pink-50 rounded-xl p-4">
+                        <p className="font-semibold text-pink-600 mb-1">💼 副業</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.side_job_allowed)}</p>
+                      </div>
+                      <div className="bg-yellow-50 rounded-xl p-4">
+                        <p className="font-semibold text-yellow-600 mb-1">🏠 住宅手当</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</p>
+                      </div>
+                      <div className="bg-rose-50 rounded-xl p-4">
+                        <p className="font-semibold text-rose-600 mb-1">👩‍👧 女性育休取得率</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.female_parental_leave_rate || 'N/A'}</p>
+                      </div>
+                      <div className="bg-indigo-50 rounded-xl p-4">
+                        <p className="font-semibold text-indigo-600 mb-1">👨‍👧 男性育休取得率</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.male_parental_leave_rate || 'N/A'}</p>
+                      </div>
+                      <div className="bg-amber-50 rounded-xl p-4">
+                        <p className="font-semibold text-amber-600 mb-1">🚗 異動/転勤</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transfer_existence)} ({selectedAdvertisement.transfer_frequency || 'N/A'})</p>
+                      </div>
+                      <div className="bg-lime-50 rounded-xl p-4">
+                        <p className="font-semibold text-lime-600 mb-1">🎉 社内イベント頻度</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internal_event_frequency || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-emerald-50 rounded-xl p-4">
+                        <p className="font-semibold text-emerald-600 mb-2">💪 健康経営の取り組み</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.health_management_practices?.join(', ') || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 border-2 border-purple-300">
+                        <p className="font-semibold text-purple-700 mb-2 flex items-center">
+                          <Gift className="w-5 h-5 mr-2" />
+                          イチオシ福利厚生
+                        </p>
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.must_tell_welfare || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 採用情報 */}
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Users className="w-6 h-6 text-blue-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">採用情報</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="grid grid-cols-1 gap-4 text-sm">
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <p className="font-semibold text-blue-600 mb-2">📞 採用担当部署（担当者）</p>
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_department || 'N/A'}</p>
+                      </div>
+                      <div className="bg-green-50 rounded-xl p-4">
+                        <p className="font-semibold text-green-600 mb-2">✉️ 採用に関する問い合わせ先</p>
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{selectedAdvertisement.recruitment_contact || 'N/A'}</p>
+                      </div>
+                      {selectedAdvertisement.recruitment_info_page_url && (
+                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4">
+                          <a 
+                            href={selectedAdvertisement.recruitment_info_page_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold"
+                          >
+                            🔗 採用情報ページを見る
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* インターンシップ情報 */}
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Target className="w-6 h-6 text-orange-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">インターンシップ情報</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-orange-50 rounded-xl p-4">
+                        <p className="font-semibold text-orange-600 mb-1">✅ 実施予定</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl p-4">
+                        <p className="font-semibold text-blue-600 mb-1">📅 実施日程</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_schedule || 'N/A'}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-xl p-4">
+                        <p className="font-semibold text-purple-600 mb-1">👥 定員</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_capacity || 'N/A'}</p>
+                      </div>
+                      <div className="bg-pink-50 rounded-xl p-4">
+                        <p className="font-semibold text-pink-600 mb-1">🎓 対象学生</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_target_students?.join(', ') || 'N/A'}</p>
+                      </div>
+                      <div className="bg-green-50 rounded-xl p-4">
+                        <p className="font-semibold text-green-600 mb-1">📍 実施場所</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_locations?.join(', ') || 'N/A'}</p>
+                      </div>
+                      <div className="bg-cyan-50 rounded-xl p-4">
+                        <p className="font-semibold text-cyan-600 mb-1">📝 内容</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_content_types?.join(', ') || 'N/A'}</p>
+                      </div>
+                      <div className="bg-yellow-50 rounded-xl p-4">
+                        <p className="font-semibold text-yellow-600 mb-1">💰 報酬</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedAdvertisement.internship_paid_unpaid || 'N/A'}</p>
+                      </div>
+                      <div className="bg-indigo-50 rounded-xl p-4">
+                        <p className="font-semibold text-indigo-600 mb-1">🚃 交通費・宿泊費</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</p>
+                      </div>
+                      {selectedAdvertisement.internship_application_url && (
+                        <div className="col-span-2 bg-gradient-to-r from-orange-50 to-pink-50 rounded-xl p-4">
+                          <a 
+                            href={selectedAdvertisement.internship_application_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-orange-600 hover:text-orange-800 font-semibold"
+                          >
+                            🎯 インターンシップに申し込む
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SNS・外部リンク */}
+                <div className="mb-6">
+                  <div className="flex items-center mb-4">
+                    <MessageCircle className="w-6 h-6 text-green-500 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">SNS・外部リンク</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 shadow-md">
+                    <div className="flex flex-wrap gap-3">
+                      {selectedAdvertisement.official_website_url && (
+                        <a 
+                          href={selectedAdvertisement.official_website_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          🌐 公式ホームページ
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.official_line_url && (
+                        <a 
+                          href={selectedAdvertisement.official_line_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          💬 公式LINE
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.instagram_url && (
+                        <a 
+                          href={selectedAdvertisement.instagram_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full hover:from-pink-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          📸 Instagram
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.tiktok_url && (
+                        <a 
+                          href={selectedAdvertisement.tiktok_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-gray-800 to-black text-white rounded-full hover:from-black hover:to-gray-900 transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          🎵 TikTok
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.other_sns_sites && (
+                        <div className="w-full mt-4 bg-gray-50 rounded-xl p-4">
+                          <p className="font-semibold text-gray-700 mb-2 flex items-center">
+                            🔗 その他のリンク
+                          </p>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{selectedAdvertisement.other_sns_sites}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             {/* ★★★ 企業詳細モーダルのコンテンツここまで ★★★ */}
