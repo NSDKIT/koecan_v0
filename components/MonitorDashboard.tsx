@@ -961,11 +961,11 @@ export default function MonitorDashboard() {
 
               {/* 企業画像 */}
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                <div className="mb-4 rounded-lg overflow-hidden">
+                <div className="mb-4 rounded-lg overflow-hidden h-96">
                   <img
                     src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
                     alt={selectedAdvertisement.company_name}
-                    className="w-full h-64 object-cover"
+                    className="w-auto h-full object-cover mx-auto"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
