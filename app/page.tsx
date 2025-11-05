@@ -1,5 +1,4 @@
 // koecan_v0-main/app/page.tsx
-// 修正版: エラーバウンダリーを追加 + 自動クリア機能追加（合計1秒、サイレント実行）
 
 'use client'
 
@@ -13,54 +12,35 @@ import MonitorDashboard from '@/components/MonitorDashboard';
 import { ClientDashboard } from '@/components/ClientDashboard';
 import { AdminDashboard } from '@/components/AdminDashboard';
 import SupportDashboard from '@/components/SupportDashboard';
-import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer';
+// 新しい閲覧用コンポーネントをインポート
+import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer'; 
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
+
+// URLハッシュを操作するヘルパー
+const navigateToAuth = () => {
+    window.location.hash = 'auth';
+};
+const navigateToWelcome = () => {
+    window.location.hash = '';
+};
+
 
 export default function Home() {
   const { user, loading, error, signOut } = useAuth();
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [isAuthScreen, setIsAuthScreen] = useState(window.location.hash === '#auth'); // URLハッシュから初期状態を取得
+  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
+  // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
-  // ★★★ 追加: ローディングタイムアウトを検出するためのステート ★★★
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
+  // ★★★ 修正箇所: URLハッシュの変更をリッスンして画面を切り替える ★★★
   useEffect(() => {
-    if (!loading && (user || error)) {
-      console.log('PAGE.TSX RENDER: Final Auth State:', {
-        loading: loading,
-        user: user ? `User ID: ${user.id}, Role: ${user.role}` : 'Null',
-        error: error
-      });
-    }
-  }, [loading, user, error]);
-
-  // ★★★ 修正: ローディングが0.5秒以上続く場合にタイムアウトフラグを立てる ★★★
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        console.warn('PAGE.TSX: Loading timeout detected after 0.5 second');
-        setLoadingTimeout(true);
-      }, 500); // 0.5秒
-
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [loading]);
-
-  // ★★★ 追加: タイムアウト後0.5秒で自動クリア（合計1秒） ★★★
-  useEffect(() => {
-    if (loadingTimeout) {
-      console.log('PAGE.TSX: Auto-clearing auth in 0.5 seconds...');
-      const autoClearTimer = setTimeout(() => {
-        console.log('PAGE.TSX: Auto-executing emergency clear');
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.reload();
-      }, 500); // 0.5秒後に自動実行（合計1秒）
-
-      return () => clearTimeout(autoClearTimer);
-    }
-  }, [loadingTimeout]);
+    const handleHashChange = () => {
+      setIsAuthScreen(window.location.hash === '#auth');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+  // ★★★ 修正箇所ここまで ★★★
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -92,7 +72,7 @@ export default function Home() {
     );
   }
 
-  // エラーがある場合の表示
+  // エラーがある場合の表示 (useAuth側でエラーが設定された場合)
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -107,7 +87,7 @@ export default function Home() {
             {error}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => window.location.reload()} 
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             再試行（強制リセット）
@@ -123,30 +103,25 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 mb-4"> </p>
+          <p className="text-gray-600">認証情報を確認中...</p>
         </div>
       </div>
     );
   }
 
-  // loading=false かつ user=null の場合の処理
-  if (!user && !showWelcome) {
-    console.log("FINAL FAIL PATH: Loading is false but user is null. Returning AuthForm.");
-    return <AuthForm onBack={() => setShowWelcome(true)} />;
-  }
-
   // 認証チェックが完了し、ユーザーがいない場合の処理
   if (!user) {
-    if (showWelcome) {
-      return <WelcomeScreen onGetStarted={() => setShowWelcome(false)} />;
+    // ★★★ 修正箇所: URLハッシュに基づくルーティング ★★★
+    if (isAuthScreen) {
+      return <AuthForm onBack={navigateToWelcome} />;
     }
-
-    return <AuthForm onBack={() => setShowWelcome(true)} />;
+    return <WelcomeScreen onGetStarted={navigateToAuth} />;
   }
 
   // 認証チェックが完了し、ユーザーがいる場合の処理
   // AdminまたはSupportロールの場合のルーティング
   if (user.role === 'admin' || user.role === 'support') {
+    // admin@example.comがAdminDashboardとSupportDashboardのどちらかを選択
     if (user.role === 'admin' && selectedAdminPanel === null) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
@@ -173,6 +148,7 @@ export default function Home() {
       );
     }
 
+    // パネルが選択された、またはsupportロールでログインした場合
     if (user.role === 'admin' && selectedAdminPanel === 'admin') {
       return <AdminDashboard />;
     } else if (user.role === 'admin' && selectedAdminPanel === 'support') {
@@ -181,6 +157,7 @@ export default function Home() {
       return <SupportDashboard />;
     }
   }
+
 
   // その他のユーザー役割のルーティング (monitor, client)
   switch (user.role) {
