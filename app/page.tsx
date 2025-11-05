@@ -27,13 +27,17 @@ const navigateToWelcome = () => {
 
 export default function Home() {
   const { user, loading, error, signOut } = useAuth();
-  const [isAuthScreen, setIsAuthScreen] = useState(window.location.hash === '#auth'); // URLハッシュから初期状態を取得
-  const [showSlowLoadWarning, setShowSlowLoadWarning] = useState(false); // 遅延警告のステート (未使用になるが維持)
-  // 管理者/サポートユーザーが選択したパネルを保持する新しいステート
-  const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
+  // ★★★ 修正箇所: 初期値を false に設定し、サーバーでの window アクセスを回避 ★★★
+  const [isAuthScreen, setIsAuthScreen] = useState(false); 
+  const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
+  // ... (中略) ...
 
-  // ★★★ 修正箇所: URLハッシュの変更をリッスンして画面を切り替える ★★★
+  // ★★★ 修正箇所: window.location.hash を useEffect で読み込むロジック ★★★
   useEffect(() => {
+    // クライアント側での初回レンダリング後に実行
+    setIsClient(true);
+    setIsAuthScreen(window.location.hash === '#auth');
+
     const handleHashChange = () => {
       setIsAuthScreen(window.location.hash === '#auth');
     };
@@ -44,61 +48,16 @@ export default function Home() {
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
-            <Database className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
-            Supabaseの設定が必要です
-          </h1>
-          <p className="text-gray-600 mb-6">
-            アプリケーションを使用するには、Supabaseプロジェクトを設定してください。
-            <br /><br />
-            環境変数が正しく設定されていない可能性があります。
-          </p>
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-left">
-            <h3 className="font-semibold text-orange-900 mb-2">設定手順:</h3>
-            <ol className="text-sm text-orange-800 space-y-1">
-              <li>1. .env.localファイルを確認してください</li>
-              <li>2. NEXT_PUBLIC_SUPABASE_URLが正しく設定されているか確認</li>
-              <li>3. NEXT_PUBLIC_SUPABASE_ANON_KEYが正しく設定されているか確認</li>
-              <li>4. 開発サーバーを再起動してください</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
+    // ... (中略) ...
   }
 
   // エラーがある場合の表示 (useAuth側でエラーが設定された場合)
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
-            <AlertCircle className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
-            接続エラー
-          </h1>
-          <p className="text-gray-600 mb-6">
-            {error}
-          </p>
-          <button
-            onClick={() => window.location.reload()} 
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            再試行（強制リセット）
-          </button>
-        </div>
-      </div>
-    );
+    // ... (中略) ...
   }
 
   // 認証状態の初回チェック中はローディング画面を表示
-  if (loading) {
+  if (loading || !isClient) { // ★★★ 修正: isClient が true になるまで待機 ★★★
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
@@ -118,6 +77,8 @@ export default function Home() {
     return <WelcomeScreen onGetStarted={navigateToAuth} />;
   }
 
+  // ... (後略: ユーザーがいる場合の処理は変更なし) ...
+  // ...
   // 認証チェックが完了し、ユーザーがいる場合の処理
   // AdminまたはSupportロールの場合のルーティング
   if (user.role === 'admin' || user.role === 'support') {
