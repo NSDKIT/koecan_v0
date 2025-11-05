@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "name": "声キャン！",
   "short_name": "声キャン",
-  "description": "声優・アニメファンのためのアンケート・コミュニティサイト",
+  "description": "ポイ活しながら、キャリア相談ができる！あなたの声が未来を作る、新しいプラットフォーム",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
@@ -11,30 +11,18 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-256x256.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512x512.png",
+      "src": "/lp_logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "id": "/?source=pwa",
-  "categories": ["entertainment", "social"]
+  "categories": ["education", "business", "social"]
 }
