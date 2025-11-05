@@ -2,10 +2,10 @@
 
 'use client'
 
-import React, { useState } from 'react';
-import { Star, Users, Gift, MessageCircle, ArrowRight, Briefcase, Sparkles, UserCheck } from 'lucide-react'; // ★★★ アイコンを追加 ★★★
+import React from 'react';
+import { Star, Users, Gift, MessageCircle, ArrowRight, Briefcase, Sparkles, UserCheck, Download } from 'lucide-react'; 
 import { AnimatedBackground } from '@/components/AnimatedBackground';
-// import { OneSignalButton } from '@/components/OneSignalButton'; // 削除
+import { InstallPWAButton } from '@/components/InstallPWAButton'; // ★★★ 追加: InstallPWAButton をインポート ★★★
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -23,18 +23,18 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
               声キャン！
             </h1>
+            {/* 修正: 他のテキストは意図通り削除済み */}
           </div>
 
-          {/* ★★★ 修正: グリッドを削除し、内容を新しいリストに置き換える ★★★ */}
+          {/* ★★★ 修正: モニターセクションのみの新しいリスト ★★★ */}
           <div className="space-y-4 max-w-md mx-auto mb-12">
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
-              {/* ★★★ 修正: h3タグの内容を削除 ★★★ */}
+              {/* 修正: h3タグの内容を削除 */}
               <h3 className="text-xl font-semibold text-gray-800 mb-3"></h3>
               
-              {/* ★★★ 修正: 新しい箇条書きリストに置き換え ★★★ */}
               <ul className="text-gray-600 space-y-3 text-left">
                 <li className="flex items-center">
                   <Sparkles className="w-4 h-4 text-orange-500 mr-2 flex-shrink-0" />
@@ -53,7 +53,6 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
                   それでいて、ポイ活もできる
                 </li>
               </ul>
-              {/* ★★★ 修正箇所ここまで ★★★ */}
             </div>
           </div>
 
@@ -70,7 +69,11 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
               無料でアカウントを作成して、今すぐ始めましょう
             </p>
 
-            {/* <OneSignalButton /> を削除 */}
+            {/* ★★★ 修正箇所: InstallPWAButton を配置 ★★★ */}
+            <div className="pt-4 max-w-sm mx-auto">
+                <InstallPWAButton />
+            </div>
+            {/* ★★★ 修正箇所ここまで ★★★ */}
           </div>
         </div>
       </div>
