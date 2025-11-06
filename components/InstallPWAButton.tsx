@@ -1,20 +1,20 @@
-// koecan_v0-main/components/InstallPWAButton.tsx (新規作成)
+// koecan_v0-main/components/InstallPWAButton.tsx
 
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Download, CheckCircle } from 'lucide-react';
+import { Download, CheckCircle, AlertCircle } from 'lucide-react';
 
 // A2HSイベントを保存するためのグローバル変数
 let deferredPrompt: any;
 
 export function InstallPWAButton() {
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [showButton, setShowButton] = useState(false); // ボタンの常時表示を制御
   const [isInstalled, setIsInstalled] = useState(false);
   
-  // インストール状態をチェックするロジック (簡易版)
+  // インストール状態をチェックするロジック
   useEffect(() => {
-    // navigator.standalone (iOS) または display-mode (Android PWA) をチェック
+    // 既にインストールされているかをチェック
     const checkInstalled = () => {
       if (
         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
@@ -22,43 +22,35 @@ export function InstallPWAButton() {
       ) {
         setIsInstalled(true);
       }
+      setShowButton(true); // 常にボタンを表示する
     };
-    checkInstalled();
-    window.addEventListener('appinstalled', () => setIsInstalled(true));
-    return () => window.removeEventListener('appinstalled', () => setIsInstalled(true));
-  }, []);
-
-  // ブラウザのネイティブプロンプトを捕捉するロジック
-  useEffect(() => {
-    if (isInstalled) return;
-
+    
+    // ブラウザのネイティブプロンプトを捕捉するロジック
     const handler = (e: any) => {
-      // Chromeが自動的にプロンプトを表示するのを防ぐ
       e.preventDefault(); 
-      // イベントを保存
       deferredPrompt = e; 
-      // インストールボタンを表示
-      setShowInstallPrompt(true); 
-      console.log('A2HS prompt captured.');
+      // イベントが発火したことをログに残す
+      console.log('A2HS native prompt captured.');
     };
 
+    checkInstalled();
     window.addEventListener('beforeinstallprompt', handler);
-
+    window.addEventListener('appinstalled', () => setIsInstalled(true));
+    
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', () => setIsInstalled(true));
     };
-  }, [isInstalled]);
+  }, []);
 
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-        alert('ホーム画面への追加機能は、ブラウザがサポートしている場合にのみ利用可能です。');
+        alert('現在、お使いのブラウザでは自動的なホーム画面追加機能が利用できません。\n\nブラウザのメニューから「ホーム画面に追加」をタップしてください。');
         return;
     }
     
-    setShowInstallPrompt(false);
-    
-    // 保存したネイティブプロンプトを起動
+    // ネイティブプロンプトを起動
     deferredPrompt.prompt(); 
     
     // ユーザーの選択を待つ
@@ -75,21 +67,14 @@ export function InstallPWAButton() {
 
   if (isInstalled) {
     return (
-      <div className="flex items-center text-green-600 bg-green-50 px-4 py-2 rounded-full text-sm font-medium">
+      <div className="flex items-center text-green-600 bg-green-50 px-4 py-2 rounded-xl text-sm font-semibold justify-center shadow-lg">
         <CheckCircle className="w-4 h-4 mr-2" />
         アプリとしてインストール済み
       </div>
     );
   }
 
-  if (!showInstallPrompt) {
-    return (
-      <p className="text-xs text-gray-500">
-        （この機能は、お使いのブラウザがサポートする時期に表示されます）
-      </p>
-    );
-  }
-
+  // ボタンを常に表示するが、deferredPromptがない場合はクリック時の処理を変える
   return (
     <button
       onClick={handleInstallClick}
