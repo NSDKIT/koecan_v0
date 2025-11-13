@@ -3,7 +3,7 @@
 'use client'
 
 import React, { useState } from 'react';
-import { X, FileText, Upload, AlertCircle } from 'lucide-react';
+import { X, FileText, Upload, AlertCircle, Loader2, List } from 'lucide-react'; // Loader2, List を追加
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -12,190 +12,184 @@ interface ImportSurveyModalProps {
   onImport: () => void;
 }
 
+// 複数アンケートを格納する型
+interface ParsedSurvey {
+    title: string;
+    description: string;
+    questions: any[];
+}
+
+
+const parseMarkdown = (text: string): ParsedSurvey[] => {
+    // 最初のトップレベルの見出し（# ）でドキュメントを分割
+    // 正規表現: /(?=^#)/gm は、行頭にある # の直前を検索し、分割する (lookahead)
+    const rawDocuments = text.trim().split(/(?=^#)/gm).filter(doc => doc.trim());
+    const finalSurveys: ParsedSurvey[] = [];
+
+    rawDocuments.forEach(docText => {
+        const lines = docText.trim().split('\n').filter(line => line.trim());
+        if (lines.length === 0) return;
+
+        let title = '';
+        let description = '';
+        const questions: any[] = [];
+        let currentQuestion: any = null;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // Title (# heading) - 最初の行が # で始まることを期待
+            if (line.startsWith('# ') && !title) {
+                title = line.substring(2).trim();
+                continue;
+            }
+
+            // Description (## heading) - 2番目のトップレベル
+            if (line.startsWith('## ') && !description) {
+                description = line.substring(3).trim();
+                continue;
+            }
+
+            // Question (###, ####, ##### heading, $$$ ranking)
+            const isRanking = line.startsWith('$$$');
+            const isText = line.startsWith('##### ');
+            const isMulti = line.startsWith('#### ');
+            const isSingle = line.startsWith('### ');
+
+            if (isRanking || isText || isMulti || isSingle) {
+                // 既存の質問を保存
+                if (currentQuestion) {
+                    questions.push(currentQuestion);
+                }
+                
+                const questionText = line.substring(line.indexOf(' ') + 1).trim();
+                const questionIndex = questions.length;
+
+                if (isRanking) {
+                    const parts = line.split(' ');
+                    const maxSelections = parts[0].includes('-') ? 
+                        parseInt(parts[0].split('-')[1]) : 3;
+                    
+                    currentQuestion = {
+                        question_text: questionText,
+                        question_type: 'ranking',
+                        options: [],
+                        required: true,
+                        order_index: questionIndex,
+                        is_multiple_select: true,
+                        max_selections: maxSelections
+                    };
+                } else {
+                    currentQuestion = {
+                        question_text: questionText,
+                        question_type: isText ? 'text' : 'multiple_choice',
+                        options: [],
+                        required: !isText, // 自由記述以外は必須と仮定
+                        order_index: questionIndex,
+                        is_multiple_select: isMulti,
+                        max_selections: null
+                    };
+                }
+                continue;
+            }
+
+            // Options (□ checkbox)
+            if (line.startsWith('□ ') && currentQuestion) {
+                currentQuestion.options.push(line.substring(2).trim());
+                continue;
+            }
+        }
+
+        // 最後の質問を保存
+        if (currentQuestion) {
+            questions.push(currentQuestion);
+        }
+
+        // アンケートとして有効な場合のみ追加
+        if (title && questions.length > 0) {
+            finalSurveys.push({ title, description, questions });
+        }
+    });
+
+    return finalSurveys;
+};
+
+
 export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps) {
   const { user } = useAuth();
   const [markdownText, setMarkdownText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState<any>(null);
-
-  const parseMarkdown = (text: string) => {
-    const lines = text.split('\n').filter(line => line.trim());
-    let title = '';
-    let description = '';
-    const questions: any[] = [];
-    let currentQuestion: any = null;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      // Title (# heading)
-      if (line.startsWith('# ') && !title) {
-        title = line.substring(2).trim();
-        continue;
-      }
-
-      // Description (## heading)
-      if (line.startsWith('## ') && !description) {
-        description = line.substring(3).trim();
-        continue;
-      }
-
-      // Question (### heading)
-      if (line.startsWith('### ')) {
-        if (currentQuestion) {
-          questions.push(currentQuestion);
-        }
-        currentQuestion = {
-          question_text: line.substring(4).trim(),
-          question_type: 'multiple_choice',
-          options: [],
-          required: true,
-          order_index: questions.length
-        };
-        continue;
-      }
-
-      // Question (#### heading)
-      if (line.startsWith('#### ')) {
-        if (currentQuestion) {
-          questions.push(currentQuestion);
-        }
-        currentQuestion = {
-          question_text: line.substring(5).trim(),
-          question_type: 'multiple_choice',
-          options: [],
-          required: true,
-          order_index: questions.length,
-          is_multiple_select: true
-        };
-        continue;
-      }
-
-      // Question (##### heading) - Text question
-      if (line.startsWith('##### ')) {
-        if (currentQuestion) {
-          questions.push(currentQuestion);
-        }
-        currentQuestion = {
-          question_text: line.substring(6).trim(),
-          question_type: 'text',
-          options: [],
-          required: false,
-          order_index: questions.length
-        };
-        continue;
-      }
-
-      // Special ranking question ($$$)
-      if (line.startsWith('$$$')) {
-        if (currentQuestion) {
-          questions.push(currentQuestion);
-        }
-        const parts = line.split(' ');
-        const maxSelections = parts[0].includes('-') ? 
-          parseInt(parts[0].split('-')[1]) : 3;
-        
-        currentQuestion = {
-          question_text: line.substring(line.indexOf(' ') + 1).trim(),
-          question_type: 'ranking',
-          options: [],
-          required: true,
-          order_index: questions.length,
-          is_multiple_select: true,
-          max_selections: maxSelections
-        };
-        continue;
-      }
-
-      // Options (□ checkbox)
-      if (line.startsWith('□ ') && currentQuestion) {
-        currentQuestion.options.push(line.substring(2).trim());
-        continue;
-      }
-    }
-
-    // Add the last question
-    if (currentQuestion) {
-      questions.push(currentQuestion);
-    }
-
-    return {
-      title: title || 'インポートされたアンケート',
-      description: description || 'マークダウンからインポートされたアンケートです。',
-      questions
-    };
-  };
+  const [preview, setPreview] = useState<ParsedSurvey[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handlePreview = () => {
+    setError(null);
     if (!markdownText.trim()) return;
     
     try {
       const parsed = parseMarkdown(markdownText);
       setPreview(parsed);
+      if (parsed.length === 0) {
+          setError("Markdownから有効なアンケートが抽出されませんでした。ヘッダー（#）と質問（###）を確認してください。");
+      }
     } catch (error) {
-      alert('マークダウンの解析に失敗しました。形式を確認してください。');
+      setError(`Markdown解析に失敗しました。形式を確認してください: ${error.message}`);
     }
   };
 
   const handleImport = async () => {
-    // ★★★ 修正箇所: デバッグログを追加 ★★★
-    console.log('HANDLE IMPORT CHECK:', { 
-        previewExists: !!preview, 
-        userExists: !!user,
-        previewQuestionsCount: preview ? preview.questions?.length : 0
-    });
-    
-    if (!preview || !user) {
-        if (!preview) console.error('Import aborted: Preview data is missing.');
-        if (!user) console.error('Import aborted: User is not logged in.');
-        return;
-    }
-    // ★★★ 修正箇所ここまで ★★★
+    if (!preview || preview.length === 0 || !user) return;
 
     setLoading(true);
+    setError(null);
+    
     try {
-      // Create survey
-      const { data: survey, error: surveyError } = await supabase
-        .from('surveys')
-        .insert([
-          {
-            // ★★★ 修正箇所: ログインユーザーのIDを client_id に設定 ★★★
-            client_id: user.id, 
-            title: preview.title,
-            description: preview.description,
-            points_reward: 10,
-            status: 'draft'
-          }
-        ])
-        .select()
-        .single();
+      // ★★★ 修正箇所: 複数のアンケートを順次挿入するロジック ★★★
+      for (const p of preview) {
+          
+          // 1. Create survey
+          const { data: survey, error: surveyError } = await supabase
+            .from('surveys')
+            .insert([
+              {
+                client_id: user.id, 
+                title: p.title,
+                description: p.description,
+                points_reward: 10,
+                status: 'draft'
+              }
+            ])
+            .select('id')
+            .single(); // IDを取得
 
-      if (surveyError) throw surveyError;
+          if (surveyError) throw surveyError;
 
-      // Create questions
-      const questionsToInsert = preview.questions.map((q: any) => ({
-        survey_id: survey.id,
-        question_text: q.question_text,
-        question_type: q.question_type,
-        options: q.options,
-        required: q.required,
-        order_index: q.order_index,
-        is_multiple_select: q.is_multiple_select || false,
-        max_selections: q.max_selections || null
-      }));
+          // 2. Create questions (Bulk insert)
+          const questionsToInsert = p.questions.map((q: any) => ({
+            survey_id: survey.id,
+            question_text: q.question_text,
+            question_type: q.question_type,
+            options: q.options.length > 0 ? q.options : null, // 空配列を null に変換
+            required: q.required,
+            order_index: q.order_index,
+            is_multiple_select: q.is_multiple_select || false,
+            max_selections: q.max_selections || null
+          }));
 
-      const { error: questionsError } = await supabase
-        .from('questions')
-        .insert(questionsToInsert);
+          const { error: questionsError } = await supabase
+            .from('questions')
+            .insert(questionsToInsert);
 
-      if (questionsError) throw questionsError;
+          if (questionsError) throw questionsError;
+      }
+      // ★★★ 修正箇所ここまで ★★★
 
-      alert('アンケートをインポートしました！');
+      alert(`${preview.length}件のアンケートをインポートしました！`);
       onImport();
       onClose();
     } catch (error) {
       console.error('Error importing survey:', error);
-      alert('アンケートのインポートに失敗しました。');
+      setError(`アンケートのインポートに失敗しました: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -224,6 +218,13 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
         </div>
 
         <div className="p-6">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <strong className="font-bold">エラー:</strong>
+              <span className="block sm:inline"> {error}</span>
+            </div>
+          )}
+
           {!preview ? (
             /* Input Form */
             <div>
@@ -234,28 +235,23 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
                   <div className="flex items-start">
                     <AlertCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-blue-800">
-                      <p className="font-semibold mb-2">マークダウン形式の例:</p>
+                      <p className="font-semibold mb-2">マークダウン形式の例 (複数インポート可):</p>
                       <pre className="text-xs bg-white p-2 rounded border overflow-x-auto">
-{`# アンケートタイトル
+{`# 最初のアンケートタイトル
 
-## アンケートの説明
+## 最初のアンケートの説明
 
-### 単一選択の質問
+### Q1. 単一選択の質問
 □ 選択肢1
 □ 選択肢2
-□ 選択肢3
 
-#### 複数選択の質問（複数選択可）
+# 2番目のアンケートタイトル
+
+## 2番目のアンケートの説明
+
+#### Q2. 複数選択の質問（複数選択可）
 □ 選択肢A
-□ 選択肢B
-□ 選択肢C
-
-$$$1-3 ランキング質問（3つまで選択）
-□ 項目1
-□ 項目2
-□ 項目3
-
-##### 自由記述の質問`}
+□ 選択肢B`}
                       </pre>
                     </div>
                   </div>
@@ -290,7 +286,7 @@ $$$1-3 ランキング質問（3つまで選択）
             /* Preview */
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-800">プレビュー</h3>
+                <h3 className="text-lg font-semibold text-gray-800">プレビュー ({preview.length}件のアンケート)</h3>
                 <button
                   onClick={() => setPreview(null)}
                   className="text-blue-600 hover:text-blue-700"
@@ -300,35 +296,15 @@ $$$1-3 ランキング質問（3つまで選択）
               </div>
 
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                <h4 className="text-xl font-bold text-gray-800 mb-2">{preview.title}</h4>
-                <p className="text-gray-600 mb-4">{preview.description}</p>
-                <p className="text-sm text-gray-500">{preview.questions.length}個の質問</p>
-              </div>
-
-              <div className="space-y-6 mb-6 max-h-64 overflow-y-auto">
-                {preview.questions.map((question: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <h5 className="font-semibold text-gray-800 mb-2">
-                      {index + 1}. {question.question_text}
-                    </h5>
-                    <div className="text-sm text-gray-600 mb-2">
-                      種類: {
-                        question.question_type === 'multiple_choice' ? '選択式' :
-                        question.question_type === 'text' ? '自由記述' :
-                        question.question_type === 'ranking' ? 'ランキング' : question.question_type
-                      }
-                      {question.is_multiple_select && ' (複数選択可)'}
-                      {question.max_selections && ` (最大${question.max_selections}個)`}
-                    </div>
-                    {question.options.length > 0 && (
-                      <ul className="list-disc list-inside text-sm text-gray-600">
-                        {question.options.map((option: string, optionIndex: number) => (
-                          <li key={optionIndex}>{option}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+                <p className="text-sm font-semibold text-gray-800 mb-2">インポートされるアンケート一覧:</p>
+                <ul className="list-disc list-inside text-sm text-gray-600 max-h-40 overflow-y-auto">
+                    {preview.map((p: ParsedSurvey, index: number) => (
+                        <li key={index}>
+                            <List className="w-3 h-3 inline-block mr-1"/>
+                            **{p.title}** ({p.questions.length}問)
+                        </li>
+                    ))}
+                </ul>
               </div>
 
               <div className="flex space-x-4">
@@ -348,7 +324,7 @@ $$$1-3 ランキング質問（3つまで選択）
                   ) : (
                     <Upload className="w-4 h-4 mr-2" />
                   )}
-                  インポート
+                  {preview.length}件をインポート
                 </button>
               </div>
             </div>
