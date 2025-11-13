@@ -132,8 +132,8 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
       if (parsed.length === 0) {
           setError("Markdownから有効なアンケートが抽出されませんでした。ヘッダー（#）と質問（###）を確認してください。");
       }
-    } catch (error) {
-      setError(`Markdown解析に失敗しました。形式を確認してください: ${error.message}`);
+    } catch (error: unknown) { // Explicitly type 'error' as unknown
+      setError(`Markdown解析に失敗しました。形式を確認してください: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -187,9 +187,9 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
       alert(`${preview.length}件のアンケートをインポートしました！`);
       onImport();
       onClose();
-    } catch (error) {
+    } catch (error: unknown) { // Explicitly type 'error' as unknown
       console.error('Error importing survey:', error);
-      setError(`アンケートのインポートに失敗しました: ${error.message}`);
+      setError(`アンケートのインポートに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setLoading(false);
     }
