@@ -551,7 +551,7 @@ export default function MonitorDashboard() {
         </div>
       </div>
     );
-  }}
+  }
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -1340,5 +1340,6 @@ export default function MonitorDashboard() {
       )}
 
     </div>
+  </div>
   );
 }
