@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
+import { Survey } from '@/types'; // Survey 型をインポート
 import { 
   Users, 
   BarChart3, 
@@ -12,7 +13,7 @@ import {
   LogOut, 
   User as UserIcon,
   Shield,
-  Database, // Database アイコンを維持
+  Database,
   Activity,
   TrendingUp,
   AlertCircle,
@@ -22,7 +23,8 @@ import {
   MessageCircle,
   Menu, // ハンバーガーメニュー
   X, // 閉じるボタン
-  FileText
+  FileText,
+  ClipboardList
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
@@ -32,9 +34,92 @@ import { LineLinkButton } from '@/components/LineLinkButton';
 
 // ★★★ 追加: インポートモーダルをインポート ★★★
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
-import { ImportCsvModal } from '@/components/ImportCsvModal'; // ImportCsvModal をインポート
+import { ImportCsvModal } from '@/components/ImportCsvModal';
 
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'chat_monitoring' | 'point_exchange';
+// =========================================================================
+// 新しいコンポーネント: AdminSurveyManager (このファイル内で定義)
+// =========================================================================
+
+interface AdminSurveyManagerProps {
+    surveys: Survey[];
+    fetchSurveys: () => void;
+}
+
+const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchSurveys }) => {
+    
+    const handleStatusChange = async (surveyId: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from('surveys')
+                .update({ status: newStatus })
+                .eq('id', surveyId);
+            
+            if (error) throw error;
+            fetchSurveys();
+        } catch (error) {
+            console.error('Error updating survey status:', error);
+            alert('ステータスの更新に失敗しました。');
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'draft': return 'bg-gray-100 text-gray-800';
+            case 'active': return 'bg-green-100 text-green-800';
+            case 'completed': return 'bg-blue-100 text-blue-800';
+            case 'rejected': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <h3 className="text-xl font-bold text-gray-800">全アンケート一覧 ({surveys.length}件)</h3>
+            
+            {surveys.length === 0 ? (
+                <p className="text-gray-600">現在、管理対象のアンケートはありません。</p>
+            ) : (
+                surveys.map(survey => (
+                    <div key={survey.id} className="border p-4 rounded-lg flex justify-between items-center bg-white">
+                        <div>
+                            <p className="font-semibold">{survey.title}</p>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(survey.status)}`}>
+                                {survey.status}
+                            </span>
+                        </div>
+                        <div className="flex space-x-2">
+                            <button className="text-blue-500 hover:text-blue-700">結果を見る</button>
+                            {survey.status === 'draft' && (
+                                <button 
+                                    onClick={() => handleStatusChange(survey.id, 'active')} 
+                                    className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
+                                >
+                                    公開
+                                </button>
+                            )}
+                            {survey.status === 'active' && (
+                                <button 
+                                    onClick={() => handleStatusChange(survey.id, 'completed')} 
+                                    className="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600"
+                                >
+                                    終了
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                ))
+            )}
+        </div>
+    );
+}
+
+// =========================================================================
+// AdminDashboard コンポーネント本体
+// =========================================================================
+
+// ★★★ 修正: タブの型に 'survey_manager' を追加 ★★★
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange';
+
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
@@ -46,11 +131,30 @@ export function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<AdminDashboardTab>('overview');
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // メニュー開閉状態
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [showLineLinkModal, setShowLineLinkModal] = useState(false); 
-  // ★★★ 追加: 2つのインポートモーダル制御ステート ★★★
   const [showImportSurveyModal, setShowImportSurveyModal] = useState(false);
   const [showImportCsvModal, setShowImportCsvModal] = useState(false);
+
+  // ★★★ 追加: アンケートデータと取得関数 ★★★
+  const [allSurveys, setAllSurveys] = useState<Survey[]>([]);
+
+  const fetchAllSurveys = async () => {
+    if (!user?.id) return;
+    try {
+        // 管理者として、すべてのアンケート（全ステータス）を取得
+        const { data, error } = await supabase
+            .from('surveys')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setAllSurveys(data || []);
+    } catch (error) {
+        console.error('Error fetching all surveys:', error);
+    }
+  };
+  // ★★★ 追加ここまで ★★★
 
 
   // チャット監視用ステート
@@ -63,6 +167,7 @@ export function AdminDashboard() {
   useEffect(() => {
     if (user) {
       fetchStats();
+      fetchAllSurveys(); // ★★★ アンケートデータを初期ロード ★★★
     }
   }, [user]);
 
@@ -312,6 +417,18 @@ export function AdminDashboard() {
               >
                 就職情報管理
               </button>
+              {/* ★★★ 修正箇所: 新しいタブを追加 ★★★ */}
+              <button
+                onClick={() => setActiveTab('survey_manager')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'survey_manager'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                アンケート管理
+              </button>
+              {/* ★★★ 修正箇所ここまで ★★★ */}
               <button
                 onClick={() => setActiveTab('chat_monitoring')}
                 className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
@@ -341,6 +458,11 @@ export function AdminDashboard() {
             {activeTab === 'job_info_manager' && (
               <AdminJobInfoManager onDataChange={fetchStats} />
             )}
+            {/* ★★★ 修正箇所: 新しいタブのコンテンツ ★★★ */}
+            {activeTab === 'survey_manager' && (
+                <AdminSurveyManager surveys={allSurveys} fetchSurveys={fetchAllSurveys} />
+            )}
+            {/* ★★★ 修正箇所ここまで ★★★ */}
             {activeTab === 'chat_monitoring' && renderChatMonitoringTab()}
             {activeTab === 'point_exchange' && ( // ★★★ 追加: ポイント交換管理をレンダリング ★★★
                 <PointExchangeManager />
@@ -366,13 +488,13 @@ export function AdminDashboard() {
       {showImportSurveyModal && (
         <ImportSurveyModal
           onClose={() => setShowImportSurveyModal(false)}
-          onImport={fetchStats} // 統計情報や企業情報一覧の再取得が必要であればこちらを呼び出す
+          onImport={fetchAllSurveys} // アンケートリストの再取得
         />
       )}
       {showImportCsvModal && (
         <ImportCsvModal
           onClose={() => setShowImportCsvModal(false)}
-          onImport={fetchStats} // 企業情報管理画面の内容を更新する関数を呼び出す
+          onImport={fetchStats} // 企業情報管理画面の内容を更新する関数を呼び出す (JobInfoManagerの再取得が理想だが、ここでは stats を更新)
         />
       )}
 
