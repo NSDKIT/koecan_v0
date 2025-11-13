@@ -138,7 +138,19 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
   };
 
   const handleImport = async () => {
-    if (!preview || !user) return;
+    // ★★★ 修正箇所: デバッグログを追加 ★★★
+    console.log('HANDLE IMPORT CHECK:', { 
+        previewExists: !!preview, 
+        userExists: !!user,
+        previewQuestionsCount: preview ? preview.questions?.length : 0
+    });
+    
+    if (!preview || !user) {
+        if (!preview) console.error('Import aborted: Preview data is missing.');
+        if (!user) console.error('Import aborted: User is not logged in.');
+        return;
+    }
+    // ★★★ 修正箇所ここまで ★★★
 
     setLoading(true);
     try {
