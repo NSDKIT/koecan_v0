@@ -24,12 +24,14 @@ import {
   Menu, // ハンバーガーメニュー
   X, // 閉じるボタン
   FileText,
-  ClipboardList
+  ClipboardList,
+  Edit, // 追加: 編集アイコン
+  Trash2 // 追加: 削除アイコン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
 import { ChatModal } from '@/components/ChatModal';
-import { PointExchangeManager } from '@/components/PointExchangeManager';
+import { PointExchangeManager } from '@/components/PointExchangeManager'; 
 import { LineLinkButton } from '@/components/LineLinkButton'; 
 
 // ★★★ 追加: インポートモーダルをインポート ★★★
@@ -62,6 +64,34 @@ const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchS
         }
     };
 
+    // ★★★ 追加: アンケート削除ハンドラ ★★★
+    const handleDeleteSurvey = async (surveyId: string) => {
+        if (!confirm('本当にこのアンケートを削除しますか？全ての関連データも削除されます。')) {
+            return;
+        }
+        try {
+            const { error } = await supabase
+                .from('surveys')
+                .delete()
+                .eq('id', surveyId);
+            
+            if (error) throw error;
+            alert('アンケートを削除しました。');
+            fetchSurveys(); // リストを再取得
+        } catch (error) {
+            console.error('Error deleting survey:', error);
+            alert('アンケートの削除に失敗しました。');
+        }
+    };
+    // ★★★ ここまで追加 ★★★
+
+    // ★★★ 追加: アンケート編集ハンドラ (ダミー) ★★★
+    const handleEditSurvey = (surveyId: string) => {
+        alert(`アンケートID: ${surveyId} の編集機能を実装する必要があります。`);
+        // ここに編集モーダルを開くロジックなどを追加
+    };
+    // ★★★ ここまで追加 ★★★
+
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'draft': return 'bg-gray-100 text-gray-800';
@@ -87,8 +117,26 @@ const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchS
                                 {survey.status}
                             </span>
                         </div>
-                        <div className="flex space-x-2">
-                            <button className="text-blue-500 hover:text-blue-700">結果を見る</button>
+                        <div className="flex space-x-2 items-center">
+                            {/* ★★★ 修正箇所: 編集ボタンを追加 ★★★ */}
+                            <button 
+                                onClick={() => handleEditSurvey(survey.id)} 
+                                className="text-blue-500 hover:text-blue-700 p-1 rounded"
+                                title="編集"
+                            >
+                                <Edit className="w-4 h-4" />
+                            </button>
+                            {/* ★★★ 修正箇所: 削除ボタンを追加 ★★★ */}
+                            <button 
+                                onClick={() => handleDeleteSurvey(survey.id)} 
+                                className="text-red-500 hover:text-red-700 p-1 rounded"
+                                title="削除"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                            {/* 「結果を見る」は一旦残す */}
+                            <button className="text-gray-500 hover:text-gray-700 p-1 rounded">結果を見る</button>
+                            
                             {survey.status === 'draft' && (
                                 <button 
                                     onClick={() => handleStatusChange(survey.id, 'active')} 
