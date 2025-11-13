@@ -147,7 +147,8 @@ export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps)
         .from('surveys')
         .insert([
           {
-            client_id: user.id,
+            // ★★★ 修正箇所: ログインユーザーのIDを client_id に設定 ★★★
+            client_id: user.id, 
             title: preview.title,
             description: preview.description,
             points_reward: 10,
