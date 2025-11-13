@@ -20,23 +20,28 @@ interface ParsedSurvey {
 }
 
 
-// koecan_v0-main/components/ImportSurveyModal.tsx
-
-// ... (既存のimportやinterface定義はそのまま) ...
-
 const parseMarkdown = (text: string): ParsedSurvey[] => {
-    console.log("parseMarkdown: Input text:", text); // 追加
-    const rawDocuments = text.trim().split(/(?=^#)/gm).filter(doc => doc.trim());
-    console.log("parseMarkdown: Raw documents after split and filter:", rawDocuments); // 追加
+    console.log("parseMarkdown: Input text:", text);
+    
+    // 修正された分割ロジック:
+    // 各アンケートのタイトル (例: "# 最初のアンケートタイトル") を基準にドキュメントを分割します。
+    // `# ` の前に改行があること、またはファイルの先頭であることを条件にします。
+    const rawDocuments = text.trim().split(/(?:\r?\n|^)#\s+/g).filter(doc => doc.trim());
+    
+    console.log("parseMarkdown: Raw documents after split and filter (NEW LOGIC):", rawDocuments);
     const finalSurveys: ParsedSurvey[] = [];
 
     rawDocuments.forEach((docText, docIndex) => {
-        console.log(`--- Processing Document ${docIndex + 1} ---`); // 追加
-        console.log("Doc text:", docText); // 追加
-        const lines = docText.trim().split('\n').filter(line => line.trim());
-        console.log("Lines after splitting and trimming:", lines); // 追加
+        // IMPORTANT: 修正された分割ロジックでは、`# ` 自体は分割後の文字列には含まれません。
+        // そのため、docText の先頭に `# ` を再付与して、以下の解析ロジックが機能するようにします。
+        const fullDocText = `# ${docText}`; // ここが重要な修正点です。
+        const lines = fullDocText.trim().split('\n').filter(line => line.trim());
+        
+        console.log(`--- Processing Document ${docIndex + 1} ---`);
+        console.log("Full Doc text (after re-adding #):", fullDocText);
+        console.log("Lines after splitting and trimming:", lines);
         if (lines.length === 0) {
-            console.log("Document has no valid lines, skipping."); // 追加
+            console.log("Document has no valid lines, skipping.");
             return;
         }
 
@@ -47,19 +52,19 @@ const parseMarkdown = (text: string): ParsedSurvey[] => {
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            console.log(`Line ${i + 1}: "${line}"`); // 追加
+            console.log(`Line ${i + 1}: "${line}"`);
 
             // Title (# heading) - 最初の行が # で始まることを期待
             if (line.startsWith('# ') && !title) {
                 title = line.substring(2).trim();
-                console.log("  -> Title found:", title); // 追加
+                console.log("  -> Title found:", title);
                 continue;
             }
 
             // Description (## heading) - 2番目のトップレベル
             if (line.startsWith('## ') && !description) {
                 description = line.substring(3).trim();
-                console.log("  -> Description found:", description); // 追加
+                console.log("  -> Description found:", description);
                 continue;
             }
 
@@ -73,7 +78,7 @@ const parseMarkdown = (text: string): ParsedSurvey[] => {
                 // 既存の質問を保存
                 if (currentQuestion) {
                     questions.push(currentQuestion);
-                    console.log("  -> Pushing previous question:", currentQuestion.question_text); // 追加
+                    console.log("  -> Pushing previous question:", currentQuestion.question_text);
                 }
                 
                 const questionText = line.substring(line.indexOf(' ') + 1).trim();
@@ -93,7 +98,7 @@ const parseMarkdown = (text: string): ParsedSurvey[] => {
                         is_multiple_select: true,
                         max_selections: maxSelections
                     };
-                    console.log("  -> Ranking Question found:", currentQuestion); // 追加
+                    console.log("  -> Ranking Question found:", currentQuestion);
                 } else {
                     currentQuestion = {
                         question_text: questionText,
@@ -104,7 +109,7 @@ const parseMarkdown = (text: string): ParsedSurvey[] => {
                         is_multiple_select: isMulti,
                         max_selections: null
                     };
-                    console.log("  -> Regular Question found:", currentQuestion); // 追加
+                    console.log("  -> Regular Question found:", currentQuestion);
                 }
                 continue;
             }
@@ -112,31 +117,32 @@ const parseMarkdown = (text: string): ParsedSurvey[] => {
             // Options (□ checkbox)
             if (line.startsWith('□ ') && currentQuestion) {
                 currentQuestion.options.push(line.substring(2).trim());
-                console.log("  -> Option added:", line.substring(2).trim()); // 追加
+                console.log("  -> Option added:", line.substring(2).trim());
                 continue;
             }
-            console.log("  -> Line not recognized as title, description, question, or option."); // 追加
+            console.log("  -> Line not recognized as title, description, question, or option.");
         }
 
         // 最後の質問を保存
         if (currentQuestion) {
             questions.push(currentQuestion);
-            console.log("--- Pushing final question for document:", currentQuestion.question_text); // 追加
+            console.log("--- Pushing final question for document:", currentQuestion.question_text);
         }
 
         // アンケートとして有効な場合のみ追加
-        if (title && questions.length > 0) {
+        if (title && questions.length > 0) { // description は必須ではないので条件から削除
             finalSurveys.push({ title, description, questions });
-            console.log(`--- Document ${docIndex + 1} successfully parsed as a survey! ---`); // 追加
-            console.log("Final Survey Object:", { title, description, questions }); // 追加
+            console.log(`--- Document ${docIndex + 1} successfully parsed as a survey! ---`);
+            console.log("Final Survey Object:", { title, description, questions });
         } else {
-            console.log(`--- Document ${docIndex + 1} NOT parsed as a valid survey (title: ${title || 'N/A'}, questions.length: ${questions.length}) ---`); // 追加
+            console.log(`--- Document ${docIndex + 1} NOT parsed as a valid survey (title: ${title || 'N/A'}, description: ${description || 'N/A'}, questions.length: ${questions.length}) ---`);
         }
     });
-    console.log("parseMarkdown: Final surveys count:", finalSurveys.length); // 追加
-    console.log("parseMarkdown: Returning:", finalSurveys); // 追加
+    console.log("parseMarkdown: Final surveys count:", finalSurveys.length);
+    console.log("parseMarkdown: Returning:", finalSurveys);
     return finalSurveys;
 };
+
 
 export function ImportSurveyModal({ onClose, onImport }: ImportSurveyModalProps) {
   const { user } = useAuth();
