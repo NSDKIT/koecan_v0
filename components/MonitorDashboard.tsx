@@ -494,41 +494,6 @@ export default function MonitorDashboard() {
                       </label>
                     </div>
                   )}
-
-                  {question.question_type === 'ranking' && (
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 mb-3">
-                        {question.max_selections ? `最大${question.max_selections}個まで選択` : '順位をつけて選択'}
-                      </p>
-                      {question.options?.map((option, optionIndex) => (
-                        <label key={optionIndex} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            name={`question_${question.id}`}
-                            value={option}
-                            onChange={(e) => {
-                              const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
-                              const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : [];
-                              
-                              if (e.target.checked) {
-                                // 最大選択数のチェック
-                                if (question.max_selections && currentAnswersArray.length >= question.max_selections) {
-                                  e.target.checked = false;
-                                  alert(`最大${question.max_selections}個まで選択できます`);
-                                  return;
-                                }
-                                handleAnswerChange(question.id, [...currentAnswersArray, option].join(','));
-                              } else {
-                                handleAnswerChange(question.id, currentAnswersArray.filter(a => a !== option).join(','));
-                              }
-                            }}
-                            className="mr-2"
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -843,7 +808,7 @@ export default function MonitorDashboard() {
                         />
                         
                         <div className="absolute inset-0 flex items-center justify-center">
-                            
+                            <a
                                 href={C8_LINE_ADD_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -1340,6 +1305,5 @@ export default function MonitorDashboard() {
       )}
 
     </div>
-  </div>
   );
 }
