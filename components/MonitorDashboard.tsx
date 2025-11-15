@@ -3,7 +3,6 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth'; 
 import { supabase } from '@/config/supabase';
 import { 
   Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse 
@@ -43,6 +42,7 @@ import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
 import { MatchingFeature } from '@/components/MatchingFeature';
+import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
@@ -130,6 +130,7 @@ export default function MonitorDashboard() {
               age: 0, 
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
+              // 他のプロパティはオプショナルなので含めなくてもOK
           };
           setProfile(defaultProfile);
           console.log("MonitorDashboard: fetchProfile 完了。ポイント: 0 (プロファイル未作成)");
@@ -563,7 +564,7 @@ export default function MonitorDashboard() {
           </div>
         </div>
       </div>
-      </React.Fragment> {/* ★★★ Fragmentの閉じタグを追加 ★★★ */}
+      </React.Fragment> {/* Fragmentの閉じタグを追加 */}
     );
   }
 
@@ -669,7 +670,7 @@ export default function MonitorDashboard() {
                 </div>
                 <div>
                   <p className="text-gray-600 text-lg">獲得ポイント</p>
-                  <p className="text-5xl font-bold text-orange-600"><span>{profile?.points || 0}</span></p> {/* ★★★ spanで囲むように修正 ★★★ */}
+                  <p className="text-5xl font-bold text-orange-600"><span>{profile?.points || 0}</span></p>
                 </div>
               </div>
             )}
@@ -811,7 +812,7 @@ export default function MonitorDashboard() {
                                 alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 loading="lazy"
-                                referrerPolicy="no-referrer"
+                                referrerpolicy="no-referrer" // ★★★ referrerpolicy を使用 ★★★
                                 crossOrigin="anonymous"
                                 onError={(e) => {
                                   console.error(`画像読み込みエラー: ${ad.company_name}`, ad.image_url);
@@ -946,386 +947,6 @@ export default function MonitorDashboard() {
           />
         )}
 
-        {selectedAdvertisement && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              
-              <div className="relative">
-                <button
-                  onClick={() => setSelectedAdvertisement(null)}
-                  className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
-                {/* ヘッダー - 白背景にオレンジテキスト */}
-                <div className="bg-white rounded-t-3xl p-8 pb-6 border-b-2 border-orange-500">
-                  <h2 className="text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
-                </div>
-
-                {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                  <div className="px-8 pt-6 relative z-10">
-                    <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
-                      <img
-                        src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
-                        alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
-                        className="w-auto h-full object-cover mx-auto"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-8">
-                  {displayValue(selectedAdvertisement.company_vision) && (
-                    <div className="mb-8">
-                      <div className="bg-orange-50 rounded-2xl p-6 border-l-4 border-orange-500">
-                        <div className="flex items-start mb-2">
-                          <Sparkles className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-1" />
-                          <h3 className="text-lg font-bold text-orange-600">目指す未来</h3>
-                        </div>
-                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{displayValue(selectedAdvertisement.company_vision)}</p>
-                      </div>
-                    </div>
-                  )}
-                
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <Building className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">企業概要</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                      <table className="w-full">
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">代表者名</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.representative_name)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">設立年</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.establishment_year)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（本社）</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.headquarters_location)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（支社）</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.branch_office_location)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">従業員数</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_count)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男女比</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_gender_ratio)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">平均年齢</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_avg_age)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">業界</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.industries)}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシポイント</td>
-                            <td className="px-6 py-4 text-orange-800 font-medium">
-                              {[
-                                displayValue(selectedAdvertisement.highlight_point_1),
-                                displayValue(selectedAdvertisement.highlight_point_2),
-                                displayValue(selectedAdvertisement.highlight_point_3)
-                              ].filter(Boolean).join(' / ') || ''}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">募集・待遇情報</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                      <table className="w-full">
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">初任給</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.starting_salary)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">3年定着率</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.three_year_retention_rate)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">20代平均年収</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_20s)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">30代平均年収</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_30s)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">キャリアパス</td>
-                            <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.promotion_model_case)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">募集職種とその人数</td>
-                            <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_roles_count)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">選考フロー</td>
-                            <td className="px-6 py-4 text-gray-700">
-                              {selectedAdvertisement.selection_flow_steps && selectedAdvertisement.selection_flow_steps.length > 0 
-                                ? selectedAdvertisement.selection_flow_steps.join(' → ') 
-                                : ''}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">必須資格・免許</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.required_qualifications)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <Sparkles className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">働き方・福利厚生</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                      <table className="w-full">
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">勤務時間</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.working_hours)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">休日</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.holidays)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">年間休日数</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.annual_holidays)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">リモートワーク</td>
-                            <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.remote_work_available)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">副業</td>
-                            <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.side_job_allowed)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">住宅手当</td>
-                            <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">女性育休取得率</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.female_parental_leave_rate)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男性育休取得率</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.male_parental_leave_rate)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">異動/転勤</td>
-                            <td className="px-6 py-4 text-gray-700">
-                              {formatBoolean(selectedAdvertisement.transfer_existence)}
-                              {displayValue(selectedAdvertisement.transfer_frequency) && ` (${displayValue(selectedAdvertisement.transfer_frequency)})`}
-                            </td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">社内イベント頻度</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internal_event_frequency)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">健康経営の取り組み</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.health_management_practices)}</td>
-                          </tr>
-                          <tr>
-                            <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシ福利厚生</td>
-                            <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.must_tell_welfare)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <Users className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">採用情報</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                      <table className="w-full">
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">採用担当部署（担当者）</td>
-                            <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_department)}</td>
-                          </tr>
-                          <tr className={selectedAdvertisement.recruitment_info_page_url ? "border-b border-gray-200" : ""}>
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用に関する問い合わせ先</td>
-                            <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_contact)}</td>
-                          </tr>
-                          {selectedAdvertisement.recruitment_info_page_url && (
-                            <tr>
-                              <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用情報ページ</td>
-                              <td className="px-6 py-4">
-                                <a 
-                                  href={selectedAdvertisement.recruitment_info_page_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
-                                >
-                                  採用情報ページを見る
-                                  <ExternalLink className="w-4 h-4 ml-2" />
-                                </a>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="mb-8">
-                    <div className="flex items-center mb-4">
-                      <Target className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">インターンシップ情報</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                      <table className="w-full">
-                        <tbody>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">実施予定</td>
-                            <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施日程</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_schedule)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">定員</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_capacity)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">対象学生</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_target_students)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施場所</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_locations)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">内容</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_content_types)}</td>
-                          </tr>
-                          <tr className="border-b border-gray-200">
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">報酬</td>
-                            <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_paid_unpaid)}</td>
-                          </tr>
-                          <tr className={selectedAdvertisement.internship_application_url ? "border-b border-gray-200" : ""}>
-                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">交通費・宿泊費</td>
-                            <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</td>
-                          </tr>
-                          {selectedAdvertisement.internship_application_url && (
-                            <tr>
-                              <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">申込</td>
-                              <td className="px-6 py-4">
-                                <a 
-                                  href={selectedAdvertisement.internship_application_url} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
-                                >
-                                  インターンシップに申し込む
-                                  <ExternalLink className="w-4 h-4 ml-2" />
-                                </a>
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <div className="flex items-center mb-4">
-                      <MessageCircle className="w-6 h-6 text-orange-600 mr-2" />
-                      <h3 className="text-2xl font-bold text-gray-800">SNS・外部リンク</h3>
-                    </div>
-                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                      <div className="flex flex-wrap gap-3">
-                        {selectedAdvertisement.official_website_url && (
-                          <a 
-                            href={selectedAdvertisement.official_website_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-5 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
-                          >
-                            🌐 公式ホームページ
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        )}
-                        {selectedAdvertisement.official_line_url && (
-                          <a 
-                            href={selectedAdvertisement.official_line_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-5 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
-                          >
-                            💬 公式LINE
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        )}
-                        {selectedAdvertisement.instagram_url && (
-                          <a 
-                            href={selectedAdvertisement.instagram_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
-                          >
-                            📸 Instagram
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        )}
-                        {selectedAdvertisement.tiktok_url && (
-                          <a 
-                            href={selectedAdvertisement.tiktok_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-5 py-3 bg-gray-800 hover:bg-black text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
-                          >
-                            🎵 TikTok
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </a>
-                        )}
-                        {displayValue(selectedAdvertisement.other_sns_sites) && (
-                          <div className="w-full mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
-                            <p className="font-semibold text-gray-700 mb-2 flex items-center">
-                              🔗 その他のリンク
-                            </p>
-                            <p className="text-sm text-gray-600 whitespace-pre-wrap">{displayValue(selectedAdvertisement.other_sns_sites)}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-          </div>
-        )}
-
         {showPointExchangeModal && profile && (
           <PointExchangeModal
             currentPoints={profile.points}
@@ -1353,7 +974,7 @@ export default function MonitorDashboard() {
                 </div>
             </div>
         )}
-      </React.Fragment> {/* ★★★ Fragmentの閉じタグを追加 ★★★ */}
+      </React.Fragment> {/* Fragmentの閉じタグを追加 */}
     </React.Fragment>
   );
 }
