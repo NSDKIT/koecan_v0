@@ -13,7 +13,7 @@ interface AuthUser extends SupabaseUser {
 export function useAuth() {
   const supabase = useSupabase();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // 初期ロード状態は true のまま
   const [error, setError] = useState<string | null>(null);
 
   const mountedRef = useRef(true);
@@ -39,8 +39,8 @@ export function useAuth() {
   const performSignOut = async () => {
     if (!supabase) return false;
     try {
-      await supabase.auth.signOut();
-      clearLocalSupabaseCache();
+      await supabase.auth.signOut(); 
+      clearLocalSupabaseCache(); 
       if (mountedRef.current) {
         setUser(null);
         setError(null);
@@ -54,45 +54,23 @@ export function useAuth() {
     }
   }
 
-
-  // ヘルパー関数: ユーザーデータとプロファイルを取得
-  const fetchUserData = async (client: SupabaseClient, userId: string): Promise<AuthUser | null> => {
-    console.log('fetchUserData: START for user ID:', userId);
-    try {
-      const { data: userProfile, error: profileError } = await client
-        .from('users')
-        .select('role, name')
-        .eq('id', userId)
-        .single();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('fetchUserData: ERROR fetching user profile (Non-PGRST116):', profileError.message);
-        throw profileError;
-      }
-      
-      const { data: { user: authUser }, error: authUserError } = await client.auth.getUser();
-      if (authUserError) throw authUserError;
-
-      if (!authUser) return null;
-      
-      console.log('fetchUserData: END successfully.');
-      return {
-        ...authUser,
-        role: userProfile?.role,
-        name: userProfile?.name,
-      } as AuthUser;
-    } catch (err) {
-      console.error('fetchUserData: CRITICAL ERROR during user data retrieval:', err);
-      if (mountedRef.current) {
-        setError(err instanceof Error ? err.message : 'ユーザープロファイル取得中に致命的なエラーが発生しました');
-      }
-      return null;
-    }
-  };
-
-  // ★★★ 修正箇所: getInitialSession を useCallback でラップし、useAuth の外から呼び出せるようにする ★★★
+  // ★★★ 修正箇所: getInitialSession を useCallback でラップし、useEffect から切り離す ★★★
   const getInitialSession = useCallback(async () => {
       console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
+
+      // 既に認証が完了しているか、ローディング中でなければ何もしない
+      if (user !== null || !mountedRef.current) {
+          console.log('getInitialSession: Already authenticated or component unmounted. Skipping.');
+          setLoading(false); // 念のためローディングを false に
+          return;
+      }
+      if (loading) {
+          console.log('getInitialSession: Already loading. Skipping redundant call.');
+          return;
+      }
+      
+      setLoading(true); // 認証開始前にローディングを true に設定
+      setError(null); // エラーもクリア
 
       if (!supabase) {
         if (mountedRef.current) {
@@ -108,10 +86,9 @@ export function useAuth() {
         
         if (sessionError) {
           console.error('getInitialSession: ERROR getting session:', sessionError.message);
-          
           clearLocalSupabaseCache(); 
           if (mountedRef.current) {
-            setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしましたので、リロードしてください。`);
+            setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
           }
           return; 
         }
@@ -140,14 +117,14 @@ export function useAuth() {
         }
       }
       console.log('getInitialSession: END.');
-  }, [supabase]); // 依存配列に supabase を追加
+  }, [supabase, user, loading]); // user, loading を依存配列に追加して、getInitialSession の実行が重複しないようにする
 
 
-  // ★★★ 修正箇所: getInitialSession を useEffect の外に出したため、この useEffect は onAuthStateChange のリスナー設定に専念 ★★★
+  // ★★★ 修正箇所: onAuthStateChange のリスナー設定のみを行う useEffect ★★★
   useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
     if (supabase) { 
-        console.log('useEffect: Setting up onAuthStateChange listener.');
+        console.log('useEffect (onAuthStateChange): Setting up listener.');
         const { data: authListener } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
               if (!mountedRef.current) return;
@@ -159,6 +136,7 @@ export function useAuth() {
                 } else {
                   if (mountedRef.current) setUser(null);
                 }
+                if (mountedRef.current) setLoading(false); // 認証状態変化時にはローディングを解除
               } catch(err) {
                   console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
                   if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
@@ -168,19 +146,18 @@ export function useAuth() {
           );
           subscription = authListener.subscription;
     } else {
-        console.log('useEffect: Supabase client is null, cannot set up onAuthStateChange listener.');
+        console.log('useEffect (onAuthStateChange): Supabase client is null, cannot set up listener.');
     }
-
-    console.log('--- useAuth useEffect END ---');
 
     return () => {
       if (subscription) {
-        console.log('useEffect: Unsubscribing from onAuthStateChange.');
+        console.log('useEffect (onAuthStateChange): Unsubscribing from listener.');
         subscription.unsubscribe();
       }
-      console.log('Cleanup complete.');
+      console.log('useEffect (onAuthStateChange): Cleanup complete.');
     };
   }, [supabase]); 
+  // ★★★ 修正箇所ここまで ★★★
 
   // 公開する signOut 関数はそのまま維持
   const signOut = async () => {
@@ -193,7 +170,7 @@ export function useAuth() {
         setUser(null);
         setError(null);
       }
-      clearLocalSupabaseCache(); // サインアウト時にもローカルキャッシュをクリア
+      clearLocalSupabaseCache(); 
     } catch (err) {
       if (mountedRef.current) setError(err instanceof Error ? err.message : 'Sign out error');
     } finally {
