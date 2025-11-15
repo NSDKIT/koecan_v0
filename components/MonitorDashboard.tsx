@@ -3,9 +3,11 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; 
 import { supabase } from '@/config/supabase';
-import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
+import { 
+  Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse 
+} from '@/types'; 
 import { 
   Star, 
   Gift, 
@@ -44,15 +46,17 @@ import { MatchingFeature } from '@/components/MatchingFeature';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
-const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
-const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
+const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // TODO: 実際のサポートユーザーIDに置き換える
+const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB'; // TODO: 実際のLINE追加URLに置き換える
 
+// boolean値を 'あり'/'なし' で表示するヘルパー関数
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
     if (val === true) return yes;
     if (val === false) return no;
     return '';
 };
 
+// nullやundefinedの値を空文字列として表示するヘルパー関数
 const displayValue = (value: any): string => {
     if (value === null || value === undefined || value === 'N/A') return '';
     if (Array.isArray(value)) {
@@ -61,14 +65,16 @@ const displayValue = (value: any): string => {
     return String(value);
 };
 
+// 画像URLを安全に最適化するヘルパー関数
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     
+    // http/httpsで始まるURLはwsrv.nlで最適化を試みる
     if (url.startsWith('http://') || url.startsWith('https://')) {
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=800&output=webp&q=85`;
     }
     
-    return url;
+    return url; // それ以外のURLはそのまま返す（Supabase Storageのパスなど）
 };
 
 export default function MonitorDashboard() {
@@ -92,69 +98,76 @@ export default function MonitorDashboard() {
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
+  const [error, setError] = useState<string | null>(null); // エラー表示用state
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchSurveysAndResponses(); 
-      fetchAdvertisements();
+  // ★★★ 修正された fetchProfile 関数 ★★★
+  const fetchProfile = async (): Promise<MonitorProfile | null> => {
+    console.log("MonitorDashboard: fetchProfile 開始。");
+    if (!user?.id) {
+        console.error("MonitorDashboard: fetchProfile エラー - ユーザーIDがありません。");
+        // ユーザーIDがない場合はプロフィールをクリアし、エラーを設定
+        setProfile(null); 
+        setError("ユーザー情報が見つかりません。再ログインしてください。");
+        return null; // 早期リターン
     }
-  }, [user]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
-        return; 
-      }
-      const menuElement = document.getElementById('hamburger-menu-dropdown');
-      if (menuElement && !menuElement.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []); 
-
-  const fetchProfile = async () => {
-    console.log("MonitorDashboard: fetchProfile started.");
-    if (!user?.id) throw new Error("User ID is missing.");
-    
     try {
+      // 1. monitor_profiles テーブルからユーザーの基本プロフィールデータを取得
       const { data: profileData, error: profileError } = await supabase
         .from('monitor_profiles')
         .select('*') 
-        .eq('user_id', user.id)
+        .eq('user_id', user.id) 
         .single();
 
-      if (profileError) throw profileError;
+      // ユーザーのプロフィールがまだ作成されていない場合のハンドリング
+      if (profileError && profileError.code === 'PGRST116') { // PGRST116 = 行が見つからない
+          console.warn("モニタープロファイルが見つかりません。デフォルト値で初期化します。");
+          // プロファイルがなければ、一時的なデフォルトプロファイルを作成し、ポイントは0とする
+          const defaultProfile: MonitorProfile = {
+              id: user.id, // Supabase AuthのIDを仮のプロファイルIDとして使用
+              user_id: user.id,
+              points: 0,
+              age: 0, 
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              monitor_id: user.id
+          };
+          setProfile(defaultProfile);
+          console.log("MonitorDashboard: fetchProfile 完了。ポイント: 0 (プロファイル未作成)");
+          return defaultProfile; // 処理を終了し、後続のポイントビュー取得は行わない
+      } else if (profileError) {
+          throw profileError; // その他のデータベースエラーはスロー
+      }
 
-      const { data: pointsData, error: pointsError } = await supabase
-        .from('monitor_points_view') 
+      // 2. monitor_points_view からポイント残高を取得 (ビューが正しく定義されている前提)
+      const { data: pointsData, error: pointsViewError } = await supabase
+        .from('monitor_points_view')
         .select('points_balance')
         .eq('user_id', user.id)
         .single();
       
-      if (pointsError && pointsError.code !== 'PGRST116') { 
-         throw pointsError;
+      // ビューの取得でエラーが発生しても、クラッシュせず、ポイントを0として扱う
+      if (pointsViewError && pointsViewError.code !== 'PGRST116') {
+         console.warn('monitor_points_view の取得中にエラーが発生しました。ポイントは0として扱います:', pointsViewError.message);
       }
       
-      const pointsBalance = pointsData ? pointsData.points_balance : 0;
-      
+      // pointsDataがnullまたはpoints_balanceがnullの場合も0にフォールバック
+      const pointsBalance = pointsData ? (pointsData.points_balance || 0) : 0;
+
+      // 3. 取得したプロフィールデータとポイント残高を結合
       const combinedProfile: MonitorProfile = {
-          ...profileData, 
-          points: pointsBalance, 
-          monitor_id: profileData.id 
-      } as MonitorProfile;
+          ...profileData!, // profileDataはここで存在することが保証されている
+          points: pointsBalance, // monitor_points_view からの値をセット
+          monitor_id: profileData!.id // profileDataのidをmonitor_idとして使用
+      };
 
-      setProfile(combinedProfile);
-
-      console.log("MonitorDashboard: fetchProfile completed. Points: " + pointsBalance);
-      return combinedProfile; 
+      setProfile(combinedProfile); // 更新されたプロフィールをstateにセット
+      console.log("MonitorDashboard: fetchProfile 完了。ポイント: " + pointsBalance);
+      return combinedProfile; // 呼び出し元のために結合されたプロフィールを返します
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
+      setError(error instanceof Error ? error.message : 'プロフィールの読み込みに失敗しました。');
+      // エラー発生時も、最低限のプロフィール情報を設定してUIがフリーズしないようにします。
       setProfile({ 
           id: user.id, 
           user_id: user.id,
@@ -164,7 +177,7 @@ export default function MonitorDashboard() {
           updated_at: new Date().toISOString(),
           monitor_id: user.id 
       } as MonitorProfile); 
-      throw error;
+      return null; // エラー時はnullを返す
     }
   };
 
@@ -172,7 +185,7 @@ export default function MonitorDashboard() {
     console.log("MonitorDashboard: fetchSurveysAndResponses started.");
     if (!user?.id) {
         console.error("fetchSurveysAndResponses: User ID is not available.");
-        throw new Error("User ID is not available.");
+        return; // ユーザーIDがない場合は早期リターン
     }
     try {
       const { data: allActiveSurveys, error: surveysError } = await supabase
@@ -212,10 +225,10 @@ export default function MonitorDashboard() {
       setAvailableSurveys(newAvailableSurveys);
       setAnsweredSurveys(newAnsweredSurveys);
       console.log("MonitorDashboard: fetchSurveysAndResponses completed.");
-      return { available: newAvailableSurveys, answered: newAnsweredSurveys };
+      // return { available: newAvailableSurveys, answered: newAnsweredSurveys }; // 非同期処理の結果はPromise.allで処理されるため、ここでは不要
     } catch (error) {
       console.error('アンケートと回答の取得エラー:', error);
-      throw error;
+      setError('アンケートリストの取得に失敗しました。'); // エラーを設定
     }
   };
 
@@ -235,7 +248,8 @@ export default function MonitorDashboard() {
       return data;
     } catch (error) {
       console.error('広告取得エラー:', error);
-      throw error;
+      setError('企業情報の取得に失敗しました。'); // エラーを設定
+      return null; // エラー時はnullを返す
     }
   };
 
@@ -252,6 +266,7 @@ export default function MonitorDashboard() {
       }
 
       setDashboardDataLoading(true); 
+      setError(null); // 新しいデータロードの前にエラーをクリア
       try {
         await Promise.all([
           fetchProfile(),
@@ -266,6 +281,7 @@ export default function MonitorDashboard() {
         console.error("MonitorDashboard: Failed to load dashboard data in Promise.all:", err);
         if (isMounted) {
           setDashboardDataLoading(false); 
+          setError('ダッシュボードデータの読み込み中にエラーが発生しました。'); // 総合エラーを設定
         }
       }
     };
@@ -296,6 +312,7 @@ export default function MonitorDashboard() {
     }
 
     if (status) {
+        // URLからクエリパラメータを削除して、リロードしてもアラートが再表示されないようにする
         history.replaceState(null, '', window.location.pathname);
     }
     
@@ -369,14 +386,15 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); 
-      fetchSurveysAndResponses(); 
+      fetchProfile(); // ポイントの更新を反映させるためにプロファイルを再取得
+      fetchSurveysAndResponses(); // 回答済みアンケートリストを更新
     } catch (error) {
       console.error('アンケート送信エラー:', error);
       alert('アンケートの送信に失敗しました。');
     }
   };
 
+  // ★★★ ロード中またはエラー表示の統合 ★★★
   if (authLoading || dashboardDataLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -387,6 +405,33 @@ export default function MonitorDashboard() {
       </div>
     );
   }
+
+  // グローバルなエラー表示
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <AlertCircle className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
+            エラーが発生しました
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {error}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
+            再試行
+          </button>
+        </div>
+      </div>
+    );
+  }
+  // ★★★ ロード中またはエラー表示の統合ここまで ★★★
+
 
   if (selectedSurvey) {
     return (
@@ -1273,7 +1318,71 @@ export default function MonitorDashboard() {
             </div>
             
           </div>
+        </main>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto flex justify-around h-20">
+          <button
+            onClick={() => setActiveTab('surveys')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <ClipboardList className="w-6 h-6 mb-1" />
+            アンケート
+          </button>
+          <button
+            onClick={() => setActiveTab('matching')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Sparkles className="w-6 h-6 mb-1" />
+            キャリア診断
+          </button>
+          <button
+            onClick={() => setActiveTab('recruitment')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Briefcase className="w-6 h-6 mb-1" />
+            企業情報
+          </button>
+          <button
+            onClick={() => setActiveTab('career_consultation')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <MessageCircle className="w-6 h-6 mb-1" />
+            キャリア相談
+          </button>
         </div>
+      </div>
+
+      {showProfileModal && (
+        <ProfileModal
+          user={user}
+          profile={profile}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={fetchProfile}
+        />
+      )}
+
+      {showCareerModal && (
+        <CareerConsultationModal
+          onClose={() => setShowCareerModal(false)}
+        />
+      )}
+
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
+        <ChatModal
+          user={user} 
+          otherUserId={SUPABASE_SUPPORT_USER_ID} 
+          onClose={() => setShowChatModal(false)}
+        />
       )}
 
       {showPointExchangeModal && profile && (
