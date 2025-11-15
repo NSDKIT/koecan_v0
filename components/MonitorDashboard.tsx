@@ -3,10 +3,9 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { 
-  Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse 
-} from '@/types'; 
+import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
 import { 
   Star, 
   Gift, 
@@ -42,21 +41,18 @@ import { SparklesCore } from '@/components/ui/sparkles';
 import { PointExchangeModal } from '@/components/PointExchangeModal'; 
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
 import { MatchingFeature } from '@/components/MatchingFeature';
-import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
-const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d'; // TODO: 実際のサポートユーザーIDに置き換える
-const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB'; // TODO: 実際のLINE追加URLに置き換える
+const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
+const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
 
-// boolean値を 'あり'/'なし' で表示するヘルパー関数
 const formatBoolean = (val: boolean | null | undefined, yes: string = 'あり', no: string = 'なし') => {
     if (val === true) return yes;
     if (val === false) return no;
     return '';
 };
 
-// nullやundefinedの値を空文字列として表示するヘルパー関数
 const displayValue = (value: any): string => {
     if (value === null || value === undefined || value === 'N/A') return '';
     if (Array.isArray(value)) {
@@ -65,16 +61,14 @@ const displayValue = (value: any): string => {
     return String(value);
 };
 
-// 画像URLを安全に最適化するヘルパー関数
 const getSecureImageUrl = (url: string | null | undefined): string | null => {
     if (!url) return null;
     
-    // http/httpsで始まるURLはwsrv.nlで最適化を試みる
     if (url.startsWith('http://') || url.startsWith('https://')) {
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=800&output=webp&q=85`;
     }
     
-    return url; // それ以外のURLはそのまま返す（Supabase Storageのパスなど）
+    return url;
 };
 
 export default function MonitorDashboard() {
@@ -98,84 +92,79 @@ export default function MonitorDashboard() {
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
-  const [error, setError] = useState<string | null>(null); // エラー表示用state
 
-  // ★★★ 修正された fetchProfile 関数 ★★★
-  const fetchProfile = async (): Promise<MonitorProfile | null> => {
-    console.log("MonitorDashboard: fetchProfile 開始。");
-    if (!user?.id) {
-        console.error("MonitorDashboard: fetchProfile エラー - ユーザーIDがありません。");
-        // ユーザーIDがない場合はプロフィールをクリアし、エラーを設定
-        setProfile(null); 
-        setError("ユーザー情報が見つかりません。再ログインしてください。");
-        return null; // 早期リターン
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchSurveysAndResponses(); 
+      fetchAdvertisements();
     }
+  }, [user]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
+        return; 
+      }
+      const menuElement = document.getElementById('hamburger-menu-dropdown');
+      if (menuElement && !menuElement.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []); 
+
+  const fetchProfile = async () => {
+    console.log("MonitorDashboard: fetchProfile started.");
+    if (!user?.id) throw new Error("User ID is missing.");
+    
     try {
-      // 1. monitor_profiles テーブルからユーザーの基本プロフィールデータを取得
       const { data: profileData, error: profileError } = await supabase
         .from('monitor_profiles')
         .select('*') 
-        .eq('user_id', user.id) 
+        .eq('user_id', user.id)
         .single();
 
-      // ユーザーのプロフィールがまだ作成されていない場合のハンドリング
-      if (profileError && profileError.code === 'PGRST116') { // PGRST116 = 行が見つからない
-          console.warn("モニタープロファイルが見つかりません。デフォルト値で初期化します。");
-          // プロファイルがなければ、一時的なデフォルトプロファイルを作成し、ポイントは0とする
-          const defaultProfile: MonitorProfile = {
-              monitor_id: user.id, // monitor_idはユーザーIDと同じと仮定
-              user_id: user.id,
-              points: 0,
-              age: 0, 
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              // 他のプロパティはオプショナルなので含めなくてもOK
-          };
-          setProfile(defaultProfile);
-          console.log("MonitorDashboard: fetchProfile 完了。ポイント: 0 (プロファイル未作成)");
-          return defaultProfile; // 処理を終了し、後続のポイントビュー取得は行わない
-      } else if (profileError) {
-          throw profileError; // その他のデータベースエラーはスロー
-      }
+      if (profileError) throw profileError;
 
-      // 2. monitor_points_view からポイント残高を取得 (ビューが正しく定義されている前提)
-      const { data: pointsData, error: pointsViewError } = await supabase
-        .from('monitor_points_view')
+      const { data: pointsData, error: pointsError } = await supabase
+        .from('monitor_points_view') 
         .select('points_balance')
         .eq('user_id', user.id)
         .single();
       
-      // ビューの取得でエラーが発生しても、クラッシュせず、ポイントを0として扱う
-      if (pointsViewError && pointsViewError.code !== 'PGRST116') {
-         console.warn('monitor_points_view の取得中にエラーが発生しました。ポイントは0として扱います:', pointsViewError.message);
+      if (pointsError && pointsError.code !== 'PGRST116') { 
+         throw pointsError;
       }
       
-      // pointsDataがnullまたはpoints_balanceがnullの場合も0にフォールバック
-      const pointsBalance = pointsData ? (pointsData.points_balance || 0) : 0;
-
-      // 3. 取得したプロフィールデータとポイント残高を結合
+      const pointsBalance = pointsData ? pointsData.points_balance : 0;
+      
       const combinedProfile: MonitorProfile = {
-          ...profileData!, // profileDataはここで存在することが保証されている
-          points: pointsBalance, // monitor_points_view からの値をセット
-      };
+          ...profileData, 
+          points: pointsBalance, 
+          monitor_id: profileData.id 
+      } as MonitorProfile;
 
-      setProfile(combinedProfile); // 更新されたプロフィールをstateにセット
-      console.log("MonitorDashboard: fetchProfile 完了。ポイント: " + pointsBalance);
-      return combinedProfile; // 呼び出し元のために結合されたプロフィールを返します
+      setProfile(combinedProfile);
+
+      console.log("MonitorDashboard: fetchProfile completed. Points: " + pointsBalance);
+      return combinedProfile; 
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
-      setError(error instanceof Error ? error.message : 'プロフィールの読み込みに失敗しました。');
-      // エラー発生時も、最低限のプロフィール情報を設定してUIがフリーズしないようにします。
       setProfile({ 
-          monitor_id: user.id, 
+          id: user.id, 
           user_id: user.id,
           points: 0,
           age: 0, 
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-      }); 
-      return null; // エラー時はnullを返す
+          monitor_id: user.id 
+      } as MonitorProfile); 
+      throw error;
     }
   };
 
@@ -183,7 +172,7 @@ export default function MonitorDashboard() {
     console.log("MonitorDashboard: fetchSurveysAndResponses started.");
     if (!user?.id) {
         console.error("fetchSurveysAndResponses: User ID is not available.");
-        return; // ユーザーIDがない場合は早期リターン
+        throw new Error("User ID is not available.");
     }
     try {
       const { data: allActiveSurveys, error: surveysError } = await supabase
@@ -223,9 +212,10 @@ export default function MonitorDashboard() {
       setAvailableSurveys(newAvailableSurveys);
       setAnsweredSurveys(newAnsweredSurveys);
       console.log("MonitorDashboard: fetchSurveysAndResponses completed.");
+      return { available: newAvailableSurveys, answered: newAnsweredSurveys };
     } catch (error) {
       console.error('アンケートと回答の取得エラー:', error);
-      setError('アンケートリストの取得に失敗しました。'); // エラーを設定
+      throw error;
     }
   };
 
@@ -245,8 +235,7 @@ export default function MonitorDashboard() {
       return data;
     } catch (error) {
       console.error('広告取得エラー:', error);
-      setError('企業情報の取得に失敗しました。'); // エラーを設定
-      return null; // エラー時はnullを返す
+      throw error;
     }
   };
 
@@ -263,7 +252,6 @@ export default function MonitorDashboard() {
       }
 
       setDashboardDataLoading(true); 
-      setError(null); // 新しいデータロードの前にエラーをクリア
       try {
         await Promise.all([
           fetchProfile(),
@@ -278,7 +266,6 @@ export default function MonitorDashboard() {
         console.error("MonitorDashboard: Failed to load dashboard data in Promise.all:", err);
         if (isMounted) {
           setDashboardDataLoading(false); 
-          setError('ダッシュボードデータの読み込み中にエラーが発生しました。'); // 総合エラーを設定
         }
       }
     };
@@ -309,7 +296,6 @@ export default function MonitorDashboard() {
     }
 
     if (status) {
-        // URLからクエリパラメータを削除して、リロードしてもアラートが再表示されないようにする
         history.replaceState(null, '', window.location.pathname);
     }
     
@@ -321,11 +307,10 @@ export default function MonitorDashboard() {
         .from('responses')
         .select('id')
         .eq('survey_id', survey.id)
-        .eq('monitor_id', user?.id);
-        // .single(); // .single()を外して、結果がなくてもエラーにならないようにする
+        .eq('monitor_id', user?.id)
+        .single();
 
-      // 回答が1件以上見つかった場合
-      if (existingResponse && existingResponse.length > 0) {
+      if (existingResponse) {
         alert('このアンケートは既に回答済みです。');
         return;
       }
@@ -359,14 +344,9 @@ export default function MonitorDashboard() {
     if (!selectedSurvey || !user) return;
 
     try {
-      // 必須質問の回答チェック
-      const allRequiredAnswered = surveyQuestions.every(q => {
-          if (!q.required) return true; // 必須でない質問は常にOK
-          const userAnswer = answers.find(a => a.question_id === q.id);
-          // 回答が存在し、かつその回答が空文字列でないことを確認
-          return userAnswer && userAnswer.answer.trim() !== '';
-      });
-      
+      const questionCount = surveyQuestions.length > 0 ? surveyQuestions.length : 5; 
+
+      const allRequiredAnswered = surveyQuestions.every(q => !q.required || answers.some(a => a.question_id === q.id && a.answer.trim() !== ''));
 
       if (!allRequiredAnswered) {
           alert('全ての必須質問に回答してください。');
@@ -389,15 +369,14 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); // ポイントの更新を反映させるためにプロファイルを再取得
-      fetchSurveysAndResponses(); // 回答済みアンケートリストを更新
+      fetchProfile(); 
+      fetchSurveysAndResponses(); 
     } catch (error) {
       console.error('アンケート送信エラー:', error);
       alert('アンケートの送信に失敗しました。');
     }
   };
 
-  // ★★★ ロード中またはエラー表示の統合 ★★★
   if (authLoading || dashboardDataLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -409,36 +388,8 @@ export default function MonitorDashboard() {
     );
   }
 
-  // グローバルなエラー表示
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center shadow-lg">
-            <AlertCircle className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500 mb-4">
-            エラーが発生しました
-          </h1>
-          <p className="text-gray-600 mb-6">
-            {error}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            再試行
-          </button>
-        </div>
-      </div>
-    );
-  }
-  // ★★★ ロード中またはエラー表示の統合ここまで ★★★
-
-
   if (selectedSurvey) {
     return (
-      <React.Fragment> {/* ★★★ 全体をFragmentで囲むように修正 ★★★ */}
       <div className="min-h-screen bg-gray-50 p-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg p-6">
@@ -564,417 +515,795 @@ export default function MonitorDashboard() {
           </div>
         </div>
       </div>
-      </React.Fragment> {/* Fragmentの閉じタグを追加 */}
     );
   }
 
   return (
-    <React.Fragment> {/* ★★★ 全体をFragmentで囲むように修正 ★★★ */}
-      <div className="min-h-screen bg-white relative overflow-hidden">
-        <div className="w-full absolute inset-0 h-screen">
-          <SparklesCore
-            id="tsparticlesmonitor"
-            background="transparent"
-            minSize={0.6}
-            maxSize={1.4}
-            particleDensity={60}
-            className="w-full h-full"
-            particleColor="#F97316"
-            speed={0.5}
-          />
-        </div>
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      <div className="w-full absolute inset-0 h-screen">
+        <SparklesCore
+          id="tsparticlesmonitor"
+          background="transparent"
+          minSize={0.6}
+          maxSize={1.4}
+          particleDensity={60}
+          className="w-full h-full"
+          particleColor="#F97316"
+          speed={0.5}
+        />
+      </div>
 
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-orange-50/30 via-white to-orange-50/30"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
-        <div className="relative z-20">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center">
-                  <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
-                    声キャン！
-                  </h1>
-                </div>
+      <div className="relative z-20">
+        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
+                  声キャン！
+                </h1>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={() => setShowLineLinkModal(true)}
+                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  LINE連携
+                </button>
                 
-                <div className="flex items-center space-x-4">
-                  <button 
-                    onClick={() => setShowLineLinkModal(true)}
-                    className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    LINE連携
-                  </button>
-                  
-                  <button
-                    ref={menuButtonRef}
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="text-gray-700 hover:text-orange-600 transition-colors"
-                  >
-                    <Menu className="w-6 h-6" />
-                  </button>
-                </div>
+                <button
+                  ref={menuButtonRef}
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  <Menu className="w-6 h-6" />
+                </button>
               </div>
             </div>
-          </header>
+          </div>
+        </header>
 
-          {isMenuOpen && (
-            <div
-              id="hamburger-menu-dropdown" 
-              className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg py-2 z-[1000] border border-gray-100" 
-              style={{ zIndex: 1000 }} 
+        {isMenuOpen && (
+          <div
+            id="hamburger-menu-dropdown" 
+            className="fixed right-4 top-16 mt-2 w-48 bg-white rounded-lg py-2 z-[1000] border border-gray-100" 
+            style={{ zIndex: 1000 }} 
+          >
+            <button
+              onClick={() => {
+                setShowProfileModal(true);
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
             >
-              <button
-                onClick={() => {
-                  setShowProfileModal(true);
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <UserIcon className="w-5 h-5 mr-2" />
-                プロフィール設定
-              </button>
-              <button
-                onClick={() => {
-                  setShowProfileSurveyModal(true); 
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-              >
-                <FileText className="w-5 h-5 mr-2" /> 
-                プロフィールアンケート
-              </button>
-              <button
-                onClick={() => {
-                  signOut();
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
-              >
-                <LogOut className="w-5 h-5 mr-2" />
-                ログアウト
-              </button>
+              <UserIcon className="w-5 h-5 mr-2" />
+              プロフィール設定
+            </button>
+            <button
+              onClick={() => {
+                setShowProfileSurveyModal(true); 
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
+            >
+              <FileText className="w-5 h-5 mr-2" /> 
+              プロフィールアンケート
+            </button>
+            <button
+              onClick={() => {
+                signOut();
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
+            >
+              <LogOut className="w-5 h-5 mr-2" />
+              ログアウト
+            </button>
+          </div>
+        )}
+
+        <main className={`mx-auto pb-20 ${
+          activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
+        }`}> 
+          {activeTab !== 'career_consultation' && (
+            <div
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer"
+              onClick={() => setShowPointExchangeModal(true)} 
+            >
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+                <Star className="w-10 h-10 text-white" />
+              </div>
+              <div>
+                <p className="text-gray-600 text-lg">獲得ポイント</p>
+                <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
+              </div>
             </div>
           )}
 
-          <main className={`mx-auto pb-20 ${
-            activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
-          }`}> 
-            {activeTab !== 'career_consultation' && (
-              <div
-                className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer"
-                onClick={() => setShowPointExchangeModal(true)} 
-              >
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-                  <Star className="w-10 h-10 text-white" />
-                </div>
-                <div>
-                  <p className="text-gray-600 text-lg">獲得ポイント</p>
-                  <p className="text-5xl font-bold text-orange-600"><span>{profile?.points || 0}</span></p>
-                </div>
+          <div 
+            className={`
+              transition-colors duration-300
+              ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
+            `}
+          > 
+            {activeTab === 'surveys' && (
+              <>
+                {availableSurveys.length === 0 ? (
+                  <div className="text-center py-12 mb-8">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircle className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能な<br></br>アンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答して<br></br>ポイントを獲得しましょう。</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 mb-8">
+                    {availableSurveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6"
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-orange-50 rounded-full px-4 py-2 text-orange-700 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt</span>
+                            </div>
+                            <button
+                              onClick={() => handleSurveyClick(survey)}
+                              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-base font-semibold"
+                            >
+                              回答する
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8">回答済みアンケート</h2>
+                {answeredSurveys.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <History className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-800 mb-2">まだ回答したアンケートはありません</h3>
+                    <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {answeredSurveys.map((survey) => (
+                      <div
+                        key={survey.id}
+                        className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" 
+                      >
+                        <div className="flex flex-col md:flex-row items-start justify-between">
+                          <div className="flex-1 mb-4 md:mb-0">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                              {survey.title}
+                            </h3>
+                            <p className="text-gray-500 mb-4 line-clamp-2">{survey.description}</p>
+                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                              <div className="flex items-center">
+                                <Users className="w-4 h-4 mr-1" />
+                                <span>対象者: 学生</span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
+                            <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-semibold text-lg">
+                              <Gift className="w-5 h-5 mr-2" />
+                              <span>{survey.points_reward}pt 獲得済み</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'matching' && (
+              <MatchingFeature />
+            )}
+
+            {activeTab === 'recruitment' && ( 
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
+                {advertisements.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">現在、公開されている企業情報はありません。</p>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {advertisements.map((ad) => (
+                      <div
+                        key={ad.id}
+                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
+                        onClick={() => setSelectedAdvertisement(ad)} 
+                      >
+                        {(() => {
+                          const imageUrl = ad.image_url;
+                          const optimizedUrl = getSecureImageUrl(imageUrl);
+                          if (imageUrl && optimizedUrl !== imageUrl) {
+                            console.log(`🖼️ 画像最適化: ${ad.company_name}\n元URL: ${imageUrl}\n最適化URL: ${optimizedUrl}`);
+                          }
+                          return (imageUrl && imageUrl.length > 0);
+                        })() ? (
+                          <div className="aspect-video bg-gray-100 overflow-hidden">
+                            <img
+                              src={getSecureImageUrl(ad.image_url) || ''}
+                              alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                console.error(`画像読み込みエラー: ${ad.company_name}`, ad.image_url);
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                            <Briefcase className="w-12 h-12 text-gray-500" />
+                          </div>
+                        )}
+                        
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 mb-2">
+                            {displayValue(ad.company_name) || '企業名未設定'}
+                          </h3>
+                          <p className="text-gray-600 text-sm line-clamp-2">
+                            {displayValue(ad.company_vision) || displayValue(ad.title) || displayValue(ad.description) || ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            <div 
-              className={`
-                transition-colors duration-300
-                ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
-              `}
-            > 
-              {activeTab === 'surveys' && (
-                <>
-                  {availableSurveys.length === 0 ? (
-                    <div className="text-center py-12 mb-8">
-                      <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <CheckCircle className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">現在利用可能な<br></br>アンケートはありません</h3>
-                      <p className="text-gray-600">新しいアンケートに回答して<br></br>ポイントを獲得しましょう。</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-6 mb-8">
-                      {availableSurveys.map((survey) => (
-                        <div
-                          key={survey.id}
-                          className="border border-gray-200 rounded-xl p-6"
-                        >
-                          <div className="flex flex-col md:flex-row items-start justify-between">
-                            <div className="flex-1 mb-4 md:mb-0">
-                              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                                {survey.title}
-                              </h3>
-                              <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                <div className="flex items-center">
-                                  <Users className="w-4 h-4 mr-1" />
-                                  <span>対象者: 学生</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
-                              <div className="flex items-center bg-orange-50 rounded-full px-4 py-2 text-orange-700 font-semibold text-lg">
-                                <Gift className="w-5 h-5 mr-2" />
-                                <span>{survey.points_reward}pt</span>
-                              </div>
-                              <button
-                                onClick={() => handleSurveyClick(survey)}
-                                className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-base font-semibold"
-                              >
-                                回答する
-                              </button>
-                            </div>
-                          </div>
+            {activeTab === 'career_consultation' && (
+              <>
+                <div className="flex flex-col items-center w-full">
+                    <img 
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
+                        alt="キャリア相談 上部"
+                        className="w-full h-auto object-cover"
+                    />
+                    
+                    <div className="relative w-full">
+                        <img 
+                            src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
+                            alt="キャリア相談 中部"
+                            className="w-full h-auto object-cover"
+                        />
+                        
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <a
+                                href={C8_LINE_ADD_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
+                            >
+                                <span className="text-sm mb-1">キャリア支援のプロ</span>
+                                <span className="text-lg">シーエイトに相談</span>
+                            </a>
                         </div>
-                      ))}
                     </div>
-                  )}
 
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8">回答済みアンケート</h2>
-                  {answeredSurveys.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                        <History className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-800 mb-2">まだ回答したアンケートはありません</h3>
-                      <p className="text-gray-600">新しいアンケートに回答してポイントを獲得しましょう。</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-6">
-                      {answeredSurveys.map((survey) => (
-                        <div
-                          key={survey.id}
-                          className="border border-gray-200 rounded-xl p-6 bg-gray-50 opacity-80" 
-                        >
-                          <div className="flex flex-col md:flex-row items-start justify-between">
-                            <div className="flex-1 mb-4 md:mb-0">
-                              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                                {survey.title}
-                              </h3>
-                              <p className="text-gray-500 mb-4 line-clamp-2">{survey.description}</p>
-                              <div className="flex items-center space-x-4 text-sm text-gray-400">
-                                <div className="flex items-center">
-                                  <Users className="w-4 h-4 mr-1" />
-                                  <span>対象者: 学生</span>
-                                </div>
-                                <div className="flex items-center">
-                                  <Clock className="w-4 h-4 mr-1" />
-                                  <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-center md:items-end space-y-3 md:ml-6">
-                              <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 text-gray-600 font-semibold text-lg">
-                                <Gift className="w-5 h-5 mr-2" />
-                                <span>{survey.points_reward}pt 獲得済み</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+                    <img 
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
+                        alt="キャリア相談 下部"
+                        className="w-full h-auto object-cover"
+                    />
+                </div>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
 
-              {activeTab === 'matching' && (
-                <MatchingFeature />
-              )}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto flex justify-around h-20">
+          <button
+            onClick={() => setActiveTab('surveys')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <ClipboardList className="w-6 h-6 mb-1" />
+            アンケート
+          </button>
+          <button
+            onClick={() => setActiveTab('matching')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Sparkles className="w-6 h-6 mb-1" />
+            キャリア診断
+          </button>
+          <button
+            onClick={() => setActiveTab('recruitment')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Briefcase className="w-6 h-6 mb-1" />
+            企業情報
+          </button>
+          <button
+            onClick={() => setActiveTab('career_consultation')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <MessageCircle className="w-6 h-6 mb-1" />
+            キャリア相談
+          </button>
+        </div>
+      </div>
 
-              {activeTab === 'recruitment' && ( 
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
-                  {advertisements.length === 0 ? (
-                    <div className="text-center py-8">
-                      <p className="text-gray-600">現在、公開されている企業情報はありません。</p>
-                    </div>
-                  ) : (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {advertisements.map((ad) => (
-                        <div
-                          key={ad.id}
-                          className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
-                          onClick={() => setSelectedAdvertisement(ad)} 
-                        >
-                          {(() => {
-                            const imageUrl = ad.image_url;
-                            const optimizedUrl = getSecureImageUrl(imageUrl);
-                            if (imageUrl && optimizedUrl !== imageUrl) {
-                              console.log(`🖼️ 画像最適化: ${ad.company_name}\n元URL: ${imageUrl}\n最適化URL: ${optimizedUrl}`);
-                            }
-                            return (imageUrl && imageUrl.length > 0);
-                          })() ? (
-                            <div className="aspect-video bg-gray-100 overflow-hidden">
-                              <img
-                                src={getSecureImageUrl(ad.image_url) || ''}
-                                alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                                referrerpolicy="no-referrer" // ★★★ referrerpolicy を使用 ★★★
-                                crossOrigin="anonymous"
-                                onError={(e) => {
-                                  console.error(`画像読み込みエラー: ${ad.company_name}`, ad.image_url);
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            <div className="aspect-video bg-gray-200 flex items-center justify-center">
-                              <Briefcase className="w-12 h-12 text-gray-500" />
-                            </div>
-                          )}
-                          
-                          <div className="p-4">
-                            <h3 className="font-semibold text-gray-800 mb-2">
-                              {displayValue(ad.company_name) || '企業名未設定'}
-                            </h3>
-                            <p className="text-gray-600 text-sm line-clamp-2">
-                              {displayValue(ad.company_vision) || displayValue(ad.title) || displayValue(ad.description) || ''}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      {showProfileModal && (
+        <ProfileModal
+          user={user}
+          profile={profile}
+          onClose={() => setShowProfileModal(false)}
+          onUpdate={fetchProfile}
+        />
+      )}
+
+      {showCareerModal && (
+        <CareerConsultationModal
+          onClose={() => setShowCareerModal(false)}
+        />
+      )}
+
+      {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
+        <ChatModal
+          user={user} 
+          otherUserId={SUPABASE_SUPPORT_USER_ID} 
+          onClose={() => setShowChatModal(false)}
+        />
+      )}
+
+      {selectedAdvertisement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            
+            <div className="relative">
+              <button
+                onClick={() => setSelectedAdvertisement(null)}
+                className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* ヘッダー - 白背景にオレンジテキスト */}
+              <div className="bg-white rounded-t-3xl p-8 pb-6 border-b-2 border-orange-500">
+                <h2 className="text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+              </div>
+
+              {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
+                <div className="px-8 pt-6 relative z-10">
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-xl h-96 border-4 border-white">
+                    <img
+                      src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
+                      alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
+                      className="w-auto h-full object-cover mx-auto"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
-              {activeTab === 'career_consultation' && (
-                <>
-                  <div className="flex flex-col items-center w-full">
-                      <img 
-                          src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
-                          alt="キャリア相談 上部"
-                          className="w-full h-auto object-cover"
-                      />
-                      
-                      <div className="relative w-full">
-                          <img 
-                              src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
-                              alt="キャリア相談 中部"
-                              className="w-full h-auto object-cover"
-                          />
-                          
-                          <div className="absolute inset-0 flex items-center justify-center">
-                              <a
-                                  href={C8_LINE_ADD_URL}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
-                              >
-                                  <span className="text-sm mb-1">キャリア支援のプロ</span>
-                                  <span className="text-lg">シーエイトに相談</span>
-                              </a>
-                          </div>
+              <div className="p-8">
+                {displayValue(selectedAdvertisement.company_vision) && (
+                  <div className="mb-8">
+                    <div className="bg-orange-50 rounded-2xl p-6 border-l-4 border-orange-500">
+                      <div className="flex items-start mb-2">
+                        <Sparkles className="w-6 h-6 text-orange-600 mr-2 flex-shrink-0 mt-1" />
+                        <h3 className="text-lg font-bold text-orange-600">目指す未来</h3>
                       </div>
-
-                      <img 
-                          src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
-                          alt="キャリア相談 下部"
-                          className="w-full h-auto object-cover"
-                      />
+                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed pl-8">{displayValue(selectedAdvertisement.company_vision)}</p>
+                    </div>
                   </div>
-                </>
-              )}
-            </div>
-          </main>
-        </div>
+                )}
+              
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Building className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">企業概要</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">代表者名</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.representative_name)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">設立年</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.establishment_year)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（本社）</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.headquarters_location)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">所在地（支社）</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.branch_office_location)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">従業員数</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_count)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男女比</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_gender_ratio)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">平均年齢</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.employee_avg_age)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">業界</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.industries)}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシポイント</td>
+                          <td className="px-6 py-4 text-orange-800 font-medium">
+                            {[
+                              displayValue(selectedAdvertisement.highlight_point_1),
+                              displayValue(selectedAdvertisement.highlight_point_2),
+                              displayValue(selectedAdvertisement.highlight_point_3)
+                            ].filter(Boolean).join(' / ') || ''}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">募集・待遇情報</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">初任給</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.starting_salary)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">3年定着率</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.three_year_retention_rate)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">20代平均年収</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_20s)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">30代平均年収</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.avg_annual_income_30s)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">キャリアパス</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.promotion_model_case)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">募集職種とその人数</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_roles_count)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">選考フロー</td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {selectedAdvertisement.selection_flow_steps && selectedAdvertisement.selection_flow_steps.length > 0 
+                              ? selectedAdvertisement.selection_flow_steps.join(' → ') 
+                              : ''}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">必須資格・免許</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.required_qualifications)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
 
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-          <div className="max-w-7xl mx-auto flex justify-around h-20">
-            <button
-              onClick={() => setActiveTab('surveys')}
-              className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-                activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
-              }`}
-            >
-              <ClipboardList className="w-6 h-6 mb-1" />
-              アンケート
-            </button>
-            <button
-              onClick={() => setActiveTab('matching')}
-              className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-                activeTab === 'matching' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
-              }`}
-            >
-              <Sparkles className="w-6 h-6 mb-1" />
-              キャリア診断
-            </button>
-            <button
-              onClick={() => setActiveTab('recruitment')}
-              className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-                activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
-              }`}
-            >
-              <Briefcase className="w-6 h-6 mb-1" />
-              企業情報
-            </button>
-            <button
-              onClick={() => setActiveTab('career_consultation')}
-              className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-                activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
-              }`}
-            >
-              <MessageCircle className="w-6 h-6 mb-1" />
-              キャリア相談
-            </button>
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Sparkles className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">働き方・福利厚生</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">勤務時間</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.working_hours)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">休日</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.holidays)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">年間休日数</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.annual_holidays)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">リモートワーク</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.remote_work_available)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">副業</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.side_job_allowed)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">住宅手当</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.housing_allowance_available)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">女性育休取得率</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.female_parental_leave_rate)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">男性育休取得率</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.male_parental_leave_rate)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">異動/転勤</td>
+                          <td className="px-6 py-4 text-gray-700">
+                            {formatBoolean(selectedAdvertisement.transfer_existence)}
+                            {displayValue(selectedAdvertisement.transfer_frequency) && ` (${displayValue(selectedAdvertisement.transfer_frequency)})`}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">社内イベント頻度</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internal_event_frequency)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">健康経営の取り組み</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.health_management_practices)}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-6 py-4 bg-orange-50 font-semibold text-orange-700">イチオシ福利厚生</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.must_tell_welfare)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Users className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">採用情報</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">採用担当部署（担当者）</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_department)}</td>
+                        </tr>
+                        <tr className={selectedAdvertisement.recruitment_info_page_url ? "border-b border-gray-200" : ""}>
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用に関する問い合わせ先</td>
+                          <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_contact)}</td>
+                        </tr>
+                        {selectedAdvertisement.recruitment_info_page_url && (
+                          <tr>
+                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">採用情報ページ</td>
+                            <td className="px-6 py-4">
+                              <a 
+                                href={selectedAdvertisement.recruitment_info_page_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                採用情報ページを見る
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mb-8">
+                  <div className="flex items-center mb-4">
+                    <Target className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">インターンシップ情報</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+                    <table className="w-full">
+                      <tbody>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">実施予定</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施日程</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_schedule)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">定員</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_capacity)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">対象学生</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_target_students)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">実施場所</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_locations)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">内容</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_content_types)}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">報酬</td>
+                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.internship_paid_unpaid)}</td>
+                        </tr>
+                        <tr className={selectedAdvertisement.internship_application_url ? "border-b border-gray-200" : ""}>
+                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">交通費・宿泊費</td>
+                          <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</td>
+                        </tr>
+                        {selectedAdvertisement.internship_application_url && (
+                          <tr>
+                            <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">申込</td>
+                            <td className="px-6 py-4">
+                              <a 
+                                href={selectedAdvertisement.internship_application_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                インターンシップに申し込む
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-center mb-4">
+                    <MessageCircle className="w-6 h-6 text-orange-600 mr-2" />
+                    <h3 className="text-2xl font-bold text-gray-800">SNS・外部リンク</h3>
+                  </div>
+                  <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                    <div className="flex flex-wrap gap-3">
+                      {selectedAdvertisement.official_website_url && (
+                        <a 
+                          href={selectedAdvertisement.official_website_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          🌐 公式ホームページ
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.official_line_url && (
+                        <a 
+                          href={selectedAdvertisement.official_line_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          💬 公式LINE
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.instagram_url && (
+                        <a 
+                          href={selectedAdvertisement.instagram_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          📸 Instagram
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {selectedAdvertisement.tiktok_url && (
+                        <a 
+                          href={selectedAdvertisement.tiktok_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-5 py-3 bg-gray-800 hover:bg-black text-white rounded-full transition-all shadow-md hover:shadow-lg transform hover:scale-105 font-semibold text-sm"
+                        >
+                          🎵 TikTok
+                          <ExternalLink className="w-4 h-4 ml-2" />
+                        </a>
+                      )}
+                      {displayValue(selectedAdvertisement.other_sns_sites) && (
+                        <div className="w-full mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
+                          <p className="font-semibold text-gray-700 mb-2 flex items-center">
+                            🔗 その他のリンク
+                          </p>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{displayValue(selectedAdvertisement.other_sns_sites)}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </div>
+      )}
 
-        {showProfileModal && (
-          <ProfileModal
-            user={user}
-            profile={profile}
-            onClose={() => setShowProfileModal(false)}
-            onUpdate={fetchProfile}
-          />
-        )}
+      {showPointExchangeModal && profile && (
+        <PointExchangeModal
+          currentPoints={profile.points}
+          onClose={() => setShowPointExchangeModal(false)}
+          onExchangeSuccess={fetchProfile}
+        />
+      )}
 
-        {showCareerModal && (
-          <CareerConsultationModal
-            onClose={() => setShowCareerModal(false)}
-          />
-        )}
+      {showProfileSurveyModal && (
+        <MonitorProfileSurveyModal
+          onClose={() => setShowProfileSurveyModal(false)}
+          onSaveSuccess={() => { /* ... */ }}
+        />
+      )}
+      
+      {showLineLinkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+                  <div className="flex justify-end p-4">
+                      <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
+                          <X className="w-6 h-6" />
+                      </button>
+                  </div>
+                  <LineLinkButton /> 
+              </div>
+          </div>
+      )}
 
-        {showChatModal && user?.id && SUPABASE_SUPPORT_USER_ID && ( 
-          <ChatModal
-            user={user} 
-            otherUserId={SUPABASE_SUPPORT_USER_ID} 
-            onClose={() => setShowChatModal(false)}
-          />
-        )}
-
-        {showPointExchangeModal && profile && (
-          <PointExchangeModal
-            currentPoints={profile.points}
-            onClose={() => setShowPointExchangeModal(false)}
-            onExchangeSuccess={fetchProfile}
-          />
-        )}
-
-        {showProfileSurveyModal && (
-          <MonitorProfileSurveyModal
-            onClose={() => setShowProfileSurveyModal(false)}
-            onSaveSuccess={() => { /* ... */ }}
-          />
-        )}
-        
-        {showLineLinkModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-                    <div className="flex justify-end p-4">
-                        <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
-                            <X className="w-6 h-6" />
-                        </button>
-                    </div>
-                    <LineLinkButton /> 
-                </div>
-            </div>
-        )}
-      </React.Fragment> {/* Fragmentの閉じタグを追加 */}
-    </React.Fragment>
+    </div>
   );
 }
