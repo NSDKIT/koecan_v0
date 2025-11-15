@@ -28,27 +28,27 @@ const navigateToWelcome = () => {
 
 
 export default function Home() {
-  const { user, loading, error, signOut, getInitialSession } = useAuth(); // ★★★ getInitialSession を useAuth から取得 ★★★
+  const { user, loading, error, signOut } = useAuth();
   const router = useRouter(); 
   const [isAuthScreen, setIsAuthScreen] = useState(false); // サーバーでの window アクセスを回避
   const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
+  // ★★★ 修正箇所: selectedAdminPanel ステートを再宣言 ★★★
+  const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
+
+  // ★★★ 修正箇所: URLハッシュの変更をリッスンして画面を切り替えるロジック ★★★
   useEffect(() => {
+    // クライアント側での初回レンダリング後に実行
     setIsClient(true);
-    // ★★★ 修正箇所: isClient が true になった後に getInitialSession を呼び出す ★★★
-    if (window.location.hash === '#auth') {
-      setIsAuthScreen(true);
-    } else {
-      setIsAuthScreen(false);
-    }
-    getInitialSession(); // クライアント側で認証処理を開始
+    setIsAuthScreen(window.location.hash === '#auth');
 
     const handleHashChange = () => {
       setIsAuthScreen(window.location.hash === '#auth');
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [getInitialSession]); // getInitialSession を依存配列に追加
+  }, []);
+  // ★★★ 修正箇所ここまで ★★★
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -97,7 +97,7 @@ export default function Home() {
           <button
             onClick={() => {
               signOut(); 
-              router.replace(window.location.pathname); // クリーンなリダイレクト
+              router.replace(window.location.pathname); 
             }}
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
@@ -109,7 +109,7 @@ export default function Home() {
   }
 
   // 認証状態の初回チェック中はローディング画面を表示
-  if (loading || !isClient) { // isClient が true になるまで待機
+  if (loading || !isClient) { 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
