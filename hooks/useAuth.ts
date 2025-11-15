@@ -1,7 +1,7 @@
 // koecan_v0-main/hooks/useAuth.ts
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react'; // useCallback をインポート
 import { User as SupabaseUser, SupabaseClient } from '@supabase/supabase-js';
 import { useSupabase } from '@/contexts/SupabaseProvider';
 
@@ -28,12 +28,10 @@ export function useAuth() {
   // ローカルストレージから Supabase のセッションキャッシュを手動でクリアする関数
   const clearLocalSupabaseCache = () => {
     Object.keys(localStorage).forEach(key => {
-        // Supabase V1/V2 のキープレフィックスを考慮して削除
         if (key.startsWith('sb:') || (key.startsWith('sb-') && key.includes('-auth-token'))) { 
             localStorage.removeItem(key);
         }
     });
-    // IndexedDB のクリアはより複雑になるため、ここでは localStorage のみとする
     console.log('Local Supabase session cache cleared.');
   }
 
@@ -41,18 +39,18 @@ export function useAuth() {
   const performSignOut = async () => {
     if (!supabase) return false;
     try {
-      await supabase.auth.signOut(); // サーバーとローカルの両方でクリーンアップを試行
-      clearLocalSupabaseCache(); // ローカルストレージを確実にクリーンアップ
+      await supabase.auth.signOut();
+      clearLocalSupabaseCache();
       if (mountedRef.current) {
         setUser(null);
         setError(null);
         setLoading(false); 
       }
       console.log('signOut: Successfully performed sign out.');
-      return true; // 成功を返す
+      return true;
     } catch (e) {
       console.error('Sign Out Failed in performSignOut:', e);
-      return false; // 失敗を返す
+      return false;
     }
   }
 
@@ -67,7 +65,7 @@ export function useAuth() {
         .eq('id', userId)
         .single();
 
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116は「見つからなかった」エラーなので無視しない
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error('fetchUserData: ERROR fetching user profile (Non-PGRST116):', profileError.message);
         throw profileError;
       }
@@ -92,12 +90,8 @@ export function useAuth() {
     }
   };
 
-
-  useEffect(() => {
-    console.log('--- useAuth useEffect START ---');
-    console.log('useAuth useEffect triggered. Supabase client:', supabase ? 'Available' : 'Null', 'Loading state:', loading);
-
-    const getInitialSession = async () => {
+  // ★★★ 修正箇所: getInitialSession を useCallback でラップし、useAuth の外から呼び出せるようにする ★★★
+  const getInitialSession = useCallback(async () => {
       console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
 
       if (!supabase) {
@@ -112,19 +106,16 @@ export function useAuth() {
         console.log('getInitialSession: Attempting to get session.');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        // セッション検証時にエラーが発生した場合（トークン無効など）
         if (sessionError) {
           console.error('getInitialSession: ERROR getting session:', sessionError.message);
           
-          // エラーが発生したら、ローカルキャッシュをクリアしてエラーを設定し、page.tsx がエラー画面へ遷移
           clearLocalSupabaseCache(); 
           if (mountedRef.current) {
-            setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
+            setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしましたので、リロードしてください。`);
           }
           return; 
         }
 
-        // セッション自体はエラーではないが、セッションデータが有効でない場合
         if (session?.user) {
           console.log('getInitialSession: Active session found for user ID:', session.user.id);
           const userData = await fetchUserData(supabase, session.user.id);
@@ -149,10 +140,11 @@ export function useAuth() {
         }
       }
       console.log('getInitialSession: END.');
-    };
+  }, [supabase]); // 依存配列に supabase を追加
 
-    getInitialSession();
 
+  // ★★★ 修正箇所: getInitialSession を useEffect の外に出したため、この useEffect は onAuthStateChange のリスナー設定に専念 ★★★
+  useEffect(() => {
     let subscription: { unsubscribe: () => void } | undefined;
     if (supabase) { 
         console.log('useEffect: Setting up onAuthStateChange listener.');
@@ -214,5 +206,6 @@ export function useAuth() {
     loading,
     error,
     signOut,
+    getInitialSession, // ★★★ 修正箇所: getInitialSession をリターンする ★★★
   };
 }
