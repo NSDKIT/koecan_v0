@@ -28,27 +28,28 @@ const navigateToWelcome = () => {
 
 
 export default function Home() {
-  const { user, loading, error, signOut } = useAuth();
+  const { user, loading, error, signOut, getInitialSession } = useAuth(); // ★★★ getInitialSession を useAuth から取得 ★★★
   const router = useRouter(); 
-  const [isAuthScreen, setIsAuthScreen] = useState(false); // サーバーでの window アクセスを回避
+  const [isAuthScreen, setIsAuthScreen] = useState(false); 
   const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
-  // ★★★ 修正箇所: selectedAdminPanel ステートを再宣言 ★★★
-  const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
 
-
-  // ★★★ 修正箇所: URLハッシュの変更をリッスンして画面を切り替えるロジック ★★★
   useEffect(() => {
-    // クライアント側での初回レンダリング後に実行
     setIsClient(true);
-    setIsAuthScreen(window.location.hash === '#auth');
+    // ★★★ 修正箇所: isClient が true になった後に getInitialSession を呼び出す ★★★
+    if (window.location.hash === '#auth') {
+      setIsAuthScreen(true);
+    } else {
+      setIsAuthScreen(false);
+    }
+    // 認証処理をここで開始
+    getInitialSession(); 
 
     const handleHashChange = () => {
       setIsAuthScreen(window.location.hash === '#auth');
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-  // ★★★ 修正箇所ここまで ★★★
+  }, [getInitialSession]); // getInitialSession を依存配列に追加
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
@@ -109,7 +110,7 @@ export default function Home() {
   }
 
   // 認証状態の初回チェック中はローディング画面を表示
-  if (loading || !isClient) { 
+  if (loading || !isClient) { // isClient が true になるまで待機
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
