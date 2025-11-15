@@ -32,6 +32,7 @@ export default function Home() {
   const router = useRouter(); 
   const [isAuthScreen, setIsAuthScreen] = useState(false); 
   const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
+  const [selectedAdminPanel, setSelectedAdminPanel] = useState<"admin" | "support" | null>(null);
 
   useEffect(() => {
     setIsClient(true);
