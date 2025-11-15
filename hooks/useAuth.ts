@@ -10,6 +10,48 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
+// fetchUserData 関数を useAuth フックの外部または内部で定義します
+// ここでは、useAuth フックの内部にヘルパー関数として定義します。
+const fetchUserData = async (supabase: SupabaseClient, userId: string): Promise<AuthUser | null> => {
+  try {
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('name, role')
+      .eq('id', userId)
+      .single();
+
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = 行が見つからない
+      throw profileError;
+    }
+
+    // SupabaseUser とカスタムのAuthUserプロパティを結合
+    const { data: { user: sessionUser } } = await supabase.auth.getUser();
+
+    if (sessionUser) {
+      return {
+        ...sessionUser,
+        name: userProfile?.name || sessionUser.email?.split('@')[0] || '名無し',
+        role: userProfile?.role || 'monitor', // デフォルトロールを設定
+      };
+    }
+    return null;
+
+  } catch (err) {
+    console.error('Failed to fetch user data from "users" table:', err);
+    // エラーが発生した場合でも、基本的なユーザー情報 (sessionUser) は返す
+    const { data: { user: sessionUser } } = await supabase.auth.getUser();
+    if (sessionUser) {
+      return {
+        ...sessionUser,
+        name: sessionUser.email?.split('@')[0] || '名無し',
+        role: 'monitor', // デフォルトロール
+      };
+    }
+    return null;
+  }
+};
+
+
 export function useAuth() {
   const supabase = useSupabase();
   const [user, setUser] = useState<AuthUser | null>(null);
