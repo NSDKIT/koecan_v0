@@ -1,7 +1,7 @@
 // koecan_v0-main/hooks/useAuth.ts
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'; // useCallback をインポート
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { User as SupabaseUser, SupabaseClient } from '@supabase/supabase-js';
 import { useSupabase } from '@/contexts/SupabaseProvider';
 
@@ -10,8 +10,10 @@ interface AuthUser extends SupabaseUser {
   name?: string;
 }
 
-// fetchUserData 関数を useAuth フックの外部または内部で定義します
-// ここでは、useAuth フックの内部にヘルパー関数として定義します。
+/**
+ * Supabaseからユーザーの追加プロフィールデータを取得するヘルパー関数。
+ * `users` テーブルから名前とロールを取得し、Supabaseのセッションユーザー情報と結合します。
+ */
 const fetchUserData = async (supabase: SupabaseClient, userId: string): Promise<AuthUser | null> => {
   try {
     const { data: userProfile, error: profileError } = await supabase
@@ -20,31 +22,32 @@ const fetchUserData = async (supabase: SupabaseClient, userId: string): Promise<
       .eq('id', userId)
       .single();
 
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = 行が見つからない
-      throw profileError;
+    // 行が見つからない (PGRST116) 以外のエラーは警告として扱い、処理を続行
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.warn('ユーザープロファイルの取得に失敗しました。デフォルト値を使用します:', profileError.message);
     }
 
-    // SupabaseUser とカスタムのAuthUserプロパティを結合
+    // 最新のセッションユーザー情報を取得
     const { data: { user: sessionUser } } = await supabase.auth.getUser();
 
     if (sessionUser) {
       return {
         ...sessionUser,
+        // プロファイルが見つからない場合は、メールアドレスから名前を推測し、デフォルトロールを設定
         name: userProfile?.name || sessionUser.email?.split('@')[0] || '名無し',
         role: userProfile?.role || 'monitor', // デフォルトロールを設定
       };
     }
-    return null;
-
+    return null; // セッションユーザーが存在しない場合
   } catch (err) {
-    console.error('Failed to fetch user data from "users" table:', err);
-    // エラーが発生した場合でも、基本的なユーザー情報 (sessionUser) は返す
+    console.error('ユーザーデータ取得中に致命的なエラーが発生しました。最小限のユーザー情報を返します:', err);
+    // 致命的なエラーが発生した場合でも、セッションから取得できる基本情報を返すフォールバック
     const { data: { user: sessionUser } } = await supabase.auth.getUser();
     if (sessionUser) {
       return {
         ...sessionUser,
         name: sessionUser.email?.split('@')[0] || '名無し',
-        role: 'monitor', // デフォルトロール
+        role: 'monitor', // フォールバックロール
       };
     }
     return null;
@@ -58,8 +61,10 @@ export function useAuth() {
   const [loading, setLoading] = useState(true); // 初期ロード状態は true のまま
   const [error, setError] = useState<string | null>(null);
 
-  const mountedRef = useRef(true);
+  const mountedRef = useRef(true); // コンポーネントのマウント状態を追跡
+  const isInitialSessionChecked = useRef(false); // NEW: 初期セッションチェックが完了したか追跡
 
+  // コンポーネントのマウント・アンマウント時に mountedRef を更新
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -67,164 +72,142 @@ export function useAuth() {
     };
   }, []);
 
-  // ローカルストレージから Supabase のセッションキャッシュを手動でクリアする関数
+  /**
+   * ローカルストレージからSupabaseのセッションキャッシュを手動でクリアします。
+   * 認証エラー時などにセッションをリセットするために使用されます。
+   */
   const clearLocalSupabaseCache = () => {
     Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb:') || (key.startsWith('sb-') && key.includes('-auth-token'))) { 
             localStorage.removeItem(key);
         }
     });
-    console.log('Local Supabase session cache cleared.');
+    console.log('ローカルのSupabaseセッションキャッシュをクリアしました。');
   }
 
-  // 独立した signOut 関数 (エラー時のセッションクリーンアップ用)
-  const performSignOut = async () => {
-    if (!supabase) return false;
-    try {
-      await supabase.auth.signOut(); 
-      clearLocalSupabaseCache(); 
-      if (mountedRef.current) {
-        setUser(null);
-        setError(null);
-        setLoading(false); 
-      }
-      console.log('signOut: Successfully performed sign out.');
-      return true;
-    } catch (e) {
-      console.error('Sign Out Failed in performSignOut:', e);
-      return false;
-    }
-  }
-
-  // ★★★ 修正箇所: getInitialSession を useCallback でラップし、useEffect から切り離す ★★★
-  const getInitialSession = useCallback(async () => {
-      console.log('getInitialSession: START. Supabase client status:', supabase ? 'Available' : 'Null');
-
-      // 既に認証が完了しているか、ローディング中でなければ何もしない
-      if (user !== null || !mountedRef.current) {
-          console.log('getInitialSession: Already authenticated or component unmounted. Skipping.');
-          setLoading(false); // 念のためローディングを false に
-          return;
-      }
-      if (loading) {
-          console.log('getInitialSession: Already loading. Skipping redundant call.');
-          return;
-      }
-      
-      setLoading(true); // 認証開始前にローディングを true に設定
-      setError(null); // エラーもクリア
-
-      if (!supabase) {
-        if (mountedRef.current) {
-          setLoading(false);
-          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
-        }
-        return;
-      }
-      
-      try {
-        console.log('getInitialSession: Attempting to get session.');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('getInitialSession: ERROR getting session:', sessionError.message);
-          clearLocalSupabaseCache(); 
-          if (mountedRef.current) {
-            setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
-          }
-          return; 
-        }
-
-        if (session?.user) {
-          console.log('getInitialSession: Active session found for user ID:', session.user.id);
-          const userData = await fetchUserData(supabase, session.user.id);
-          if (mountedRef.current) {
-            setUser(userData);
-          }
-        } else {
-          console.log('getInitialSession: No active session found. User is not logged in.');
-          if (mountedRef.current) {
-            setUser(null);
-          }
-        }
-      } catch (err) {
-        console.error('getInitialSession: CRITICAL ERROR during initial session check:', err);
-        if (mountedRef.current) {
-          setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
-        }
-      } finally {
-        if (mountedRef.current) {
-          console.log('getInitialSession: Finished. Setting loading to false.');
-          setLoading(false);
-        }
-      }
-      console.log('getInitialSession: END.');
-  }, [supabase, user, loading]); // user, loading を依存配列に追加して、getInitialSession の実行が重複しないようにする
-
-
-  // ★★★ 修正箇所: onAuthStateChange のリスナー設定のみを行う useEffect ★★★
-  useEffect(() => {
-    let subscription: { unsubscribe: () => void } | undefined;
-    if (supabase) { 
-        console.log('useEffect (onAuthStateChange): Setting up listener.');
-        const { data: authListener } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-              if (!mountedRef.current) return;
-              console.log('onAuthStateChange: Event received. Session:', session ? 'Active' : 'Inactive', 'Event Type:', _event);
-              try {
-                if (session?.user) {
-                  const userData = await fetchUserData(supabase, session.user.id);
-                  if (mountedRef.current) setUser(userData);
-                } else {
-                  if (mountedRef.current) setUser(null);
-                }
-                if (mountedRef.current) setLoading(false); // 認証状態変化時にはローディングを解除
-              } catch(err) {
-                  console.error('onAuthStateChange: CRITICAL ERROR during state change processing:', err);
-                  if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
-              }
-              console.log('onAuthStateChange: END of event processing.');
-            }
-          );
-          subscription = authListener.subscription;
-    } else {
-        console.log('useEffect (onAuthStateChange): Supabase client is null, cannot set up listener.');
-    }
-
-    return () => {
-      if (subscription) {
-        console.log('useEffect (onAuthStateChange): Unsubscribing from listener.');
-        subscription.unsubscribe();
-      }
-      console.log('useEffect (onAuthStateChange): Cleanup complete.');
-    };
-  }, [supabase]); 
-  // ★★★ 修正箇所ここまで ★★★
-
-  // 公開する signOut 関数はそのまま維持
+  /**
+   * ユーザーをログアウトさせます。
+   */
   const signOut = async () => {
     if (!supabase) return;
     try {
-      if (mountedRef.current) setLoading(true);
+      if (mountedRef.current) setLoading(true); // ログアウト処理中はローディング状態に
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
       if (mountedRef.current) {
         setUser(null);
         setError(null);
       }
-      clearLocalSupabaseCache(); 
+      clearLocalSupabaseCache(); // ローカルキャッシュもクリア
     } catch (err) {
-      if (mountedRef.current) setError(err instanceof Error ? err.message : 'Sign out error');
+      console.error('ログアウトエラー:', err);
+      if (mountedRef.current) setError(err instanceof Error ? err.message : 'ログアウト中にエラーが発生しました');
     } finally {
-      if (mountedRef.current) setLoading(false);
+      if (mountedRef.current) setLoading(false); // ログアウト処理完了後はローディングを解除
     }
   };
+
+  /**
+   * 主要な認証ロジックを管理するuseEffect。
+   * 初回マウント時のセッションチェックと、認証状態変化のリアルタイムリスナー設定を行います。
+   */
+  useEffect(() => {
+    let subscription: { unsubscribe: () => void } | undefined;
+
+    const setupAuth = async () => {
+      if (!supabase) {
+        if (mountedRef.current) {
+          setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
+          setLoading(false); // Supabaseが設定されていない場合はローディングを停止
+        }
+        return;
+      }
+
+      // 1. 初回マウント時のみセッションを明示的にチェック
+      // (isInitialSessionChecked.current を使用して二重実行を防止)
+      if (!isInitialSessionChecked.current) {
+        setLoading(true); // 初期チェック中はローディング状態に
+        setError(null); // エラーをクリア
+        try {
+          console.log('useAuth: 初期セッションチェックを実行中...');
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.error('useAuth: 初期セッション取得エラー:', sessionError.message);
+            clearLocalSupabaseCache(); 
+            if (mountedRef.current) {
+              setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
+              setUser(null);
+            }
+          } else if (session?.user) {
+            console.log('useAuth: アクティブな初期セッションが見つかりました (ユーザーID:', session.user.id, ')');
+            const userData = await fetchUserData(supabase, session.user.id);
+            if (mountedRef.current) setUser(userData);
+          } else {
+            console.log('useAuth: アクティブな初期セッションは見つかりませんでした。ユーザーはログインしていません。');
+            if (mountedRef.current) setUser(null);
+          }
+        } catch (err) {
+          console.error('useAuth: 初期セッションチェック中に致命的なエラーが発生しました:', err);
+          if (mountedRef.current) {
+            setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
+            setUser(null);
+          }
+        } finally {
+          if (mountedRef.current) {
+            setLoading(false); // 初期チェック完了後はローディングを停止
+            isInitialSessionChecked.current = true; // チェック済みとマーク
+            console.log('useAuth: 初期セッションチェックが完了しました。');
+          }
+        }
+      }
+
+      // 2. リアルタイムリスナーを設定し、今後の認証状態変化を処理
+      console.log('useAuth: onAuthStateChange リスナーを設定中...');
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (_event, session) => {
+            if (!mountedRef.current) return;
+            console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', _event);
+            setLoading(true); // 認証状態変化処理中はローディング状態に
+            setError(null); // エラーをクリア
+            try {
+              if (session?.user) {
+                const userData = await fetchUserData(supabase, session.user.id);
+                if (mountedRef.current) setUser(userData);
+              } else {
+                if (mountedRef.current) setUser(null);
+              }
+            } catch(err) {
+                console.error('onAuthStateChange: 状態変化処理中に致命的なエラーが発生しました:', err);
+                if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
+            } finally {
+              if (mountedRef.current) {
+                setLoading(false); // イベント処理完了後は常にローディングを解除
+                console.log('onAuthStateChange: イベント処理が終了しました。');
+              }
+            }
+          }
+        );
+        subscription = authListener.subscription;
+    };
+
+    setupAuth(); // コンポーネントマウント時に認証設定ロジックを実行
+
+    // クリーンアップ関数
+    return () => {
+      if (subscription) {
+        console.log('useAuth: リスナーの購読を解除します。');
+        subscription.unsubscribe();
+      }
+      console.log('useAuth: クリーンアップが完了しました。');
+    };
+  }, [supabase]); // supabaseクライアントが変更された場合にのみ再実行
 
   return {
     user,
     loading,
     error,
     signOut,
-    getInitialSession, // ★★★ 修正箇所: getInitialSession をリターンする ★★★
+    // getInitialSession はuseAuthフック内部で管理されるため、外部には公開しない
   };
 }
