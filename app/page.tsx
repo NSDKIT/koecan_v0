@@ -15,7 +15,7 @@ import SupportDashboard from '@/components/SupportDashboard';
 // 新しい閲覧用コンポーネントをインポート
 import { AdminSupportChatViewer } from '@/components/AdminSupportChatViewer'; 
 import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // ★★★ useRouter をインポート ★★★
+import { useRouter } from 'next/navigation'; // useRouter をインポート
 
 
 // URLハッシュを操作するヘルパー
@@ -29,9 +29,12 @@ const navigateToWelcome = () => {
 
 export default function Home() {
   const { user, loading, error, signOut } = useAuth();
-  const router = useRouter(); // ★★★ useRouter を使用 ★★★
+  const router = useRouter(); // useRouter を使用
   const [isAuthScreen, setIsAuthScreen] = useState(false); // サーバーでの window アクセスを回避
   const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
+  // ★★★ 修正箇所: selectedAdminPanel ステートを再宣言 ★★★
+  const [selectedAdminPanel, setSelectedAdminPanel] = useState<'admin' | 'support' | null>(null);
+
 
   // ★★★ 修正箇所: URLハッシュの変更をリッスンして画面を切り替える ★★★
   useEffect(() => {
@@ -92,13 +95,10 @@ export default function Home() {
             {error}
           </p>
           <button
-            onClick={() => {
-              signOut(); // ローカルセッションをクリア
-              router.replace(window.location.pathname); // ★★★ 修正: クリーンなリダイレクト ★★★
-            }}
+            onClick={() => window.location.reload()} 
             className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
-            再試行（セッションリセット）
+            再試行（強制リセット）
           </button>
         </div>
       </div>
@@ -130,7 +130,6 @@ export default function Home() {
   // AdminまたはSupportロールの場合のルーティング
   if (user.role === 'admin' || user.role === 'support') {
     // admin@example.comがAdminDashboardとSupportDashboardのどちらかを選択
-    // ... (selectedAdminPanel のロジックは変更なし) ...
     if (user.role === 'admin' && selectedAdminPanel === null) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center p-4">
