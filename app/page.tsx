@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth'; // ★★★ 修正: getInitialSession をuseAuthから取得しない ★★★
 import { isSupabaseConfigured } from '@/config/supabase';
 import { AuthForm } from '@/components/AuthForm';
 import { WelcomeScreen } from '@/components/WelcomeScreen';
@@ -28,29 +28,29 @@ const navigateToWelcome = () => {
 
 
 export default function Home() {
-  const { user, loading, error, signOut, getInitialSession } = useAuth(); // ★★★ getInitialSession を useAuth から取得 ★★★
+  const { user, loading, error, signOut } = useAuth(); // ★★★ 修正: getInitialSession を削除 ★★★
   const router = useRouter(); 
   const [isAuthScreen, setIsAuthScreen] = useState(false); 
   const [isClient, setIsClient] = useState(false); // クライアント側でレンダリングされているかを追跡
+  // ★★★ 追加: selectedAdminPanel の宣言 ★★★
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<"admin" | "support" | null>(null);
+
 
   useEffect(() => {
     setIsClient(true);
-    // ★★★ 修正箇所: isClient が true になった後に getInitialSession を呼び出す ★★★
+    // ★★★ 修正箇所: getInitialSession の呼び出しを削除 ★★★
     if (window.location.hash === '#auth') {
       setIsAuthScreen(true);
     } else {
       setIsAuthScreen(false);
     }
-    // 認証処理をここで開始
-    getInitialSession(); 
 
     const handleHashChange = () => {
       setIsAuthScreen(window.location.hash === '#auth');
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [getInitialSession]); // getInitialSession を依存配列に追加
+  }, []); // ★★★ 修正: 依存配列を空にする ★★★
 
   // Supabaseが設定されていない場合の表示
   if (!isSupabaseConfigured) {
