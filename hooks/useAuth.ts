@@ -108,35 +108,42 @@ export function useAuth() {
 
   /**
    * 現在のセッション状態をチェックし、ユーザーデータを取得・設定するヘルパー関数。
-   * 初期ロード時とタブの再アクティブ化時に呼び出されます。
+   * onAuthStateChangeが発火しない場合に備えて、手動でセッションをチェックする。
    */
-  const checkAndSetSession = useCallback(async () => {
+  const recheckSession = useCallback(async () => {
     if (!supabase || !mountedRef.current) return;
+
+    // ロード中ではない、かつ、エラー状態でもない場合は何もしない
+    // ただし、現在ログインしていない場合はチェックを行う
+    if (!loading && user !== null && error === null) {
+        console.log('recheckSession: 現在セッションがあり、ロード中でもエラーでもないためスキップします。');
+        return;
+    }
 
     setLoading(true); // チェック中はローディング状態に
     setError(null);    // エラーをクリア
 
     try {
-      console.log('checkAndSetSession: 現在のセッションをチェック中...');
+      console.log('recheckSession: 現在のセッションを再チェック中...');
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
-        console.error('checkAndSetSession: セッション取得エラー:', sessionError.message);
+        console.error('recheckSession: セッション取得エラー:', sessionError.message);
         clearLocalSupabaseCache(); 
         if (mountedRef.current) {
           setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
           setUser(null);
         }
       } else if (session?.user) {
-        console.log('checkAndSetSession: アクティブなセッションが見つかりました (ユーザーID:', session.user.id, ')');
+        console.log('recheckSession: アクティブなセッションが見つかりました (ユーザーID:', session.user.id, ')');
         const userData = await fetchUserData(supabase, session.user.id);
         if (mountedRef.current) setUser(userData);
       } else {
-        console.log('checkAndSetSession: アクティブなセッションは見つかりませんでした。ユーザーはログインしていません。');
+        console.log('recheckSession: アクティブなセッションは見つかりませんでした。ユーザーはログインしていません。');
         if (mountedRef.current) setUser(null);
       }
     } catch (err) {
-      console.error('checkAndSetSession: セッションチェック中に致命的なエラーが発生しました:', err);
+      console.error('recheckSession: セッション再チェック中に致命的なエラーが発生しました:', err);
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : '認証中にエラーが発生しました');
         setUser(null);
@@ -144,40 +151,65 @@ export function useAuth() {
     } finally {
       if (mountedRef.current) {
         setLoading(false); // チェック完了後はローディングを停止
-        console.log('checkAndSetSession: セッションチェックが完了しました。');
+        console.log('recheckSession: セッション再チェックが完了しました。');
       }
     }
-  }, [supabase]);
+  }, [supabase, loading, user, error]);
 
 
   /**
-   * 主要な認証ロジックを管理するuseEffect。
-   * 初回マウント時のセッションチェック、認証状態変化のリアルタイムリスナー、
-   * およびブラウザタブの可視性変更リスナー設定を行います。
+   * コンポーネントマウント時の初期セッションチェックと、
+   * ブラウザタブの可視性変更リスナーを設定するuseEffect。
    */
   useEffect(() => {
-    let subscription: { unsubscribe: () => void } | undefined;
-
     if (!supabase) {
       if (mountedRef.current) {
         setError('Supabaseクライアントが初期化されていません。環境変数またはSupabaseProviderの設定を確認してください。');
-        setLoading(false); // Supabaseが設定されていない場合はローディングを停止
+        setLoading(false);
       }
       return;
     }
 
-    // 1. コンポーネントマウント時に一度セッションをチェック
-    console.log('useAuth: 初期ロード時にセッションチェックを実行します。');
-    checkAndSetSession();
+    // 1. コンポーネントマウント時に一度セッションをチェック (recheckSessionがloadingを管理)
+    console.log('useAuth: useEffect: 初期ロード時にセッションチェックを実行します。');
+    recheckSession();
 
-    // 2. リアルタイムリスナーを設定し、今後の認証状態変化を処理
-    console.log('useAuth: onAuthStateChange リスナーを設定中...');
+    // 2. ブラウザタブの可視性変更リスナーを設定
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('visibilitychange: タブがアクティブになりました。セッションを再チェックします。');
+        // タブがアクティブになった時、必ずセッションを再チェック
+        recheckSession();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // クリーンアップ関数
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      console.log('useAuth: useEffect cleanup (visibilitychange).');
+    };
+  }, [supabase, recheckSession]); // recheckSession も依存配列に含める
+
+
+  /**
+   * SupabaseのonAuthStateChangeリスナーを設定するuseEffect。
+   * これは主に認証イベント（ログイン、ログアウトなど）によってトリガーされる。
+   */
+  useEffect(() => {
+    let subscription: { unsubscribe: () => void } | undefined;
+
+    if (!supabase) return; // supabaseクライアントがない場合はリスナーを設定しない
+
+    console.log('useAuth: useEffect: onAuthStateChange リスナーを設定中...');
     const { data: authListener } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
           if (!mountedRef.current) return;
           console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', _event);
-          setLoading(true); // 認証状態変化処理中はローディング状態に
+          
+          setLoading(true); // イベント処理中はローディング状態に
           setError(null);    // エラーをクリア
+
           try {
             if (session?.user) {
               const userData = await fetchUserData(supabase, session.user.id);
@@ -198,27 +230,16 @@ export function useAuth() {
       );
     subscription = authListener.subscription;
 
-    // 3. ブラウザタブの可視性変更リスナーを設定
-    // タブが再度アクティブになったときに認証状態を再確認します。
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log('visibilitychange: タブがアクティブになりました。セッションを再チェックします。');
-        checkAndSetSession();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-
     // クリーンアップ関数
     return () => {
       if (subscription) {
         console.log('useAuth: onAuthStateChange リスナーの購読を解除します。');
         subscription.unsubscribe();
       }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      console.log('useAuth: クリーンアップが完了しました。');
+      console.log('useAuth: useEffect cleanup (onAuthStateChange).');
     };
-  }, [supabase, checkAndSetSession]); // checkAndSetSession も依存配列に含める
+  }, [supabase]); // supabaseクライアントが変更された場合にのみ再実行
+
 
   return {
     user,
