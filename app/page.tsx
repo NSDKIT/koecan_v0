@@ -18,15 +18,6 @@ import { Database, AlertCircle, Settings, MessageCircle, ArrowLeft } from 'lucid
 import { useRouter } from 'next/navigation';
 
 
-// URLハッシュを操作するヘルパー
-const navigateToAuth = () => {
-    window.location.hash = 'auth';
-};
-const navigateToWelcome = () => {
-    window.location.hash = '';
-};
-
-
 export default function Home() {
   const { user, loading, error, signOut } = useAuth(); // ★★★ 修正: getInitialSession を削除 ★★★
   const router = useRouter(); 
@@ -35,6 +26,15 @@ export default function Home() {
   // ★★★ 追加: selectedAdminPanel の宣言 ★★★
   const [selectedAdminPanel, setSelectedAdminPanel] = useState<"admin" | "support" | null>(null);
 
+  // URLハッシュを操作するヘルパー（コンポーネント内で定義して、setIsAuthScreenにアクセスできるようにする）
+  const navigateToAuth = () => {
+    setIsAuthScreen(true);
+    window.location.hash = 'auth';
+  };
+  const navigateToWelcome = () => {
+    setIsAuthScreen(false);
+    window.location.hash = '';
+  };
 
   useEffect(() => {
     setIsClient(true);
