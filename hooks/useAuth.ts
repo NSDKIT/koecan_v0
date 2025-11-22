@@ -66,6 +66,7 @@ export function useAuth() {
   const sessionCheckInProgress = useRef(false); // セッションチェックが進行中かどうかを追跡
   const isPageVisibleRef = useRef(true); // ページが可視状態かどうかを追跡
   const authEventProcessingRef = useRef(false); // 認証イベントが処理中かどうかを追跡
+  const currentUserIdRef = useRef<string | null>(null); // 現在のユーザーIDを追跡（クロージャ問題を回避）
 
   // コンポーネントのマウント・アンマウント時に mountedRef を更新
   useEffect(() => {
@@ -112,6 +113,7 @@ export function useAuth() {
       if (signOutError) throw signOutError;
       if (mountedRef.current) {
         setUser(null);
+        currentUserIdRef.current = null; // 現在のユーザーIDをクリア
         setError(null);
       }
       clearLocalSupabaseCache(); // ローカルキャッシュもクリア
@@ -156,6 +158,7 @@ export function useAuth() {
             if (mountedRef.current) {
               setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
               setUser(null);
+              currentUserIdRef.current = null; // 現在のユーザーIDをクリア
               setLoading(false);
             }
           } else if (session?.user) {
@@ -165,12 +168,14 @@ export function useAuth() {
             const userData = await fetchUserData(supabase, session.user.id);
             if (mountedRef.current) {
               setUser(userData);
+              currentUserIdRef.current = userData ? userData.id : null; // 現在のユーザーIDを更新
               setLoading(false); // 確実にローディングを解除
             }
           } else {
             console.log('useAuth: アクティブな初期セッションは見つかりませんでした。ユーザーはログインしていません。');
             if (mountedRef.current) {
               setUser(null);
+              currentUserIdRef.current = null; // 現在のユーザーIDをクリア
               setLoading(false);
             }
           }
@@ -179,6 +184,7 @@ export function useAuth() {
           if (mountedRef.current) {
             setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
             setUser(null);
+            currentUserIdRef.current = null; // 現在のユーザーIDをクリア
             setLoading(false);
           }
         } finally {
@@ -218,15 +224,25 @@ export function useAuth() {
               return;
             }
 
+            // 既にユーザーが設定されていて、SIGNED_INイベントが発火した場合はスキップ
+            // これはタブ切り替え時などに、既にログイン済みのユーザーに対してSIGNED_INが発火するのを防ぐ
+            if (event === 'SIGNED_IN' && currentUserIdRef.current && session?.user?.id === currentUserIdRef.current) {
+              console.log('onAuthStateChange: 既にログイン済みのユーザーに対するSIGNED_INイベントをスキップします。', session.user.id);
+              return;
+            }
+
             // 既に同じイベントが処理中の場合はスキップ（重複実行を防ぐ）
+            // チェックと設定をアトミックにするため、即座にフラグを設定
             if (authEventProcessingRef.current) {
               console.log('onAuthStateChange: 既に認証イベントが処理中のため、このイベントをスキップします:', event);
               return;
             }
+            
+            // 処理中フラグを即座に設定（複数のイベントが同時に発火しても、最初の1つだけが処理される）
+            authEventProcessingRef.current = true;
 
             // その他の認証イベント（SIGNED_IN, SIGNED_OUT, USER_UPDATED など）のみローディング状態を設定
             console.log('onAuthStateChange: 認証イベントを処理中...', event, session?.user?.id);
-            authEventProcessingRef.current = true; // 処理中フラグを設定
             setLoading(true); // 認証状態変化処理中はローディング状態に
             setError(null); // エラーをクリア
             
@@ -246,21 +262,32 @@ export function useAuth() {
                 console.log('onAuthStateChange: ユーザーデータ取得完了', userData ? userData.id : null, userData?.role);
                 if (mountedRef.current) {
                   setUser(userData);
+                  currentUserIdRef.current = userData ? userData.id : null; // 現在のユーザーIDを更新
                   console.log('onAuthStateChange: ユーザー情報を設定しました');
+                } else {
+                  console.log('onAuthStateChange: コンポーネントがアンマウントされたため、ユーザー情報を設定しませんでした');
                 }
               } else {
                 console.log('onAuthStateChange: セッションがありません。ユーザーをnullに設定します。');
-                if (mountedRef.current) setUser(null);
+                if (mountedRef.current) {
+                  setUser(null);
+                  currentUserIdRef.current = null; // 現在のユーザーIDをクリア
+                }
               }
             } catch(err) {
                 console.error('onAuthStateChange: 状態変化処理中に致命的なエラーが発生しました:', err);
-                if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
+                if (mountedRef.current) {
+                  setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
+                }
             } finally {
               clearTimeout(timeoutId); // タイムアウトをクリア
-              authEventProcessingRef.current = false; // 処理中フラグを解除
+              // 処理中フラグを解除（必ず実行されるように、mountedRefのチェックの外で実行）
+              authEventProcessingRef.current = false;
               if (mountedRef.current) {
                 setLoading(false); // イベント処理完了後は常にローディングを解除
                 console.log('onAuthStateChange: イベント処理が終了しました。');
+              } else {
+                console.log('onAuthStateChange: コンポーネントがアンマウントされたため、ローディング状態は更新しませんでした');
               }
             }
           }
@@ -298,6 +325,7 @@ export function useAuth() {
         if (mountedRef.current) {
           setError(`セッション検証に失敗しました: ${sessionError.message}`);
           setUser(null);
+          currentUserIdRef.current = null; // 現在のユーザーIDをクリア
           setLoading(false);
         }
         return;
@@ -308,6 +336,7 @@ export function useAuth() {
         const userData = await fetchUserData(supabase, session.user.id);
         if (mountedRef.current) {
           setUser(userData);
+          currentUserIdRef.current = userData ? userData.id : null; // 現在のユーザーIDを更新
           setLoading(false);
           console.log('useAuth: ユーザー情報を更新しました');
         }
@@ -315,6 +344,7 @@ export function useAuth() {
         console.log('useAuth: セッションが見つかりませんでした');
         if (mountedRef.current) {
           setUser(null);
+          currentUserIdRef.current = null; // 現在のユーザーIDをクリア
           setLoading(false);
         }
       }
@@ -323,6 +353,7 @@ export function useAuth() {
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : 'セッション再確認中にエラーが発生しました');
         setUser(null);
+        currentUserIdRef.current = null; // 現在のユーザーIDをクリア
         setLoading(false);
       }
     }
