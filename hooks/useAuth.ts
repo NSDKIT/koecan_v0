@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { User as SupabaseUser, SupabaseClient } from '@supabase/supabase-js';
+import { User as SupabaseUser, SupabaseClient, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { useSupabase } from '@/contexts/SupabaseProvider';
 
 interface AuthUser extends SupabaseUser {
@@ -165,9 +165,18 @@ export function useAuth() {
       // 2. リアルタイムリスナーを設定し、今後の認証状態変化を処理
       console.log('useAuth: onAuthStateChange リスナーを設定中...');
       const { data: authListener } = supabase.auth.onAuthStateChange(
-          async (_event, session) => {
+          async (event: AuthChangeEvent, session: Session | null) => {
             if (!mountedRef.current) return;
-            console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', _event);
+            console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', event);
+            
+            // TOKEN_REFRESHED イベントの場合は、ローディング状態を設定せず、ユーザーデータの再取得もスキップ
+            // これは通常の動作であり、ユーザーに影響を与えるべきではない
+            if (event === 'TOKEN_REFRESHED') {
+              console.log('onAuthStateChange: トークンがリフレッシュされました。ローディング状態は変更しません。');
+              return;
+            }
+
+            // その他の認証イベント（SIGNED_IN, SIGNED_OUT, USER_UPDATED など）のみローディング状態を設定
             setLoading(true); // 認証状態変化処理中はローディング状態に
             setError(null); // エラーをクリア
             try {
