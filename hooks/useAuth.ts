@@ -204,7 +204,7 @@ export function useAuth() {
               if (session?.user) {
                 console.log('onAuthStateChange: ユーザーデータを取得中...', session.user.id);
                 const userData = await fetchUserData(supabase, session.user.id);
-                console.log('onAuthStateChange: ユーザーデータ取得完了', userData?.id, userData?.role);
+                console.log('onAuthStateChange: ユーザーデータ取得完了', userData ? userData.id : null, userData?.role);
                 if (mountedRef.current) {
                   setUser(userData);
                   console.log('onAuthStateChange: ユーザー情報を設定しました');
@@ -239,11 +239,60 @@ export function useAuth() {
     };
   }, [supabase]); // supabaseクライアントが変更された場合にのみ再実行
 
+  /**
+   * セッションを再確認して、ユーザー情報を更新します。
+   * ログイン成功後など、onAuthStateChangeが発火しない場合に使用します。
+   */
+  const refreshSession = async () => {
+    if (!supabase) return;
+    if (!mountedRef.current) return;
+    
+    try {
+      console.log('useAuth: セッションを再確認中...');
+      setLoading(true);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('useAuth: セッション再確認エラー:', sessionError.message);
+        if (mountedRef.current) {
+          setError(`セッション検証に失敗しました: ${sessionError.message}`);
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+      
+      if (session?.user) {
+        console.log('useAuth: セッション再確認成功 (ユーザーID:', session.user.id, ')');
+        const userData = await fetchUserData(supabase, session.user.id);
+        if (mountedRef.current) {
+          setUser(userData);
+          setLoading(false);
+          console.log('useAuth: ユーザー情報を更新しました');
+        }
+      } else {
+        console.log('useAuth: セッションが見つかりませんでした');
+        if (mountedRef.current) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    } catch (err) {
+      console.error('useAuth: セッション再確認中にエラーが発生しました:', err);
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : 'セッション再確認中にエラーが発生しました');
+        setUser(null);
+        setLoading(false);
+      }
+    }
+  };
+
   return {
     user,
     loading,
     error,
     signOut,
+    refreshSession, // セッション再確認関数を公開
     // getInitialSession はuseAuthフック内部で管理されるため、外部には公開しない
   };
 }

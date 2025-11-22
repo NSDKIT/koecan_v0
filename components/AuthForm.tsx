@@ -14,6 +14,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ onBack }: AuthFormProps) {
+  const { refreshSession } = useAuth(); // セッション再確認関数を取得
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,11 +55,19 @@ export function AuthForm({ onBack }: AuthFormProps) {
           console.error('ログインエラー:', error);
           throw error;
         }
-        // ログイン成功時は、useAuthフックが認証状態の変化を検知してユーザー情報を取得する
-        // onAuthStateChangeのSIGNED_INイベントが発火して、ユーザー情報が設定される
         console.log('ログイン成功:', data.user?.id);
-        // AuthFormのローディングは解除しない（useAuthがSIGNED_INイベントを処理するまで待つ）
-        // useAuthのonAuthStateChangeがSIGNED_INイベントを処理して、ユーザー情報を設定すると、
+        
+        // ログイン成功後、onAuthStateChangeが発火するのを少し待つ
+        // 通常は即座に発火するが、ネットワークの遅延などで遅れる可能性がある
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // onAuthStateChangeが発火しない場合に備えて、明示的にセッションを再確認
+        // これにより、確実にユーザー情報が設定される
+        console.log('ログイン成功後、セッションを再確認します...');
+        await refreshSession();
+        
+        // セッション再確認後、少し待ってからローディングを解除
+        // useAuthのrefreshSessionがユーザー情報を設定すると、
         // page.tsxでuserが設定され、AuthFormが非表示になる
         return; // ログイン成功時はここで終了（finallyブロックをスキップ）
       } else {
