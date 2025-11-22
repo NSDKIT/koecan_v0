@@ -64,12 +64,26 @@ export function useAuth() {
   const mountedRef = useRef(true); // コンポーネントのマウント状態を追跡
   const isInitialSessionChecked = useRef(false); // NEW: 初期セッションチェックが完了したか追跡
   const sessionCheckInProgress = useRef(false); // セッションチェックが進行中かどうかを追跡
+  const isPageVisibleRef = useRef(true); // ページが可視状態かどうかを追跡
 
   // コンポーネントのマウント・アンマウント時に mountedRef を更新
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+    };
+  }, []);
+
+  // ページの可視性を監視（タブ切り替えを検知）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      isPageVisibleRef.current = !document.hidden;
+      console.log('ページの可視性が変更されました:', isPageVisibleRef.current ? '可視' : '非可視');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -180,7 +194,14 @@ export function useAuth() {
       const { data: authListener } = supabase.auth.onAuthStateChange(
           async (event: AuthChangeEvent, session: Session | null) => {
             if (!mountedRef.current) return;
-            console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', event);
+            console.log('onAuthStateChange: イベントを受信しました。セッション:', session ? 'アクティブ' : '非アクティブ', 'イベントタイプ:', event, 'ページ可視性:', isPageVisibleRef.current ? '可視' : '非可視');
+            
+            // ページが非可視の時（タブが切り替わっている時）は、TOKEN_REFRESHED以外のイベントをスキップ
+            // ただし、SIGNED_INやSIGNED_OUTなどの重要なイベントは処理する
+            if (!isPageVisibleRef.current && (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+              console.log('onAuthStateChange: ページが非可視のため、このイベントをスキップします:', event);
+              return;
+            }
             
             // TOKEN_REFRESHED イベントの場合は、ローディング状態を設定せず、ユーザーデータの再取得もスキップ
             // これは通常の動作であり、ユーザーに影響を与えるべきではない
@@ -200,6 +221,15 @@ export function useAuth() {
             console.log('onAuthStateChange: 認証イベントを処理中...', event, session?.user?.id);
             setLoading(true); // 認証状態変化処理中はローディング状態に
             setError(null); // エラーをクリア
+            
+            // タイムアウトを設定して、処理が完了しない場合でもローディングを解除する
+            const timeoutId = setTimeout(() => {
+              if (mountedRef.current) {
+                console.warn('onAuthStateChange: 処理がタイムアウトしました。ローディングを解除します。');
+                setLoading(false);
+              }
+            }, 10000); // 10秒でタイムアウト
+            
             try {
               if (session?.user) {
                 console.log('onAuthStateChange: ユーザーデータを取得中...', session.user.id);
@@ -217,6 +247,7 @@ export function useAuth() {
                 console.error('onAuthStateChange: 状態変化処理中に致命的なエラーが発生しました:', err);
                 if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
             } finally {
+              clearTimeout(timeoutId); // タイムアウトをクリア
               if (mountedRef.current) {
                 setLoading(false); // イベント処理完了後は常にローディングを解除
                 console.log('onAuthStateChange: イベント処理が終了しました。');
