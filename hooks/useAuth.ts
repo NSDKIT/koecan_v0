@@ -126,7 +126,8 @@ export function useAuth() {
       // 1. 初回マウント時のみセッションを明示的にチェック
       // (isInitialSessionChecked.current を使用して二重実行を防止)
       if (!isInitialSessionChecked.current) {
-        setLoading(true); // 初期チェック中はローディング状態に
+        // セッションが既に存在する可能性があるため、ローディング状態は最小限に
+        // セッションが存在しない場合のみ、ローディングを表示する
         setError(null); // エラーをクリア
         try {
           console.log('useAuth: 初期セッションチェックを実行中...');
@@ -138,27 +139,41 @@ export function useAuth() {
             if (mountedRef.current) {
               setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
               setUser(null);
+              setLoading(false); // エラー時はローディングを停止
             }
           } else if (session?.user) {
             console.log('useAuth: アクティブな初期セッションが見つかりました (ユーザーID:', session.user.id, ')');
+            // セッションが存在する場合、ユーザーデータを取得してからローディングを解除
             const userData = await fetchUserData(supabase, session.user.id);
-            if (mountedRef.current) setUser(userData);
+            if (mountedRef.current) {
+              setUser(userData);
+              setLoading(false); // ユーザーデータ取得後、即座にローディングを解除
+            }
           } else {
             console.log('useAuth: アクティブな初期セッションは見つかりませんでした。ユーザーはログインしていません。');
-            if (mountedRef.current) setUser(null);
+            if (mountedRef.current) {
+              setUser(null);
+              setLoading(false); // セッションがない場合も即座にローディングを解除
+            }
           }
         } catch (err) {
           console.error('useAuth: 初期セッションチェック中に致命的なエラーが発生しました:', err);
           if (mountedRef.current) {
             setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
             setUser(null);
+            setLoading(false); // エラー時もローディングを解除
           }
         } finally {
           if (mountedRef.current) {
-            setLoading(false); // 初期チェック完了後はローディングを停止
             isInitialSessionChecked.current = true; // チェック済みとマーク
             console.log('useAuth: 初期セッションチェックが完了しました。');
           }
+        }
+      } else {
+        // 既に初期チェックが完了している場合、ローディングを即座に解除
+        // （コンポーネントが再マウントされたが、既にチェック済みの場合）
+        if (mountedRef.current && loading) {
+          setLoading(false);
         }
       }
 
@@ -173,6 +188,13 @@ export function useAuth() {
             // これは通常の動作であり、ユーザーに影響を与えるべきではない
             if (event === 'TOKEN_REFRESHED') {
               console.log('onAuthStateChange: トークンがリフレッシュされました。ローディング状態は変更しません。');
+              return;
+            }
+
+            // INITIAL_SESSION イベントの場合も、既に初期チェックで処理済みなのでスキップ
+            // これにより、リロード時の二重処理を防ぐ
+            if (event === 'INITIAL_SESSION') {
+              console.log('onAuthStateChange: 初期セッションイベントを受信しました。初期チェックで既に処理済みのためスキップします。');
               return;
             }
 
