@@ -197,13 +197,20 @@ export function useAuth() {
             }
 
             // その他の認証イベント（SIGNED_IN, SIGNED_OUT, USER_UPDATED など）のみローディング状態を設定
+            console.log('onAuthStateChange: 認証イベントを処理中...', event, session?.user?.id);
             setLoading(true); // 認証状態変化処理中はローディング状態に
             setError(null); // エラーをクリア
             try {
               if (session?.user) {
+                console.log('onAuthStateChange: ユーザーデータを取得中...', session.user.id);
                 const userData = await fetchUserData(supabase, session.user.id);
-                if (mountedRef.current) setUser(userData);
+                console.log('onAuthStateChange: ユーザーデータ取得完了', userData?.id, userData?.role);
+                if (mountedRef.current) {
+                  setUser(userData);
+                  console.log('onAuthStateChange: ユーザー情報を設定しました');
+                }
               } else {
+                console.log('onAuthStateChange: セッションがありません。ユーザーをnullに設定します。');
                 if (mountedRef.current) setUser(null);
               }
             } catch(err) {

@@ -46,11 +46,21 @@ export function AuthForm({ onBack }: AuthFormProps) {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        if (error) {
+          console.error('ログインエラー:', error);
+          throw error;
+        }
+        // ログイン成功時は、useAuthフックが認証状態の変化を検知してユーザー情報を取得する
+        // onAuthStateChangeのSIGNED_INイベントが発火して、ユーザー情報が設定される
+        console.log('ログイン成功:', data.user?.id);
+        // AuthFormのローディングは解除しない（useAuthがSIGNED_INイベントを処理するまで待つ）
+        // useAuthのonAuthStateChangeがSIGNED_INイベントを処理して、ユーザー情報を設定すると、
+        // page.tsxでuserが設定され、AuthFormが非表示になる
+        return; // ログイン成功時はここで終了（finallyブロックをスキップ）
       } else {
         // Sign up
         const { data, error } = await supabase.auth.signUp({
@@ -103,15 +113,16 @@ export function AuthForm({ onBack }: AuthFormProps) {
                 return;
             }
           }
+          // 新規登録成功時も、useAuthフックが認証状態の変化を検知してユーザー情報を取得する
+          console.log('新規登録成功:', data.user.id);
         }
+        // 新規登録成功時も、useAuthがSIGNED_INイベントを処理するまで待つ
+        return; // 新規登録成功時もここで終了（finallyブロックをスキップ）
       }
     } catch (err) {
       console.error('Auth error:', err);
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
-    } finally {
-      if (!error) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
