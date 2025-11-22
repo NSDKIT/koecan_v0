@@ -58,11 +58,12 @@ const fetchUserData = async (supabase: SupabaseClient, userId: string): Promise<
 export function useAuth() {
   const supabase = useSupabase();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true); // 初期ロード状態は true のまま
+  const [loading, setLoading] = useState(false); // 初期ロード状態を false に変更（セッション確認後に必要に応じて true にする）
   const [error, setError] = useState<string | null>(null);
 
   const mountedRef = useRef(true); // コンポーネントのマウント状態を追跡
   const isInitialSessionChecked = useRef(false); // NEW: 初期セッションチェックが完了したか追跡
+  const sessionCheckInProgress = useRef(false); // セッションチェックが進行中かどうかを追跡
 
   // コンポーネントのマウント・アンマウント時に mountedRef を更新
   useEffect(() => {
@@ -125,12 +126,13 @@ export function useAuth() {
 
       // 1. 初回マウント時のみセッションを明示的にチェック
       // (isInitialSessionChecked.current を使用して二重実行を防止)
-      if (!isInitialSessionChecked.current) {
-        // セッションが既に存在する可能性があるため、ローディング状態は最小限に
-        // セッションが存在しない場合のみ、ローディングを表示する
+      if (!isInitialSessionChecked.current && !sessionCheckInProgress.current) {
+        sessionCheckInProgress.current = true; // チェック開始をマーク
         setError(null); // エラーをクリア
+        
         try {
           console.log('useAuth: 初期セッションチェックを実行中...');
+          // getSession()は通常localStorageから即座に読み取れるため、高速
           const { data: { session }, error: sessionError } = await supabase.auth.getSession();
           
           if (sessionError) {
@@ -139,21 +141,22 @@ export function useAuth() {
             if (mountedRef.current) {
               setError(`セッション検証に失敗しました: ${sessionError.message}。ローカルセッションをリセットしました。`);
               setUser(null);
-              setLoading(false); // エラー時はローディングを停止
+              setLoading(false);
             }
           } else if (session?.user) {
             console.log('useAuth: アクティブな初期セッションが見つかりました (ユーザーID:', session.user.id, ')');
-            // セッションが存在する場合、ユーザーデータを取得してからローディングを解除
+            // セッションが存在する場合、ユーザーデータを取得
+            // この間はローディングを表示しない（既にセッションがあるため）
             const userData = await fetchUserData(supabase, session.user.id);
             if (mountedRef.current) {
               setUser(userData);
-              setLoading(false); // ユーザーデータ取得後、即座にローディングを解除
+              setLoading(false); // 確実にローディングを解除
             }
           } else {
             console.log('useAuth: アクティブな初期セッションは見つかりませんでした。ユーザーはログインしていません。');
             if (mountedRef.current) {
               setUser(null);
-              setLoading(false); // セッションがない場合も即座にローディングを解除
+              setLoading(false);
             }
           }
         } catch (err) {
@@ -161,19 +164,14 @@ export function useAuth() {
           if (mountedRef.current) {
             setError(err instanceof Error ? err.message : '初期認証中にエラーが発生しました');
             setUser(null);
-            setLoading(false); // エラー時もローディングを解除
+            setLoading(false);
           }
         } finally {
           if (mountedRef.current) {
             isInitialSessionChecked.current = true; // チェック済みとマーク
+            sessionCheckInProgress.current = false; // チェック完了をマーク
             console.log('useAuth: 初期セッションチェックが完了しました。');
           }
-        }
-      } else {
-        // 既に初期チェックが完了している場合、ローディングを即座に解除
-        // （コンポーネントが再マウントされたが、既にチェック済みの場合）
-        if (mountedRef.current && loading) {
-          setLoading(false);
         }
       }
 
