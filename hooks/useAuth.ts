@@ -65,6 +65,7 @@ export function useAuth() {
   const isInitialSessionChecked = useRef(false); // NEW: 初期セッションチェックが完了したか追跡
   const sessionCheckInProgress = useRef(false); // セッションチェックが進行中かどうかを追跡
   const isPageVisibleRef = useRef(true); // ページが可視状態かどうかを追跡
+  const authEventProcessingRef = useRef(false); // 認証イベントが処理中かどうかを追跡
 
   // コンポーネントのマウント・アンマウント時に mountedRef を更新
   useEffect(() => {
@@ -217,8 +218,15 @@ export function useAuth() {
               return;
             }
 
+            // 既に同じイベントが処理中の場合はスキップ（重複実行を防ぐ）
+            if (authEventProcessingRef.current) {
+              console.log('onAuthStateChange: 既に認証イベントが処理中のため、このイベントをスキップします:', event);
+              return;
+            }
+
             // その他の認証イベント（SIGNED_IN, SIGNED_OUT, USER_UPDATED など）のみローディング状態を設定
             console.log('onAuthStateChange: 認証イベントを処理中...', event, session?.user?.id);
+            authEventProcessingRef.current = true; // 処理中フラグを設定
             setLoading(true); // 認証状態変化処理中はローディング状態に
             setError(null); // エラーをクリア
             
@@ -227,6 +235,7 @@ export function useAuth() {
               if (mountedRef.current) {
                 console.warn('onAuthStateChange: 処理がタイムアウトしました。ローディングを解除します。');
                 setLoading(false);
+                authEventProcessingRef.current = false; // 処理中フラグを解除
               }
             }, 10000); // 10秒でタイムアウト
             
@@ -248,6 +257,7 @@ export function useAuth() {
                 if (mountedRef.current) setError(err instanceof Error ? err.message : '認証状態変更中にエラーが発生しました');
             } finally {
               clearTimeout(timeoutId); // タイムアウトをクリア
+              authEventProcessingRef.current = false; // 処理中フラグを解除
               if (mountedRef.current) {
                 setLoading(false); // イベント処理完了後は常にローディングを解除
                 console.log('onAuthStateChange: イベント処理が終了しました。');
