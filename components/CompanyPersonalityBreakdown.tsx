@@ -327,17 +327,33 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     レーダーチャートの数値について
                   </h4>
                   <div className="text-sm text-gray-700 space-y-2">
-                    <p>
-                      <span className="font-semibold">0〜50:</span> 左側の傾向が強い（E: 外向型、N: 革新型、P: 人材志向、F: 柔軟型）
+                    <p className="font-semibold text-purple-700 mb-2">
+                      ⚠️ 重要: 数値の大小は優劣ではなく、価値観の違いを表しています
                     </p>
-                    <p>
-                      <span className="font-semibold">50:</span> 中間（バランス型）
-                    </p>
-                    <p>
-                      <span className="font-semibold">50〜100:</span> 右側の傾向が強い（I: 内向型、S: 安定型、R: 成果志向、O: 規律型）
-                    </p>
-                    <p className="text-xs text-gray-600 mt-2">
-                      ※ 元のスコア（-2〜+2）を0〜100の範囲に正規化して表示しています
+                    <div className="space-y-1">
+                      <p>
+                        <span className="font-semibold">0〜50:</span> 以下の価値観の傾向
+                      </p>
+                      <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                        <li>市場への関わり方: <span className="font-semibold">E（外向型）</span> - 外部との交流を重視</li>
+                        <li>成長・戦略スタンス: <span className="font-semibold">N（革新型）</span> - 新しいアイデアや未来の可能性を重視</li>
+                        <li>組織運営スタンス: <span className="font-semibold">P（人材志向）</span> - チームの和や個々の成長を重視</li>
+                        <li>意思決定スタイル: <span className="font-semibold">F（柔軟型）</span> - 状況に応じた柔軟な対応を重視</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-1 mt-3">
+                      <p>
+                        <span className="font-semibold">50〜100:</span> 以下の価値観の傾向
+                      </p>
+                      <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                        <li>市場への関わり方: <span className="font-semibold">I（内向型）</span> - 社内の改善や既存顧客との関係強化を重視</li>
+                        <li>成長・戦略スタンス: <span className="font-semibold">S（安定型）</span> - 現在の成果や実績のある方法を重視</li>
+                        <li>組織運営スタンス: <span className="font-semibold">R（成果志向）</span> - 目標達成や数値的な成果を重視</li>
+                        <li>意思決定スタイル: <span className="font-semibold">O（規律型）</span> - 明確な手順や長期計画を重視</li>
+                      </ul>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
+                      ※ 元のスコア（-2〜+2）を0〜100の範囲に正規化して表示しています。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
                     </p>
                   </div>
                 </div>
