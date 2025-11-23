@@ -732,6 +732,16 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     tick={{ fill: '#9ca3af', fontSize: 10 }}
                     label={{ value: 'スコア (0-100)', position: 'insideStart', offset: 10, fill: '#6b7280', fontSize: 11 }}
                   />
+                  {/* 全従業員の平均値を面積で表示 */}
+                  <Radar
+                    name="平均"
+                    dataKey="平均"
+                    stroke="rgba(139, 92, 246, 1)"
+                    fill="rgba(139, 92, 246, 0.4)"
+                    fillOpacity={0.6}
+                    strokeWidth={3}
+                    dot={false}
+                  />
                   {/* 各職種/年代別の平均値を面積で表示（各グループを異なる色で） */}
                   {categoryGroups.map((group, groupIndex) => {
                     const color = categoryColors[groupIndex % categoryColors.length];
@@ -748,14 +758,45 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       />
                     );
                   })}
+                  {/* 学生自身を点で表示（目立つ色、線で結ばない） */}
+                  {studentAxes && (
+                    <Radar
+                      name="あなた"
+                      dataKey="あなた"
+                      stroke="rgba(239, 68, 68, 1)"
+                      fill="none"
+                      strokeWidth={0}
+                      dot={{ r: 6, fill: 'rgba(239, 68, 68, 1)' }}
+                      connectNulls={false}
+                      isAnimationActive={false}
+                    />
+                  )}
+                  {/* 職種別/年代別にグループ化して点で表示（各グループを異なる色で） */}
+                  {categoryGroups.map((group, groupIndex) => {
+                    const color = categoryColors[groupIndex % categoryColors.length];
+                    return group.items.map((_: Record<string, number>, itemIndex: number) => (
+                      <Radar
+                        key={`${group.category}-${itemIndex}`}
+                        name={`${group.category}_${itemIndex + 1}`}
+                        dataKey={`${group.category}_${itemIndex + 1}`}
+                        stroke={color.stroke}
+                        fill="none"
+                        strokeWidth={0}
+                        dot={{ r: 4, fill: color.stroke, strokeWidth: 0 }}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                      />
+                    ));
+                  }).flat()}
                   <Legend 
                     wrapperStyle={{ paddingTop: '20px' }}
                     iconType="line"
                     formatter={(value: string) => {
-                      // カテゴリー名のみを表示（点は表示しない）
+                      // 職種/年代別の平均のみを凡例に表示
                       if (value.includes('_平均')) {
                         return value.replace('_平均', '');
                       }
+                      // 全体平均、あなた、個別従業員は凡例に表示しない
                       return '';
                     }}
                   />
