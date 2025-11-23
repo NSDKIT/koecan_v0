@@ -37,6 +37,8 @@ import { LineLinkButton } from '@/components/LineLinkButton';
 // ★★★ 追加: インポートモーダルをインポート ★★★
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ImportCsvModal } from '@/components/ImportCsvModal';
+import { CompanyPersonalityImportModal } from '@/components/CompanyPersonalityImportModal';
+import { CompanyPersonalityResults } from '@/components/CompanyPersonalityResults';
 
 // =========================================================================
 // 新しいコンポーネント: AdminSurveyManager (このファイル内で定義)
@@ -166,7 +168,7 @@ const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchS
 // =========================================================================
 
 // ★★★ 修正: タブの型に 'survey_manager' を追加 ★★★
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange';
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange' | 'company_personality';
 
 
 export function AdminDashboard() {
@@ -183,6 +185,8 @@ export function AdminDashboard() {
   const [showLineLinkModal, setShowLineLinkModal] = useState(false); 
   const [showImportSurveyModal, setShowImportSurveyModal] = useState(false);
   const [showImportCsvModal, setShowImportCsvModal] = useState(false);
+  const [showCompanyPersonalityImportModal, setShowCompanyPersonalityImportModal] = useState(false);
+  const [companyPersonalityData, setCompanyPersonalityData] = useState<any[]>([]);
 
   // ★★★ 追加: アンケートデータと取得関数 ★★★
   const [allSurveys, setAllSurveys] = useState<Survey[]>([]);
@@ -216,6 +220,15 @@ export function AdminDashboard() {
     if (user) {
       fetchStats();
       fetchAllSurveys(); // ★★★ アンケートデータを初期ロード ★★★
+      // 企業パーソナリティデータを読み込む
+      const storedData = localStorage.getItem('company_personality_data');
+      if (storedData) {
+        try {
+          setCompanyPersonalityData(JSON.parse(storedData));
+        } catch (err) {
+          console.error('Failed to parse company personality data:', err);
+        }
+      }
     }
   }, [user]);
 
@@ -497,6 +510,16 @@ export function AdminDashboard() {
               >
                 ポイント交換
               </button>
+              <button
+                onClick={() => setActiveTab('company_personality')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'company_personality'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                企業パーソナリティ診断
+              </button>
             </div>
           </div>
 
@@ -514,6 +537,24 @@ export function AdminDashboard() {
             {activeTab === 'chat_monitoring' && renderChatMonitoringTab()}
             {activeTab === 'point_exchange' && ( // ★★★ 追加: ポイント交換管理をレンダリング ★★★
                 <PointExchangeManager />
+            )}
+            {activeTab === 'company_personality' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">企業パーソナリティ診断</h2>
+                    <p className="text-gray-600 mt-1">CSVファイルをインポートして、職種別・年代別のパーソナリティタイプを分析</p>
+                  </div>
+                  <button
+                    onClick={() => setShowCompanyPersonalityImportModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center"
+                  >
+                    <FileText className="w-5 h-5 mr-2" />
+                    CSVインポート
+                  </button>
+                </div>
+                <CompanyPersonalityResults data={companyPersonalityData} />
+              </div>
             )}
           </div>
         </main>
@@ -543,6 +584,22 @@ export function AdminDashboard() {
         <ImportCsvModal
           onClose={() => setShowImportCsvModal(false)}
           onImport={fetchStats} // 企業情報管理画面の内容を更新する関数を呼び出す (JobInfoManagerの再取得が理想だが、ここでは stats を更新)
+        />
+      )}
+      {showCompanyPersonalityImportModal && (
+        <CompanyPersonalityImportModal
+          onClose={() => setShowCompanyPersonalityImportModal(false)}
+          onImportSuccess={() => {
+            // データを再読み込み
+            const storedData = localStorage.getItem('company_personality_data');
+            if (storedData) {
+              try {
+                setCompanyPersonalityData(JSON.parse(storedData));
+              } catch (err) {
+                console.error('Failed to parse company personality data:', err);
+              }
+            }
+          }}
         />
       )}
 

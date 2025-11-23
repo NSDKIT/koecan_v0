@@ -173,6 +173,9 @@ export interface Advertisement {
   transport_lodging_stipend?: boolean; // 交通費・宿泊費の支給
   internship_application_url?: string | null; // インターンシップ申込URL
   
+  // パーソナリティ診断
+  personality_type?: string | null; // 企業のパーソナリティタイプ（例: ENPF, ISRO等）
+  
   // 旧フィールド（互換性のため残す。利用しない場合はnullとなる。）
   title?: string | null; 
   description?: string | null;

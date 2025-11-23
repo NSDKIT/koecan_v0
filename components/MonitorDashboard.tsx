@@ -44,6 +44,7 @@ import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModa
 import { MatchingFeature } from '@/components/MatchingFeature';
 import { PersonalityAssessmentModal } from '@/components/PersonalityAssessmentModal';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
+import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
@@ -97,6 +98,8 @@ export default function MonitorDashboard() {
   const [showPersonalityAssessmentModal, setShowPersonalityAssessmentModal] = useState(false);
   const [showPersonalityTypeModal, setShowPersonalityTypeModal] = useState(false);
   const [personalityType, setPersonalityType] = useState<string | null>(null);
+  const [showCompanyPersonalityTypeModal, setShowCompanyPersonalityTypeModal] = useState(false);
+  const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
 
   const fetchProfile = useCallback(async () => {
@@ -1028,9 +1031,16 @@ export default function MonitorDashboard() {
                         )}
                         
                         <div className="p-4">
-                          <h3 className="font-semibold text-gray-800 mb-2">
-                            {displayValue(ad.company_name) || '企業名未設定'}
-                          </h3>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-gray-800">
+                              {displayValue(ad.company_name) || '企業名未設定'}
+                            </h3>
+                            {ad.personality_type && (
+                              <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">
+                                {ad.personality_type}
+                              </div>
+                            )}
+                          </div>
                           <p className="text-gray-600 text-sm line-clamp-2">
                             {displayValue(ad.company_vision) || displayValue(ad.title) || displayValue(ad.description) || ''}
                           </p>
@@ -1161,7 +1171,20 @@ export default function MonitorDashboard() {
 
               {/* ヘッダー - 白背景にオレンジテキスト */}
               <div className="bg-white rounded-t-3xl p-8 pb-6 border-b-2 border-orange-500">
-                <h2 className="text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+                  {selectedAdvertisement.personality_type && (
+                    <div
+                      className="bg-purple-100 text-purple-800 px-6 py-3 rounded-full text-xl font-bold cursor-pointer hover:bg-purple-200 transition-colors"
+                      onClick={() => {
+                        setShowCompanyPersonalityTypeModal(true);
+                        setCompanyPersonalityType(selectedAdvertisement.personality_type || null);
+                      }}
+                    >
+                      {selectedAdvertisement.personality_type}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
@@ -1520,6 +1543,19 @@ export default function MonitorDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* パーソナリティ診断結果 */}
+                {selectedAdvertisement.personality_type && (
+                  <div className="mb-8">
+                    <div className="flex items-center mb-4">
+                      <Brain className="w-6 h-6 text-purple-600 mr-2" />
+                      <h3 className="text-2xl font-bold text-gray-800">パーソナリティ診断</h3>
+                    </div>
+                    <div className="bg-white rounded-2xl p-6 border border-gray-200">
+                      <CompanyPersonalityBreakdown companyId={selectedAdvertisement.id} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -1553,6 +1589,16 @@ export default function MonitorDashboard() {
         <PersonalityTypeModal
           type={personalityType}
           onClose={() => setShowPersonalityTypeModal(false)}
+        />
+      )}
+
+      {companyPersonalityType && showCompanyPersonalityTypeModal && (
+        <PersonalityTypeModal
+          type={companyPersonalityType}
+          onClose={() => {
+            setShowCompanyPersonalityTypeModal(false);
+            setCompanyPersonalityType(null);
+          }}
         />
       )}
       
