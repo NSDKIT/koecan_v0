@@ -131,17 +131,9 @@ export default function MonitorDashboard() {
 
       if (profileError) throw profileError;
 
-      const { data: pointsData, error: pointsError } = await supabase
-        .from('monitor_points_view') 
-        .select('points_balance')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (pointsError && pointsError.code !== 'PGRST116') { 
-         throw pointsError;
-      }
-      
-      const pointsBalance = pointsData ? pointsData.points_balance : 0;
+      // monitor_profilesテーブルから直接pointsを取得
+      // トリガー（update_monitor_points_trigger）がpointsを更新するため、直接取得する
+      const pointsBalance = profileData?.points || 0;
       
       const combinedProfile: MonitorProfile = {
           ...profileData, 
@@ -369,8 +361,15 @@ export default function MonitorDashboard() {
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
-      fetchProfile(); 
-      fetchSurveysAndResponses(); 
+      
+      // トリガー（update_monitor_points_trigger）がポイントを更新するまで少し待機
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // プロフィールとアンケートリストを再取得
+      await Promise.all([
+        fetchProfile(), 
+        fetchSurveysAndResponses()
+      ]); 
     } catch (error) {
       console.error('アンケート送信エラー:', error);
       alert('アンケートの送信に失敗しました。');
