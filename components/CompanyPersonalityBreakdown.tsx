@@ -553,7 +553,23 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
-                <p className="text-sm text-gray-600 mb-3">4つの軸での価値観の傾向を可視化</p>
+                <p className="text-sm text-gray-600 mb-3">8つの軸（E, I, N, S, P, R, F, O）での価値観の傾向を可視化</p>
+                <div className="flex flex-wrap items-center gap-4 text-sm mt-2 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(139, 92, 246, 0.4)' }}></div>
+                    <span className="text-gray-700 font-semibold">平均（面積）</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                    <span className="text-gray-700">各従業員（点）</span>
+                  </div>
+                  {studentAxes && (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="text-gray-700 font-semibold">あなたの価値観</span>
+                    </div>
+                  )}
+                </div>
                 
                 {/* 数値の説明 */}
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-200">
