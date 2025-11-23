@@ -128,7 +128,7 @@ export default function MonitorDashboard() {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         console.log('MonitorDashboard: リアルタイム購読の状態:', status);
       });
 
