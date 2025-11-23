@@ -1034,7 +1034,7 @@ export default function MonitorDashboard() {
           <div 
             className={`
               transition-colors duration-300
-              ${activeTab === 'career_consultation' || activeTab === 'bulletin_board' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
+              ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
             `}
           > 
             {activeTab === 'surveys' && (
