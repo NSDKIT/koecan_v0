@@ -93,7 +93,14 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           return;
         }
 
-        // 各カテゴリーのスコアを合計
+        // 各カテゴリーのスコアを合計し、質問数で割って平均を計算
+        const questionCounts: Record<string, number> = {
+          market_engagement: 7,
+          growth_strategy: 7,
+          organization_style: 7,
+          decision_making: 7
+        };
+
         const scores: Record<string, number> = {
           market_engagement: 0, // E vs I
           growth_strategy: 0,   // N vs S
@@ -101,11 +108,27 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           decision_making: 0    // F vs O
         };
 
+        const counts: Record<string, number> = {
+          market_engagement: 0,
+          growth_strategy: 0,
+          organization_style: 0,
+          decision_making: 0
+        };
+
         data.forEach((response: { category: string; answer: number }) => {
           if (scores.hasOwnProperty(response.category)) {
             scores[response.category] += response.answer;
+            counts[response.category] += 1;
           }
         });
+
+        // 各カテゴリーの平均を計算（-2から+2の範囲）
+        const avgScores: Record<string, number> = {
+          market_engagement: counts.market_engagement > 0 ? scores.market_engagement / counts.market_engagement : 0,
+          growth_strategy: counts.growth_strategy > 0 ? scores.growth_strategy / counts.growth_strategy : 0,
+          organization_style: counts.organization_style > 0 ? scores.organization_style / counts.organization_style : 0,
+          decision_making: counts.decision_making > 0 ? scores.decision_making / counts.decision_making : 0
+        };
 
         // 8軸に変換
         const axes: Record<string, number> = {
@@ -115,32 +138,38 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           F: 0, O: 0
         };
 
+        // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
+        const normalizeScore = (score: number) => {
+          // 絶対値を取って0-100に変換（-2→100, 0→0, +2→100）
+          return Math.abs(score) * 50; // -2から+2の範囲を0-100に変換
+        };
+
         // 市場への関わり方: E ⇄ I
-        if (scores.market_engagement < 0) {
-          axes.E = normalizeScore(scores.market_engagement);
-        } else if (scores.market_engagement > 0) {
-          axes.I = normalizeScore(scores.market_engagement);
+        if (avgScores.market_engagement < 0) {
+          axes.E = normalizeScore(avgScores.market_engagement);
+        } else if (avgScores.market_engagement > 0) {
+          axes.I = normalizeScore(avgScores.market_engagement);
         }
 
         // 成長・戦略スタンス: N ⇄ S
-        if (scores.growth_strategy < 0) {
-          axes.N = normalizeScore(scores.growth_strategy);
-        } else if (scores.growth_strategy > 0) {
-          axes.S = normalizeScore(scores.growth_strategy);
+        if (avgScores.growth_strategy < 0) {
+          axes.N = normalizeScore(avgScores.growth_strategy);
+        } else if (avgScores.growth_strategy > 0) {
+          axes.S = normalizeScore(avgScores.growth_strategy);
         }
 
         // 組織運営スタンス: P ⇄ R
-        if (scores.organization_style < 0) {
-          axes.P = normalizeScore(scores.organization_style);
-        } else if (scores.organization_style > 0) {
-          axes.R = normalizeScore(scores.organization_style);
+        if (avgScores.organization_style < 0) {
+          axes.P = normalizeScore(avgScores.organization_style);
+        } else if (avgScores.organization_style > 0) {
+          axes.R = normalizeScore(avgScores.organization_style);
         }
 
         // 意思決定スタイル: F ⇄ O
-        if (scores.decision_making < 0) {
-          axes.F = normalizeScore(scores.decision_making);
-        } else if (scores.decision_making > 0) {
-          axes.O = normalizeScore(scores.decision_making);
+        if (avgScores.decision_making < 0) {
+          axes.F = normalizeScore(avgScores.decision_making);
+        } else if (avgScores.decision_making > 0) {
+          axes.O = normalizeScore(avgScores.decision_making);
         }
 
         setStudentAxes(axes);
