@@ -199,7 +199,7 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
         if (error) throw error;
 
         const loadedAnswers: Record<string, Record<string, number>> = {};
-        data?.forEach((item) => {
+        data?.forEach((item: { category: string; question_key: string; answer: number }) => {
           if (!loadedAnswers[item.category]) {
             loadedAnswers[item.category] = {};
           }
