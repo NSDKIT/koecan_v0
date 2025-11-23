@@ -5,16 +5,16 @@
 -- 【重要】既存データがある場合は、先にmigrate_personality_assessment_data.sqlを実行してください
 -- ============================================
 
--- 1. 既存データを1〜5から-2〜+2に変換
+-- 1. 既存のCHECK制約を削除（UPDATEの前に削除する必要がある）
+ALTER TABLE monitor_personality_responses 
+  DROP CONSTRAINT IF EXISTS monitor_personality_responses_answer_check;
+
+-- 2. 既存データを1〜5から-2〜+2に変換
 -- 変換式: answer = answer - 3
 -- 1 → -2, 2 → -1, 3 → 0, 4 → +1, 5 → +2
 UPDATE monitor_personality_responses
 SET answer = answer - 3
 WHERE answer BETWEEN 1 AND 5;
-
--- 2. 既存のCHECK制約を削除
-ALTER TABLE monitor_personality_responses 
-  DROP CONSTRAINT IF EXISTS monitor_personality_responses_answer_check;
 
 -- 3. 新しいCHECK制約を追加（-2〜+2）
 ALTER TABLE monitor_personality_responses 

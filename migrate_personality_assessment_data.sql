@@ -14,14 +14,18 @@ SELECT
   COUNT(*) FILTER (WHERE answer BETWEEN -2 AND 2) AS "-2〜+2のレコード数"
 FROM monitor_personality_responses;
 
--- 2. 既存データを1〜5から-2〜+2に変換
+-- 2. 既存のCHECK制約を削除（UPDATEの前に削除する必要がある）
+ALTER TABLE monitor_personality_responses 
+  DROP CONSTRAINT IF EXISTS monitor_personality_responses_answer_check;
+
+-- 3. 既存データを1〜5から-2〜+2に変換
 -- 変換式: answer = answer - 3
 -- 1 → -2, 2 → -1, 3 → 0, 4 → +1, 5 → +2
 UPDATE monitor_personality_responses
 SET answer = answer - 3
 WHERE answer BETWEEN 1 AND 5;
 
--- 3. 変換後のデータ確認
+-- 4. 変換後のデータ確認
 SELECT 
   COUNT(*) AS "総レコード数",
   MIN(answer) AS "最小値",
@@ -32,10 +36,6 @@ SELECT
   COUNT(*) FILTER (WHERE answer = 1) AS "+1の数",
   COUNT(*) FILTER (WHERE answer = 2) AS "+2の数"
 FROM monitor_personality_responses;
-
--- 4. 既存のCHECK制約を削除
-ALTER TABLE monitor_personality_responses 
-  DROP CONSTRAINT IF EXISTS monitor_personality_responses_answer_check;
 
 -- 5. 新しいCHECK制約を追加（-2〜+2）
 ALTER TABLE monitor_personality_responses 
