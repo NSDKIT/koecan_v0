@@ -261,31 +261,63 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     return axes;
   };
 
-  // 個人データを取得（localStorageから）
+  // 個人データを取得（Supabaseから）
   const [individualData, setIndividualData] = useState<any[]>([]);
   
   useEffect(() => {
-    // localStorageから個人データを取得
-    try {
-      const storedData = localStorage.getItem('company_personality_data');
-      if (storedData) {
-        const data = JSON.parse(storedData);
-        // 選択されたカテゴリーに該当するデータのみをフィルタリング
-        // 選択されたカテゴリーのすべての従業員データを取得
-        const filtered = data.filter((row: any) => {
-          if (!row.company_id || row.company_id !== companyId) return false;
-          if (selectedView === 'job') {
-            // 職種別の場合：選択された職種に該当するすべての従業員
-            return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
-          } else {
-            // 年代別の場合：選択された年代に該当するすべての従業員
-            return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+    const fetchIndividualData = async () => {
+      try {
+        // Supabaseから個別回答データを取得
+        const { data, error } = await supabase
+          .from('company_personality_individual_responses')
+          .select('*')
+          .eq('company_id', companyId);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          // 選択されたカテゴリーに該当するデータのみをフィルタリング
+          const filtered = data.filter((row: any) => {
+            if (selectedView === 'job') {
+              // 職種別の場合：選択された職種に該当するすべての従業員
+              return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
+            } else {
+              // 年代別の場合：選択された年代に該当するすべての従業員
+              return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+            }
+          });
+          setIndividualData(filtered);
+        } else {
+          setIndividualData([]);
+        }
+      } catch (err) {
+        console.error('Error loading individual data from Supabase:', err);
+        // フォールバック: localStorageから取得
+        try {
+          const storedData = localStorage.getItem('company_personality_data');
+          if (storedData) {
+            const data = JSON.parse(storedData);
+            const filtered = data.filter((row: any) => {
+              if (!row.company_id || row.company_id !== companyId) return false;
+              if (selectedView === 'job') {
+                return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
+              } else {
+                return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+              }
+            });
+            setIndividualData(filtered);
           }
-        });
-        setIndividualData(filtered);
+        } catch (localErr) {
+          console.error('Error loading individual data from localStorage:', localErr);
+          setIndividualData([]);
+        }
       }
-    } catch (err) {
-      console.error('Error loading individual data:', err);
+    };
+
+    if (companyId && selectedResults.length > 0) {
+      fetchIndividualData();
+    } else {
+      setIndividualData([]);
     }
   }, [selectedResults, selectedView, companyId]);
 

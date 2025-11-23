@@ -396,32 +396,50 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
         }
       }
 
-      // データベースに保存する前に、データを準備（履歴として保存）
-      const records = preview.map((row, index) => ({
-        timestamp: row.timestamp,
-        job_type: row.jobType,
-        years_of_service: row.yearsOfService,
-        market_engagement_q1: row.answers.market_engagement[0],
-        market_engagement_q2: row.answers.market_engagement[1],
-        market_engagement_q3: row.answers.market_engagement[2],
-        growth_strategy_q1: row.answers.growth_strategy[0],
-        growth_strategy_q2: row.answers.growth_strategy[1],
-        growth_strategy_q3: row.answers.growth_strategy[2],
-        growth_strategy_q4: row.answers.growth_strategy[3],
-        organization_style_q1: row.answers.organization_style[0],
-        organization_style_q2: row.answers.organization_style[1],
-        organization_style_q3: row.answers.organization_style[2],
-        decision_making_q1: row.answers.decision_making[0],
-        decision_making_q2: row.answers.decision_making[1],
-        decision_making_q3: row.answers.decision_making[2],
-        row_index: index + 1,
-        company_id: selectedCompanyId
+      // 各従業員の個別回答をデータベースに保存
+      const individualRecords = preview.map((row) => ({
+        company_id: selectedCompanyId,
+        timestamp: row.timestamp || null,
+        job_type: row.jobType || null,
+        years_of_service: row.yearsOfService || null,
+        market_engagement_q1: row.answers.market_engagement[0] || null,
+        market_engagement_q2: row.answers.market_engagement[1] || null,
+        market_engagement_q3: row.answers.market_engagement[2] || null,
+        growth_strategy_q1: row.answers.growth_strategy[0] || null,
+        growth_strategy_q2: row.answers.growth_strategy[1] || null,
+        growth_strategy_q3: row.answers.growth_strategy[2] || null,
+        growth_strategy_q4: row.answers.growth_strategy[3] || null,
+        organization_style_q1: row.answers.organization_style[0] || null,
+        organization_style_q2: row.answers.organization_style[1] || null,
+        organization_style_q3: row.answers.organization_style[2] || null,
+        decision_making_q1: row.answers.decision_making[0] || null,
+        decision_making_q2: row.answers.decision_making[1] || null,
+        decision_making_q3: row.answers.decision_making[2] || null,
       }));
 
-      // 履歴としてlocalStorageに保存
-      const existingData = JSON.parse(localStorage.getItem('company_personality_data') || '[]');
-      const newData = [...existingData, ...records];
-      localStorage.setItem('company_personality_data', JSON.stringify(newData));
+      // 既存の個別回答を削除（同じ企業の既存データを上書き）
+      const { error: deleteIndividualError } = await supabase
+        .from('company_personality_individual_responses')
+        .delete()
+        .eq('company_id', selectedCompanyId);
+
+      if (deleteIndividualError) {
+        console.error('Delete individual responses error:', deleteIndividualError);
+        throw new Error(`既存の個別回答データの削除に失敗しました: ${deleteIndividualError.message}`);
+      }
+
+      // 個別回答をデータベースに保存
+      if (individualRecords.length > 0) {
+        const { error: insertIndividualError } = await supabase
+          .from('company_personality_individual_responses')
+          .insert(individualRecords);
+
+        if (insertIndividualError) {
+          console.error('Insert individual responses error:', insertIndividualError);
+          console.error('Insert individual data:', individualRecords);
+          throw new Error(`個別回答データの保存に失敗しました: ${insertIndividualError.message}`);
+        }
+      }
 
       setSuccess(`${preview.length}件のデータをインポートし、企業のパーソナリティタイプを${personalityType}に設定しました。`);
       setTimeout(() => {
