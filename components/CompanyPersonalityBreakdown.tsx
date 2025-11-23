@@ -565,7 +565,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             onClick={() => setSelectedView('job')}
             className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
               selectedView === 'job'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -576,7 +576,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             onClick={() => setSelectedView('years')}
             className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
               selectedView === 'years'
-                ? 'bg-purple-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -591,7 +591,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             onClick={() => setViewMode('chart')}
             className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
               viewMode === 'chart'
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -602,7 +602,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             onClick={() => setViewMode('list')}
             className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
               viewMode === 'list'
-                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -618,7 +618,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           {/* 比較対象選択 */}
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border-2 border-purple-200">
             <div className="flex items-center mb-3">
-              <TrendingUp className="w-5 h-5 text-purple-600 mr-2" />
+              <TrendingUp className="w-5 h-5 text-orange-600 mr-2" />
               <h3 className="font-bold text-gray-800">表示するカテゴリーを選択</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">
@@ -633,7 +633,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     onClick={() => toggleComparison(result.id)}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center space-x-2 ${
                       isSelected
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg transform scale-105'
+                        ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg transform scale-105'
                         : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300'
                     }`}
                   >
@@ -648,57 +648,10 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
           {/* レーダーチャート */}
           {chartData.length > 0 && (
-            <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
                 <p className="text-sm text-gray-600 mb-3">8つの軸（E, I, N, S, P, R, F, O）での価値観の傾向を可視化</p>
-                <div className="flex flex-wrap items-center gap-4 text-sm mt-2 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: 'rgba(139, 92, 246, 0.4)' }}></div>
-                    <span className="text-gray-700 font-semibold">平均（面積）</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-                    <span className="text-gray-700">各従業員（点）</span>
-                  </div>
-                  {studentAxes && (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-gray-700 font-semibold">あなたの価値観</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* 数値の説明 */}
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-200">
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <Brain className="w-4 h-4 mr-2 text-purple-600" />
-                    八角形レーダーチャートについて
-                  </h4>
-                  <div className="text-sm text-gray-700 space-y-2">
-                    <p className="font-semibold text-purple-700 mb-2">
-                      ⚠️ 重要: 数値の大小は優劣ではなく、価値観の違いを表しています
-                    </p>
-                    <div className="space-y-1">
-                      <p className="font-semibold">8つの軸:</p>
-                      <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
-                        <li><span className="font-semibold">E（外向型）⇄ I（内向型）</span> - 市場への関わり方</li>
-                        <li><span className="font-semibold">N（革新型）⇄ S（安定型）</span> - 成長・戦略スタンス</li>
-                        <li><span className="font-semibold">P（人材志向）⇄ R（成果志向）</span> - 組織運営スタンス</li>
-                        <li><span className="font-semibold">F（柔軟型）⇄ O（規律型）</span> - 意思決定スタイル</li>
-                      </ul>
-                    </div>
-                    <div className="space-y-1 mt-3">
-                      <p className="font-semibold">表示方法:</p>
-                      <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
-                        <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
-                      </ul>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
-                      ※ 各軸の値は0〜100の範囲で表示されます。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
-                    </p>
-                  </div>
-                </div>
               </div>
               <ResponsiveContainer width="100%" height={500}>
                 <RadarChart data={chartData}>
@@ -751,7 +704,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   return (
                     <div
                       key={result.id}
-                      className="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 border-2 border-gray-200 hover:border-purple-400 transition-all cursor-pointer"
+                      className="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 border-2 border-gray-200 hover:border-orange-400 transition-all cursor-pointer"
                       onClick={() => {
                         if (!result.personality_type.includes('/')) {
                           setSelectedType(result.personality_type);
@@ -774,7 +727,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                         <div className="flex justify-between">
                           <span className="text-gray-600">タイプ:</span>
                           <span 
-                            className="font-bold text-purple-600 hover:text-purple-800"
+                            className="font-bold text-orange-600 hover:text-orange-800"
                           >
                             {result.personality_type}
                           </span>
@@ -783,6 +736,37 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     </div>
                   );
                 })}
+              </div>
+
+              {/* 八角形レーダーチャートについて（ページの一番下） */}
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 mt-6 border border-orange-200">
+                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                  <Brain className="w-4 h-4 mr-2 text-orange-600" />
+                  八角形レーダーチャートについて
+                </h4>
+                <div className="text-sm text-gray-700 space-y-2">
+                  <p className="font-semibold text-orange-700 mb-2">
+                    ⚠️ 重要: 数値の大小は優劣ではなく、価値観の違いを表しています
+                  </p>
+                  <div className="space-y-1">
+                    <p className="font-semibold">8つの軸:</p>
+                    <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                      <li><span className="font-semibold">E（外向型）⇄ I（内向型）</span> - 市場への関わり方</li>
+                      <li><span className="font-semibold">N（革新型）⇄ S（安定型）</span> - 成長・戦略スタンス</li>
+                      <li><span className="font-semibold">P（人材志向）⇄ R（成果志向）</span> - 組織運営スタンス</li>
+                      <li><span className="font-semibold">F（柔軟型）⇄ O（規律型）</span> - 意思決定スタイル</li>
+                    </ul>
+                  </div>
+                  <div className="space-y-1 mt-3">
+                    <p className="font-semibold">表示方法:</p>
+                    <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                      <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
+                    </ul>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-orange-200">
+                    ※ 各軸の値は0〜100の範囲で表示されます。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
+                  </p>
+                </div>
               </div>
             </div>
           )}
