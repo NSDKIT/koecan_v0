@@ -38,7 +38,7 @@ import { LineLinkButton } from '@/components/LineLinkButton';
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ImportCsvModal } from '@/components/ImportCsvModal';
 import { CompanyPersonalityImportModal } from '@/components/CompanyPersonalityImportModal';
-import { CompanyPersonalityResults } from '@/components/CompanyPersonalityResults';
+import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
 
 // =========================================================================
 // 新しいコンポーネント: AdminSurveyManager (このファイル内で定義)
@@ -186,7 +186,8 @@ export function AdminDashboard() {
   const [showImportSurveyModal, setShowImportSurveyModal] = useState(false);
   const [showImportCsvModal, setShowImportCsvModal] = useState(false);
   const [showCompanyPersonalityImportModal, setShowCompanyPersonalityImportModal] = useState(false);
-  const [companyPersonalityData, setCompanyPersonalityData] = useState<any[]>([]);
+  const [selectedCompanyForPersonality, setSelectedCompanyForPersonality] = useState<string>('');
+  const [availableCompaniesForPersonality, setAvailableCompaniesForPersonality] = useState<{ id: string; name: string }[]>([]);
 
   // ★★★ 追加: アンケートデータと取得関数 ★★★
   const [allSurveys, setAllSurveys] = useState<Survey[]>([]);
@@ -220,15 +221,22 @@ export function AdminDashboard() {
     if (user) {
       fetchStats();
       fetchAllSurveys(); // ★★★ アンケートデータを初期ロード ★★★
-      // 企業パーソナリティデータを読み込む
-      const storedData = localStorage.getItem('company_personality_data');
-      if (storedData) {
+      // 企業一覧を取得（パーソナリティ診断用）
+      const fetchCompaniesForPersonality = async () => {
         try {
-          setCompanyPersonalityData(JSON.parse(storedData));
+          const { data, error } = await supabase
+            .from('advertisements')
+            .select('id, company_name')
+            .eq('is_active', true)
+            .order('company_name');
+
+          if (error) throw error;
+          setAvailableCompaniesForPersonality(data?.map((c: Advertisement) => ({ id: c.id, name: c.company_name })) || []);
         } catch (err) {
-          console.error('Failed to parse company personality data:', err);
+          console.error('Error fetching companies for personality:', err);
         }
-      }
+      };
+      fetchCompaniesForPersonality();
     }
   }, [user]);
 
@@ -553,7 +561,37 @@ export function AdminDashboard() {
                     CSVインポート
                   </button>
                 </div>
-                <CompanyPersonalityResults data={companyPersonalityData} />
+
+                {/* 企業選択 */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    企業を選択
+                  </label>
+                  <select
+                    value={selectedCompanyForPersonality}
+                    onChange={(e) => setSelectedCompanyForPersonality(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">企業を選択してください</option>
+                    {availableCompaniesForPersonality.map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 診断結果表示 */}
+                {selectedCompanyForPersonality && (
+                  <CompanyPersonalityBreakdown companyId={selectedCompanyForPersonality} />
+                )}
+
+                {!selectedCompanyForPersonality && (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center">
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">企業を選択すると、パーソナリティ診断結果が表示されます</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -590,15 +628,22 @@ export function AdminDashboard() {
         <CompanyPersonalityImportModal
           onClose={() => setShowCompanyPersonalityImportModal(false)}
           onImportSuccess={() => {
-            // データを再読み込み
-            const storedData = localStorage.getItem('company_personality_data');
-            if (storedData) {
+            // 企業一覧を再取得
+            const fetchCompaniesForPersonality = async () => {
               try {
-                setCompanyPersonalityData(JSON.parse(storedData));
+                const { data, error } = await supabase
+                  .from('advertisements')
+                  .select('id, company_name')
+                  .eq('is_active', true)
+                  .order('company_name');
+
+                if (error) throw error;
+                setAvailableCompaniesForPersonality(data?.map((c: Advertisement) => ({ id: c.id, name: c.company_name })) || []);
               } catch (err) {
-                console.error('Failed to parse company personality data:', err);
+                console.error('Error fetching companies for personality:', err);
               }
-            }
+            };
+            fetchCompaniesForPersonality();
           }}
         />
       )}
