@@ -89,7 +89,7 @@ export default function MonitorDashboard() {
   const [surveyQuestions, setSurveyQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('surveys');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('bulletin_board');
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
@@ -1366,6 +1366,15 @@ export default function MonitorDashboard() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="max-w-7xl mx-auto flex justify-around h-20">
           <button
+            onClick={() => setActiveTab('bulletin_board')}
+            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+              activeTab === 'bulletin_board' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <MessageCircle className="w-6 h-6 mb-1" />
+            掲示板
+          </button>
+          <button
             onClick={() => setActiveTab('surveys')}
             className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
               activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
@@ -1391,15 +1400,6 @@ export default function MonitorDashboard() {
           >
             <MessageCircle className="w-6 h-6 mb-1" />
             キャリア相談
-          </button>
-          <button
-            onClick={() => setActiveTab('bulletin_board')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-              activeTab === 'bulletin_board' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
-            }`}
-          >
-            <MessageCircle className="w-6 h-6 mb-1" />
-            掲示板
           </button>
         </div>
       </div>
