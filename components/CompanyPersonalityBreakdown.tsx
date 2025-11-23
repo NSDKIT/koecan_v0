@@ -42,8 +42,8 @@ export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBre
 
         if (error) throw error;
 
-        const jobTypes = data?.filter(r => r.category_type === 'job_type') || [];
-        const years = data?.filter(r => r.category_type === 'years_of_service') || [];
+        const jobTypes = data?.filter((r: PersonalityResult) => r.category_type === 'job_type') || [];
+        const years = data?.filter((r: PersonalityResult) => r.category_type === 'years_of_service') || [];
 
         setJobTypeResults(jobTypes);
         setYearsResults(years);
