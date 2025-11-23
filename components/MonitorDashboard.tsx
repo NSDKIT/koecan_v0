@@ -979,53 +979,53 @@ export default function MonitorDashboard() {
                 </div>
               </div>
               
-              {/* パーソナリティタイプ表示 */}
+              {/* パーソナリティタイプ表示とキャラクター動画 */}
               {personalityType && (
-                <div 
-                  className="flex items-center space-x-4 cursor-pointer flex-1"
-                  onClick={() => setShowPersonalityTypeModal(true)}
-                >
-                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-                    <Brain className="w-10 h-10 text-white" />
+                <div className="flex items-center flex-1">
+                  <div 
+                    className="flex items-center space-x-4 cursor-pointer"
+                    onClick={() => setShowPersonalityTypeModal(true)}
+                  >
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+                      <Brain className="w-10 h-10 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-gray-600 text-lg">パーソナリティタイプ</p>
+                      <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-gray-600 text-lg">パーソナリティタイプ</p>
-                    <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
-                  </div>
+                  {(() => {
+                    // "/"を含む場合は最初の4文字のタイプを使用
+                    let videoType = personalityType;
+                    if (personalityType.includes('/')) {
+                      // "/"を含む場合は、最初の4文字のタイプを生成
+                      // 例: "E/ISRO" -> "E" + "I" + "S" + "R" = "EISR" (最初の4文字)
+                      const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                      if (parts.length === 4) {
+                        videoType = parts;
+                      } else {
+                        return null; // 4文字未満の場合は表示しない
+                      }
+                    }
+                    // 4文字のタイプのみ動画を表示
+                    if (videoType.length === 4) {
+                      return (
+                        <div className="ml-0">
+                          <video
+                            src={`/character/${videoType}.mp4`}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-32 h-32 object-cover rounded-lg"
+                          />
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               )}
-
-              {/* キャラクター動画表示 */}
-              {personalityType && (() => {
-                // "/"を含む場合は最初の4文字のタイプを使用
-                let videoType = personalityType;
-                if (personalityType.includes('/')) {
-                  // "/"を含む場合は、最初の4文字のタイプを生成
-                  // 例: "E/ISRO" -> "E" + "I" + "S" + "R" = "EISR" (最初の4文字)
-                  const parts = personalityType.replace(/\//g, '').substring(0, 4);
-                  if (parts.length === 4) {
-                    videoType = parts;
-                  } else {
-                    return null; // 4文字未満の場合は表示しない
-                  }
-                }
-                // 4文字のタイプのみ動画を表示
-                if (videoType.length === 4) {
-                  return (
-                    <div className="flex-1 flex items-center justify-center">
-                      <video
-                        src={`/character/${videoType}.mp4`}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-32 h-32 object-cover rounded-lg"
-                      />
-                    </div>
-                  );
-                }
-                return null;
-              })()}
             </div>
           )}
 
