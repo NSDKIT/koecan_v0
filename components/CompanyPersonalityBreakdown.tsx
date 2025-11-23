@@ -435,7 +435,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     });
   } else {
     // individualDataがない場合は、company_personality_resultsから計算
-    chartDisplayResults.forEach((result: PersonalityResult) => {
+    selectedResults.forEach((result: PersonalityResult) => {
       const axes = decomposeTo8Axes(result);
       categoryAverages[result.category_value] = axes;
     });
