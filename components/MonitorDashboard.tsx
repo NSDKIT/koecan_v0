@@ -48,7 +48,7 @@ import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBrea
 import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 
-type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
+type ActiveTab = 'surveys' | 'recruitment' | 'bulletin_board' | 'matching';
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -962,9 +962,9 @@ export default function MonitorDashboard() {
         )}
 
         <main className={`mx-auto pb-20 ${
-          activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
+          activeTab === 'bulletin_board' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
-          {activeTab !== 'career_consultation' && (
+          {activeTab !== 'bulletin_board' && (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center justify-between space-x-6">
               {/* 獲得ポイント */}
               <div
@@ -1001,7 +1001,7 @@ export default function MonitorDashboard() {
           <div 
             className={`
               transition-colors duration-300
-              ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
+              ${activeTab === 'bulletin_board' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
             `}
           > 
             {activeTab === 'surveys' && (
@@ -1317,42 +1317,14 @@ export default function MonitorDashboard() {
               </div>
             )}
 
-            {activeTab === 'career_consultation' && (
-              <>
-                <div className="flex flex-col items-center w-full">
-                    <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
-                        alt="キャリア相談 上部"
-                        className="w-full h-auto object-cover"
-                    />
-                    
-                    <div className="relative w-full">
-                        <img 
-                            src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
-                            alt="キャリア相談 中部"
-                            className="w-full h-auto object-cover"
-                        />
-                        
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <a
-                                href={C8_LINE_ADD_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
-                            >
-                                <span className="text-sm mb-1">キャリア支援のプロ</span>
-                                <span className="text-lg">シーエイトに相談</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
-                        alt="キャリア相談 下部"
-                        className="w-full h-auto object-cover"
-                    />
+            {activeTab === 'bulletin_board' && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8">
+                <div className="text-center py-12">
+                  <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">掲示板</h2>
+                  <p className="text-gray-600">掲示板機能は準備中です</p>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </main>
@@ -1388,13 +1360,13 @@ export default function MonitorDashboard() {
             企業情報
           </button>
           <button
-            onClick={() => setActiveTab('career_consultation')}
+            onClick={() => setActiveTab('bulletin_board')}
             className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
-              activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+              activeTab === 'bulletin_board' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
             <MessageCircle className="w-6 h-6 mb-1" />
-            キャリア相談
+            掲示板
           </button>
         </div>
       </div>
