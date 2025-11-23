@@ -46,6 +46,7 @@ import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
 import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
+import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
 
@@ -1383,13 +1384,7 @@ export default function MonitorDashboard() {
             )}
 
             {activeTab === 'bulletin_board' && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8">
-                <div className="text-center py-12">
-                  <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">掲示板</h2>
-                  <p className="text-gray-600">掲示板機能は準備中です</p>
-                </div>
-              </div>
+              <BulletinBoardDisplay />
             )}
           </div>
         </main>

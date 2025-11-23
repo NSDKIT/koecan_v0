@@ -39,6 +39,7 @@ import { ImportSurveyModal } from '@/components/ImportSurveyModal';
 import { ImportCsvModal } from '@/components/ImportCsvModal';
 import { CompanyPersonalityImportModal } from '@/components/CompanyPersonalityImportModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
+import { BulletinBoardManager } from '@/components/BulletinBoardManager';
 
 // =========================================================================
 // 新しいコンポーネント: AdminSurveyManager (このファイル内で定義)
@@ -168,7 +169,7 @@ const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchS
 // =========================================================================
 
 // ★★★ 修正: タブの型に 'survey_manager' を追加 ★★★
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange' | 'company_personality';
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange' | 'company_personality' | 'bulletin_board';
 
 
 export function AdminDashboard() {
@@ -528,6 +529,16 @@ export function AdminDashboard() {
               >
                 企業パーソナリティ診断
               </button>
+              <button
+                onClick={() => setActiveTab('bulletin_board')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'bulletin_board'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                掲示板管理
+              </button>
             </div>
           </div>
 
@@ -545,6 +556,9 @@ export function AdminDashboard() {
             {activeTab === 'chat_monitoring' && renderChatMonitoringTab()}
             {activeTab === 'point_exchange' && ( // ★★★ 追加: ポイント交換管理をレンダリング ★★★
                 <PointExchangeManager />
+            )}
+            {activeTab === 'bulletin_board' && (
+              <BulletinBoardManager />
             )}
             {activeTab === 'company_personality' && (
               <div className="space-y-6">
