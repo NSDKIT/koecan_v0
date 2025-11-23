@@ -814,27 +814,34 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
-            <div
-              className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center space-x-4 cursor-pointer"
-              onClick={() => setShowPointExchangeModal(true)} 
-            >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-                <Star className="w-10 h-10 text-white" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center justify-between space-x-6">
+              {/* 獲得ポイント */}
+              <div
+                className="flex items-center space-x-4 cursor-pointer flex-1"
+                onClick={() => setShowPointExchangeModal(true)} 
+              >
+                <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+                  <Star className="w-10 h-10 text-white" />
+                </div>
+                <div>
+                  <p className="text-gray-600 text-lg">獲得ポイント</p>
+                  <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-600 text-lg">獲得ポイント</p>
-                <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
-              </div>
+              
               {/* パーソナリティタイプ表示 */}
               {personalityType && (
                 <div 
-                  className="ml-auto bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-lg font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation(); // 親のonClickが発火しないようにする
-                    setShowPersonalityTypeModal(true);
-                  }}
+                  className="flex items-center space-x-4 cursor-pointer flex-1"
+                  onClick={() => setShowPersonalityTypeModal(true)}
                 >
-                  {personalityType}
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
+                    <Brain className="w-10 h-10 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-lg">パーソナリティタイプ</p>
+                    <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
+                  </div>
                 </div>
               )}
             </div>
