@@ -318,7 +318,29 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
               <div className="mb-4">
                 <h3 className="text-xl font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
-                <p className="text-sm text-gray-600">4つの軸での価値観の傾向を可視化</p>
+                <p className="text-sm text-gray-600 mb-3">4つの軸での価値観の傾向を可視化</p>
+                
+                {/* 数値の説明 */}
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-200">
+                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                    <Brain className="w-4 h-4 mr-2 text-purple-600" />
+                    レーダーチャートの数値について
+                  </h4>
+                  <div className="text-sm text-gray-700 space-y-2">
+                    <p>
+                      <span className="font-semibold">0〜50:</span> 左側の傾向が強い（E: 外向型、N: 革新型、P: 人材志向、F: 柔軟型）
+                    </p>
+                    <p>
+                      <span className="font-semibold">50:</span> 中間（バランス型）
+                    </p>
+                    <p>
+                      <span className="font-semibold">50〜100:</span> 右側の傾向が強い（I: 内向型、S: 安定型、R: 成果志向、O: 規律型）
+                    </p>
+                    <p className="text-xs text-gray-600 mt-2">
+                      ※ 元のスコア（-2〜+2）を0〜100の範囲に正規化して表示しています
+                    </p>
+                  </div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={400}>
                 <RadarChart data={chartData}>
@@ -331,6 +353,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     angle={90} 
                     domain={[0, 100]}
                     tick={{ fill: '#9ca3af', fontSize: 10 }}
+                    label={{ value: 'スコア (0-100)', position: 'insideStart', offset: 10, fill: '#6b7280', fontSize: 11 }}
                   />
                   {selectedResults.map((result, index) => {
                     const color = chartColors[index % chartColors.length];
