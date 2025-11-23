@@ -1019,7 +1019,7 @@ export default function MonitorDashboard() {
                         loop
                         muted
                         playsInline
-                        className="w-32 h-32 object-cover rounded-lg shadow-lg"
+                        className="w-32 h-32 object-cover rounded-lg"
                       />
                     </div>
                   );
