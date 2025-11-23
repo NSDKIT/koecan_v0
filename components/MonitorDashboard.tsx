@@ -963,7 +963,7 @@ export default function MonitorDashboard() {
         <main className={`mx-auto pb-20 ${
           activeTab === 'career_consultation' || activeTab === 'bulletin_board' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
-          {activeTab !== 'career_consultation' && activeTab !== 'bulletin_board' && (
+          {activeTab !== 'career_consultation' && (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center justify-between space-x-6">
               {/* 獲得ポイント */}
               <div
