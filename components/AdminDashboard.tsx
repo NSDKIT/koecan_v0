@@ -583,7 +583,28 @@ export function AdminDashboard() {
 
                 {/* 診断結果表示 */}
                 {selectedCompanyForPersonality && (
-                  <CompanyPersonalityBreakdown companyId={selectedCompanyForPersonality} />
+                  <CompanyPersonalityBreakdown 
+                    companyId={selectedCompanyForPersonality}
+                    isAdmin={true}
+                    onDelete={() => {
+                      // 削除後に企業一覧を再取得（必要に応じて）
+                      const fetchCompaniesForPersonality = async () => {
+                        try {
+                          const { data, error } = await supabase
+                            .from('advertisements')
+                            .select('id, company_name')
+                            .eq('is_active', true)
+                            .order('company_name');
+
+                          if (error) throw error;
+                          setAvailableCompaniesForPersonality(data?.map((c: Advertisement) => ({ id: c.id, name: c.company_name })) || []);
+                        } catch (err) {
+                          console.error('Error fetching companies for personality:', err);
+                        }
+                      };
+                      fetchCompaniesForPersonality();
+                    }}
+                  />
                 )}
 
                 {!selectedCompanyForPersonality && (

@@ -3,11 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
-import { Building, Users, Brain, ChevronDown, ChevronUp } from 'lucide-react';
-
-interface CompanyPersonalityBreakdownProps {
-  companyId: string;
-}
+import { Building, Users, Brain, ChevronDown, ChevronUp, Trash2, AlertTriangle } from 'lucide-react';
 
 interface PersonalityResult {
   id: string;
@@ -21,7 +17,13 @@ interface PersonalityResult {
   decision_making_score: number;
 }
 
-export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBreakdownProps) {
+interface CompanyPersonalityBreakdownProps {
+  companyId: string;
+  isAdmin?: boolean; // 管理者モードかどうか
+  onDelete?: () => void; // 削除後のコールバック
+}
+
+export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDelete }: CompanyPersonalityBreakdownProps) {
   const [jobTypeResults, setJobTypeResults] = useState<PersonalityResult[]>([]);
   const [yearsResults, setYearsResults] = useState<PersonalityResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,31 +31,34 @@ export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBre
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchResults = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('company_personality_results')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('category_type')
+        .order('category_value');
+
+      if (error) throw error;
+
+      const jobTypes = data?.filter((r: PersonalityResult) => r.category_type === 'job_type') || [];
+      const years = data?.filter((r: PersonalityResult) => r.category_type === 'years_of_service') || [];
+
+      setJobTypeResults(jobTypes);
+      setYearsResults(years);
+    } catch (err) {
+      console.error('Error fetching company personality results:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('company_personality_results')
-          .select('*')
-          .eq('company_id', companyId)
-          .order('category_type')
-          .order('category_value');
-
-        if (error) throw error;
-
-        const jobTypes = data?.filter((r: PersonalityResult) => r.category_type === 'job_type') || [];
-        const years = data?.filter((r: PersonalityResult) => r.category_type === 'years_of_service') || [];
-
-        setJobTypeResults(jobTypes);
-        setYearsResults(years);
-      } catch (err) {
-        console.error('Error fetching company personality results:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (companyId) {
       fetchResults();
     }
@@ -67,6 +72,43 @@ export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBre
       newExpanded.add(categoryValue);
     }
     setExpandedCategories(newExpanded);
+  };
+
+  const handleDelete = async () => {
+    if (!isAdmin) return;
+    
+    setDeleting(true);
+    try {
+      // company_personality_resultsから削除
+      const { error: deleteResultsError } = await supabase
+        .from('company_personality_results')
+        .delete()
+        .eq('company_id', companyId);
+
+      if (deleteResultsError) throw deleteResultsError;
+
+      // advertisementsテーブルのpersonality_typeも削除
+      const { error: updateError } = await supabase
+        .from('advertisements')
+        .update({ personality_type: null })
+        .eq('id', companyId);
+
+      if (updateError) throw updateError;
+
+      // 結果をクリア
+      setJobTypeResults([]);
+      setYearsResults([]);
+      
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (err) {
+      console.error('削除エラー:', err);
+      alert('削除に失敗しました。');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   const currentResults = selectedView === 'job' ? jobTypeResults : yearsResults;
@@ -91,6 +133,19 @@ export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBre
 
   return (
     <div className="space-y-6">
+      {/* 管理者用の削除ボタン */}
+      {isAdmin && (jobTypeResults.length > 0 || yearsResults.length > 0) && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            診断結果を削除
+          </button>
+        </div>
+      )}
+
       {/* ビュー切り替え */}
       <div className="flex space-x-4">
         <button
@@ -205,6 +260,40 @@ export function CompanyPersonalityBreakdown({ companyId }: CompanyPersonalityBre
             setSelectedType(null);
           }}
         />
+      )}
+
+      {/* 削除確認モーダル */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
+                <h3 className="text-xl font-bold text-gray-800">診断結果を削除</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                この企業のパーソナリティ診断結果を削除しますか？<br />
+                この操作は取り消せません。
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  disabled={deleting}
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                  disabled={deleting}
+                >
+                  {deleting ? '削除中...' : '削除する'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
