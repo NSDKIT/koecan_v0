@@ -347,7 +347,110 @@ const personalityTypes: Record<string, PersonalityType> = {
 };
 
 export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProps) {
+  // スコアが0の場合、タイプコードに "/" が含まれる（例: "E/IN/SP/RF/O"）
+  const hasAmbiguousScores = type.includes('/');
+  
   const personalityType = personalityTypes[type];
+
+  // スコアが0でタイプが特定できない場合の特別な表示
+  if (hasAmbiguousScores && !personalityType) {
+    // タイプコードを解析（例: "E/IN/SP/RF/O" → ["E/I", "N/S", "P/R", "F/O"]）
+    const parseTypeCode = (code: string): string[] => {
+      const result: string[] = [];
+      // 各軸のパターンを順番に抽出
+      const patterns = [
+        /([EI]\/?[EI]?)/,  // E, I, または E/I
+        /([NS]\/?[NS]?)/,  // N, S, または N/S
+        /([PR]\/?[PR]?)/,  // P, R, または P/R
+        /([FO]\/?[FO]?)/   // F, O, または F/O
+      ];
+      
+      let remaining = code;
+      for (const pattern of patterns) {
+        const match = remaining.match(pattern);
+        if (match && match.index !== undefined) {
+          result.push(match[0]);
+          remaining = remaining.substring(match.index + match[0].length);
+        }
+      }
+      
+      return result;
+    };
+    
+    const parts = parseTypeCode(type);
+    const axisLabels = [
+      '市場への関わり方（外向型E vs 内向型I）',
+      '成長・戦略スタンス（革新型N vs 安定型S）',
+      '組織運営スタンス（人材志向P vs 成果志向R）',
+      '意思決定・マネジメントスタイル（柔軟型F vs 規律型O）'
+    ];
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
+          <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-500 text-white p-6 rounded-t-2xl z-10">
+            <div className="flex justify-between items-start">
+              <div>
+                <div className="flex items-center mb-2">
+                  <span className="text-3xl font-bold mr-3">{type}</span>
+                </div>
+                <p className="text-purple-50 text-sm">中間的なスコアのため、複数の可能性があります</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-purple-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+              <p className="text-yellow-800 font-semibold mb-2">中間的なスコアについて</p>
+              <p className="text-yellow-700 text-sm">
+                一部の軸でスコアが0（中間）のため、どちらのタイプにも当てはまる可能性があります。
+                より明確なタイプを判定するには、診断を再度回答してください。
+              </p>
+            </div>
+            
+            <section>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">各軸の可能性</h3>
+              <div className="space-y-4">
+                {parts.map((part, index) => {
+                  if (index >= axisLabels.length) return null;
+                  const isAmbiguous = part.includes('/');
+                  return (
+                    <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-800 mb-2">{axisLabels[index]}</h4>
+                      {isAmbiguous ? (
+                        <p className="text-gray-700">
+                          <span className="font-semibold text-purple-600">{part}</span> - どちらのタイプにも当てはまる可能性があります
+                        </p>
+                      ) : (
+                        <p className="text-gray-700">
+                          <span className="font-semibold text-purple-600">{part}</span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+          
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 rounded-b-2xl">
+            <button
+              onClick={onClose}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              閉じる
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!personalityType) {
     return (
