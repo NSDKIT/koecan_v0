@@ -89,12 +89,33 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
     return typeCode;
   };
 
-  // CSVをパースする関数
+  // CSVをパースする関数（より堅牢なCSVパーサー）
   const parseCSV = (csvText: string): ParsedRow[] => {
     const lines = csvText.split('\n').filter(line => line.trim());
     if (lines.length < 2) throw new Error('CSVファイルが空です');
 
-    const headers = lines[0].split(',').map(h => h.trim());
+    // CSVの行を正しくパース（カンマ区切り、引用符対応）
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const headers = parseCSVLine(lines[0]);
     const rows: ParsedRow[] = [];
 
     // ヘッダーのインデックスを取得
@@ -132,9 +153,12 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
 
     // データ行をパース
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
+      const values = parseCSVLine(lines[i]);
       
-      if (values.length < headers.length) continue; // 不完全な行をスキップ
+      if (values.length < headers.length) {
+        console.warn(`行 ${i + 1} は不完全です。スキップします。`, values);
+        continue; // 不完全な行をスキップ
+      }
 
       const timestamp = values[timestampIdx] || '';
       const jobType = values[jobTypeIdx] || '';
@@ -351,7 +375,10 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
         .delete()
         .eq('company_id', selectedCompanyId);
 
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        console.error('Delete error:', deleteError);
+        throw new Error(`既存データの削除に失敗しました: ${deleteError.message}`);
+      }
 
       // 職種別・年代別の結果をデータベースに保存
       const allResults = [...jobTypeResults, ...yearsResults];
@@ -360,7 +387,11 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           .from('company_personality_results')
           .insert(allResults);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          console.error('Insert data:', allResults);
+          throw new Error(`データの保存に失敗しました: ${insertError.message}`);
+        }
       }
 
       // データベースに保存する前に、データを準備（履歴として保存）
@@ -397,7 +428,11 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
       }, 1500);
     } catch (err) {
       console.error('Import error:', err);
-      setError(err instanceof Error ? err.message : 'データのインポートに失敗しました。');
+      if (err instanceof Error) {
+        setError(`データのインポートに失敗しました: ${err.message}`);
+      } else {
+        setError('データのインポートに失敗しました。詳細はコンソールを確認してください。');
+      }
     } finally {
       setLoading(false);
     }
