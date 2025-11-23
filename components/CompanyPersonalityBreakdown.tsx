@@ -654,6 +654,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
                         <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を個別の点で表示（線で接続しない）</li>
+                        <li><span className="font-semibold">色分け:</span> {selectedView === 'job' ? '職種別' : '年代別'}に色分けして表示</li>
                         <li><span className="font-semibold">面積（平均）:</span> 全従業員の平均値を結んで面積として表示</li>
                         <li><span className="font-semibold">点（あなた）:</span> 学生自身の価値観を点で表示</li>
                       </ul>
