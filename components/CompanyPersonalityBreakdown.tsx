@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
+import { useAuth } from '@/hooks/useAuth';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
-import { Building, Users, Brain, ChevronDown, ChevronUp, Trash2, AlertTriangle, BarChart3, TrendingUp, FileText, CheckCircle2 } from 'lucide-react';
+import { Building, Users, Brain, ChevronDown, ChevronUp, Trash2, AlertTriangle, BarChart3, TrendingUp, FileText, CheckCircle2, User } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, ResponsiveContainer } from 'recharts';
 
 interface PersonalityResult {
@@ -25,6 +26,7 @@ interface CompanyPersonalityBreakdownProps {
 }
 
 export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDelete }: CompanyPersonalityBreakdownProps) {
+  const { user } = useAuth();
   const [jobTypeResults, setJobTypeResults] = useState<PersonalityResult[]>([]);
   const [yearsResults, setYearsResults] = useState<PersonalityResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   const [deleting, setDeleting] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'list' | 'chart'>('chart'); // デフォルトをチャートに
+  const [studentAxes, setStudentAxes] = useState<Record<string, number> | null>(null);
 
   const fetchResults = async () => {
     setLoading(true);
@@ -71,6 +74,84 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   useEffect(() => {
     setSelectedForComparison(new Set());
   }, [selectedView]);
+
+  // 学生自身のパーソナリティ診断結果を取得
+  useEffect(() => {
+    const fetchStudentPersonality = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('monitor_personality_responses')
+          .select('category, answer')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          setStudentAxes(null);
+          return;
+        }
+
+        // 各カテゴリーのスコアを合計
+        const scores: Record<string, number> = {
+          market_engagement: 0, // E vs I
+          growth_strategy: 0,   // N vs S
+          organization_style: 0,// P vs R
+          decision_making: 0    // F vs O
+        };
+
+        data.forEach((response: { category: string; answer: number }) => {
+          if (scores.hasOwnProperty(response.category)) {
+            scores[response.category] += response.answer;
+          }
+        });
+
+        // 8軸に変換
+        const axes: Record<string, number> = {
+          E: 0, I: 0,
+          N: 0, S: 0,
+          P: 0, R: 0,
+          F: 0, O: 0
+        };
+
+        // 市場への関わり方: E ⇄ I
+        if (scores.market_engagement < 0) {
+          axes.E = normalizeScore(scores.market_engagement);
+        } else if (scores.market_engagement > 0) {
+          axes.I = normalizeScore(scores.market_engagement);
+        }
+
+        // 成長・戦略スタンス: N ⇄ S
+        if (scores.growth_strategy < 0) {
+          axes.N = normalizeScore(scores.growth_strategy);
+        } else if (scores.growth_strategy > 0) {
+          axes.S = normalizeScore(scores.growth_strategy);
+        }
+
+        // 組織運営スタンス: P ⇄ R
+        if (scores.organization_style < 0) {
+          axes.P = normalizeScore(scores.organization_style);
+        } else if (scores.organization_style > 0) {
+          axes.R = normalizeScore(scores.organization_style);
+        }
+
+        // 意思決定スタイル: F ⇄ O
+        if (scores.decision_making < 0) {
+          axes.F = normalizeScore(scores.decision_making);
+        } else if (scores.decision_making > 0) {
+          axes.O = normalizeScore(scores.decision_making);
+        }
+
+        setStudentAxes(axes);
+      } catch (err) {
+        console.error('Error fetching student personality:', err);
+        setStudentAxes(null);
+      }
+    };
+
+    fetchStudentPersonality();
+  }, [user?.id]);
 
   const toggleCategory = (categoryValue: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -306,8 +387,13 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     // 平均値を追加
     dataPoint['平均'] = averageAxes[axisData.axis];
 
+    // 学生自身の値を追加
+    if (studentAxes) {
+      dataPoint['あなた'] = studentAxes[axisData.axis];
+    }
+
     // 各個人の値を追加（点で表示）
-    individual8AxesData.forEach((axes, index) => {
+    individual8AxesData.forEach((axes: Record<string, number>, index: number) => {
       dataPoint[`個人${index + 1}`] = axes[axisData.axis];
     });
 
@@ -516,6 +602,18 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     strokeWidth={3}
                     dot={false}
                   />
+                  {/* 学生自身を点で表示（目立つ色） */}
+                  {studentAxes && (
+                    <Radar
+                      name="あなた"
+                      dataKey="あなた"
+                      stroke="rgba(239, 68, 68, 1)"
+                      fill="none"
+                      strokeWidth={3}
+                      dot={{ r: 6, fill: 'rgba(239, 68, 68, 1)' }}
+                      connectNulls={false}
+                    />
+                  )}
                   {/* 各個人を点で表示（最大20人まで） */}
                   {individual8AxesData.slice(0, 20).map((_: Record<string, number>, index: number) => {
                     const color = chartColors[index % chartColors.length];
