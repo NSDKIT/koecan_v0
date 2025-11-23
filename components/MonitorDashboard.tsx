@@ -254,13 +254,14 @@ export default function MonitorDashboard() {
     // 価値観（パーソナリティタイプ）フィルター
     if (selectedPersonalityTypes.length > 0) {
       filtered = filtered.filter(ad => {
-        if (!ad.personality_type) return false;
+        const adPersonalityType = ad.personality_type;
+        if (!adPersonalityType) return false;
         // タイプが完全一致するか、"/"を含む場合は部分一致もチェック
         return selectedPersonalityTypes.some(type => {
-          if (ad.personality_type === type) return true;
+          if (adPersonalityType === type) return true;
           // "/"を含む場合（例: "E/ISRO"）は、各文字が一致するかチェック
-          if (ad.personality_type.includes('/')) {
-            const adTypeParts = ad.personality_type.split('');
+          if (adPersonalityType.includes('/')) {
+            const adTypeParts = adPersonalityType.split('');
             const typeParts = type.split('');
             // 4文字の各位置で一致または"/"を含むかチェック
             for (let i = 0; i < 4; i++) {
@@ -289,12 +290,12 @@ export default function MonitorDashboard() {
     // マッチング検索（学生のパーソナリティタイプと企業のパーソナリティタイプをマッチング）
     if (isMatchingSearch && personalityType) {
       filtered = filtered.filter(ad => {
-        if (!ad.personality_type) return false;
+        const companyType = ad.personality_type;
+        if (!companyType) return false;
         
         // 学生のタイプと企業のタイプを比較
         // "/"を含む場合は、共通する文字があればマッチ
         const studentType = personalityType;
-        const companyType = ad.personality_type;
         
         // 完全一致
         if (studentType === companyType) return true;
