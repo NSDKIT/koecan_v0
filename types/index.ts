@@ -213,3 +213,13 @@ export interface ChatMessage {
   is_read: boolean;
   created_at: string;
 }
+
+export interface PersonalityResponse {
+  id: string;
+  user_id: string;
+  category: 'market_engagement' | 'growth_strategy' | 'organization_style' | 'decision_making';
+  question_key: 'q1' | 'q2' | 'q3' | 'q4' | 'q5';
+  answer: number; // 1-5
+  created_at: string;
+  updated_at: string;
+}
