@@ -5,8 +5,12 @@
 -- INSERT用のポリシーを明示的に追加します
 -- ============================================
 
--- 既存のALLポリシーを削除
+-- 既存のポリシーをすべて削除
 DROP POLICY IF EXISTS "Admins can manage company personality results" ON company_personality_results;
+DROP POLICY IF EXISTS "Anyone can view company personality results" ON company_personality_results;
+DROP POLICY IF EXISTS "Admins can insert company personality results" ON company_personality_results;
+DROP POLICY IF EXISTS "Admins can update company personality results" ON company_personality_results;
+DROP POLICY IF EXISTS "Admins can delete company personality results" ON company_personality_results;
 
 -- SELECTポリシー（全員が閲覧可能）
 CREATE POLICY "Anyone can view company personality results"
