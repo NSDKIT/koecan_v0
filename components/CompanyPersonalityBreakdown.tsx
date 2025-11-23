@@ -396,7 +396,34 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     items: items.map(item => item.axes)
   }));
 
-  // 各軸の平均値を計算（Eの平均、Iの平均、...というふうに8項目の平均）
+  // 各職種/年代別の平均値を計算
+  const categoryAverages: Record<string, Record<string, number>> = {};
+  categoryGroups.forEach((group) => {
+    const categoryAvg: Record<string, number> = {
+      E: 0, I: 0,
+      N: 0, S: 0,
+      P: 0, R: 0,
+      F: 0, O: 0
+    };
+    
+    // このグループ内の各従業員の8軸データから平均を計算
+    group.items.forEach((axes: Record<string, number>) => {
+      Object.keys(categoryAvg).forEach(key => {
+        categoryAvg[key] += axes[key];
+      });
+    });
+    
+    // 平均を計算
+    if (group.items.length > 0) {
+      Object.keys(categoryAvg).forEach(key => {
+        categoryAvg[key] /= group.items.length;
+      });
+    }
+    
+    categoryAverages[group.category] = categoryAvg;
+  });
+
+  // 全従業員の平均値を計算（Eの平均、Iの平均、...というふうに8項目の平均）
   const averageAxes: Record<string, number> = {
     E: 0, I: 0,
     N: 0, S: 0,
@@ -444,15 +471,23 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
-    // 平均値を追加
+    // 全従業員の平均値を追加
     dataPoint['平均'] = averageAxes[axisData.axis];
+
+    // 各職種/年代別の平均値を追加（面積として表示）
+    categoryGroups.forEach((group) => {
+      const categoryAvg = categoryAverages[group.category];
+      if (categoryAvg) {
+        dataPoint[`${group.category}_平均`] = categoryAvg[axisData.axis];
+      }
+    });
 
     // 学生自身の値を追加
     if (studentAxes) {
       dataPoint['あなた'] = studentAxes[axisData.axis];
     }
 
-    // 職種別/年代別にグループ化して追加（各グループを異なる色で表示）
+    // 職種別/年代別にグループ化して追加（各グループを異なる色で点として表示）
     categoryGroups.forEach((group, groupIndex) => {
       group.items.forEach((axes: Record<string, number>, itemIndex: number) => {
         const dataKey = `${group.category}_${itemIndex + 1}`;
@@ -654,9 +689,9 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     <div className="space-y-1 mt-3">
                       <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                        <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
+                        <li><span className="font-semibold">面積（全体平均）:</span> 全従業員の平均値を結んで面積として表示</li>
                         <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を個別の点で表示（線で接続しない）</li>
-                        <li><span className="font-semibold">色分け:</span> {selectedView === 'job' ? '職種別' : '年代別'}に色分けして表示</li>
-                        <li><span className="font-semibold">面積（平均）:</span> 全従業員の平均値を結んで面積として表示</li>
                         <li><span className="font-semibold">点（あなた）:</span> 学生自身の価値観を点で表示</li>
                       </ul>
                     </div>
@@ -679,7 +714,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     tick={{ fill: '#9ca3af', fontSize: 10 }}
                     label={{ value: 'スコア (0-100)', position: 'insideStart', offset: 10, fill: '#6b7280', fontSize: 11 }}
                   />
-                  {/* 平均値を面積で表示 */}
+                  {/* 全従業員の平均値を面積で表示 */}
                   <Radar
                     name="平均"
                     dataKey="平均"
@@ -689,6 +724,22 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     strokeWidth={3}
                     dot={false}
                   />
+                  {/* 各職種/年代別の平均値を面積で表示（各グループを異なる色で） */}
+                  {categoryGroups.map((group, groupIndex) => {
+                    const color = categoryColors[groupIndex % categoryColors.length];
+                    return (
+                      <Radar
+                        key={`${group.category}_平均`}
+                        name={`${group.category}_平均`}
+                        dataKey={`${group.category}_平均`}
+                        stroke={color.stroke}
+                        fill={color.fill}
+                        fillOpacity={0.4}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    );
+                  })}
                   {/* 学生自身を点で表示（目立つ色、線で結ばない） */}
                   {studentAxes && (
                     <Radar
@@ -723,14 +774,12 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     wrapperStyle={{ paddingTop: '20px' }}
                     iconType="circle"
                     formatter={(value: string) => {
-                      // カテゴリー名を表示（例: "経営層・管理職_1" → "経営層・管理職"）
-                      if (value.includes('_')) {
-                        const category = value.split('_')[0];
-                        // 同じカテゴリーの最初の項目のみ表示
-                        const itemIndex = parseInt(value.split('_')[1]);
-                        if (itemIndex === 1) {
-                          return category;
-                        }
+                      // カテゴリー名を表示
+                      if (value.includes('_平均')) {
+                        // 職種/年代別の平均値
+                        return value.replace('_平均', '');
+                      } else if (value.includes('_')) {
+                        // 個別の従業員（凡例には表示しない）
                         return '';
                       }
                       return value;
