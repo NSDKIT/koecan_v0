@@ -54,12 +54,10 @@ WHERE
     AND contype = 'c';  -- CHECK制約のみ
 
 -- 4. サンプルデータの確認（pointsカラムの値）
+-- まず、実際のカラム名を確認してから実行
+-- 以下のクエリは、カラムが存在する場合のみ実行してください
 SELECT
-    id,
-    user_id,
-    points,
-    age,
-    created_at
+    *
 FROM
     monitor_profiles
 LIMIT 5;
