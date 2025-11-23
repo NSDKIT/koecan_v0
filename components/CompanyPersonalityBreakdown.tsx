@@ -420,9 +420,8 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     if (newSelected.has(resultId)) {
       newSelected.delete(resultId);
     } else {
-      if (newSelected.size < 6) { // 最大6つまで比較可能
-        newSelected.add(resultId);
-      }
+      // 制限なし（すべて選択可能）
+      newSelected.add(resultId);
     }
     setSelectedForComparison(newSelected);
   };
