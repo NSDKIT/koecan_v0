@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
+import { Advertisement } from '@/types';
 import { X, Upload, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 interface CompanyPersonalityImportModalProps {
@@ -42,7 +43,7 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           .order('company_name');
 
         if (error) throw error;
-        setAvailableCompanies(data?.map(c => ({ id: c.id, name: c.company_name })) || []);
+        setAvailableCompanies(data?.map((c: Advertisement) => ({ id: c.id, name: c.company_name })) || []);
       } catch (err) {
         console.error('Error fetching companies:', err);
       }
