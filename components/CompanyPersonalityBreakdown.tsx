@@ -210,10 +210,15 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       setSelectedForComparison(new Set(allSelected.map(r => r.id)));
       return allSelected;
     }
-    return currentResults.filter(r => selectedForComparison.has(r.id));
+    const filtered = currentResults.filter(r => selectedForComparison.has(r.id));
+    // フィルタ結果が空の場合は、すべてを表示
+    return filtered.length > 0 ? filtered : currentResults;
   };
 
   const selectedResults = prepareChartData();
+  
+  // チャート表示用：すべてのカテゴリーを表示（selectedResultsが空でも）
+  const chartDisplayResults = selectedResults.length > 0 ? selectedResults : currentResults;
 
   // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
   const normalizeScore = (score: number) => {
@@ -277,13 +282,15 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
         if (data && data.length > 0) {
           // 選択されたカテゴリーに該当するデータのみをフィルタリング
+          // selectedResultsが空の場合は、currentResultsを使用
+          const resultsToUse = selectedResults.length > 0 ? selectedResults : currentResults;
           const filtered = data.filter((row: any) => {
             if (selectedView === 'job') {
               // 職種別の場合：選択された職種に該当するすべての従業員
-              return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
+              return resultsToUse.some((r: PersonalityResult) => r.category_value === row.job_type);
             } else {
               // 年代別の場合：選択された年代に該当するすべての従業員
-              return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+              return resultsToUse.some((r: PersonalityResult) => r.category_value === row.years_of_service);
             }
           });
           setIndividualData(filtered);
@@ -297,12 +304,13 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           const storedData = localStorage.getItem('company_personality_data');
           if (storedData) {
             const data = JSON.parse(storedData);
+            const resultsToUse = selectedResults.length > 0 ? selectedResults : currentResults;
             const filtered = data.filter((row: any) => {
               if (!row.company_id || row.company_id !== companyId) return false;
               if (selectedView === 'job') {
-                return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
+                return resultsToUse.some((r: PersonalityResult) => r.category_value === row.job_type);
               } else {
-                return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+                return resultsToUse.some((r: PersonalityResult) => r.category_value === row.years_of_service);
               }
             });
             setIndividualData(filtered);
@@ -314,12 +322,12 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       }
     };
 
-    if (companyId && selectedResults.length > 0) {
+    if (companyId && currentResults.length > 0) {
       fetchIndividualData();
     } else {
       setIndividualData([]);
     }
-  }, [selectedResults, selectedView, companyId]);
+  }, [selectedResults, selectedView, companyId, currentResults]);
 
   // 個人データを8軸に変換し、職種別/年代別にグループ化
   const individual8AxesDataWithCategory = individualData.map((row: any) => {
@@ -398,30 +406,40 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
   // 各職種/年代別の平均値を計算
   const categoryAverages: Record<string, Record<string, number>> = {};
-  categoryGroups.forEach((group) => {
-    const categoryAvg: Record<string, number> = {
-      E: 0, I: 0,
-      N: 0, S: 0,
-      P: 0, R: 0,
-      F: 0, O: 0
-    };
-    
-    // このグループ内の各従業員の8軸データから平均を計算
-    group.items.forEach((axes: Record<string, number>) => {
-      Object.keys(categoryAvg).forEach(key => {
-        categoryAvg[key] += axes[key];
+  
+  // individualDataがある場合は、それから計算
+  if (categoryGroups.length > 0) {
+    categoryGroups.forEach((group) => {
+      const categoryAvg: Record<string, number> = {
+        E: 0, I: 0,
+        N: 0, S: 0,
+        P: 0, R: 0,
+        F: 0, O: 0
+      };
+      
+      // このグループ内の各従業員の8軸データから平均を計算
+      group.items.forEach((axes: Record<string, number>) => {
+        Object.keys(categoryAvg).forEach(key => {
+          categoryAvg[key] += axes[key];
+        });
       });
+      
+      // 平均を計算
+      if (group.items.length > 0) {
+        Object.keys(categoryAvg).forEach(key => {
+          categoryAvg[key] /= group.items.length;
+        });
+      }
+      
+      categoryAverages[group.category] = categoryAvg;
     });
-    
-    // 平均を計算
-    if (group.items.length > 0) {
-      Object.keys(categoryAvg).forEach(key => {
-        categoryAvg[key] /= group.items.length;
-      });
-    }
-    
-    categoryAverages[group.category] = categoryAvg;
-  });
+  } else {
+    // individualDataがない場合は、company_personality_resultsから計算
+    chartDisplayResults.forEach((result: PersonalityResult) => {
+      const axes = decomposeTo8Axes(result);
+      categoryAverages[result.category_value] = axes;
+    });
+  }
 
   // 全従業員の平均値を計算（Eの平均、Iの平均、...というふうに8項目の平均）
   const averageAxes: Record<string, number> = {
