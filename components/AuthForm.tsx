@@ -112,15 +112,23 @@ export function AuthForm({ onBack }: AuthFormProps) {
                   gender,
                   occupation,
                   location,
+                  points: 0, // 明示的に初期ポイントを0に設定
                 },
               ]);
             if (monitorError) {
                 console.error('Monitor profile creation failed:', monitorError);
+                console.error('エラー詳細:', {
+                  message: monitorError.message,
+                  code: monitorError.code,
+                  details: monitorError.details,
+                  hint: monitorError.hint
+                });
                 setError(`モニター情報作成に失敗しました: ${monitorError.message}`);
                 setLoading(false);
                 await supabase.auth.signOut();
                 return;
             }
+            console.log('Monitor profile created successfully for user:', data.user.id);
           }
           // 新規登録成功時も、useAuthフックが認証状態の変化を検知してユーザー情報を取得する
           console.log('新規登録成功:', data.user.id);
