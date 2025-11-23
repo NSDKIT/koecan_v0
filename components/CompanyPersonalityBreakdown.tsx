@@ -372,15 +372,16 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   }
 
   // レーダーチャート用のデータ構造（8軸）
+  // 対極の組み合わせを反対側に配置: E⇄I, N⇄S, P⇄R, F⇄O
   const chartData = [
-    { axis: 'E', fullMark: 100 },
-    { axis: 'I', fullMark: 100 },
-    { axis: 'N', fullMark: 100 },
-    { axis: 'S', fullMark: 100 },
-    { axis: 'P', fullMark: 100 },
-    { axis: 'R', fullMark: 100 },
-    { axis: 'F', fullMark: 100 },
-    { axis: 'O', fullMark: 100 },
+    { axis: 'E', fullMark: 100 },   // 0度
+    { axis: 'N', fullMark: 100 },   // 45度
+    { axis: 'P', fullMark: 100 },   // 90度
+    { axis: 'F', fullMark: 100 },   // 135度
+    { axis: 'I', fullMark: 100 },   // 180度（Eの対極）
+    { axis: 'S', fullMark: 100 },   // 225度（Nの対極）
+    { axis: 'R', fullMark: 100 },   // 270度（Pの対極）
+    { axis: 'O', fullMark: 100 },   // 315度（Fの対極）
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
@@ -602,16 +603,17 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     strokeWidth={3}
                     dot={false}
                   />
-                  {/* 学生自身を点で表示（目立つ色） */}
+                  {/* 学生自身を点で表示（目立つ色、線で結ばない） */}
                   {studentAxes && (
                     <Radar
                       name="あなた"
                       dataKey="あなた"
                       stroke="rgba(239, 68, 68, 1)"
                       fill="none"
-                      strokeWidth={3}
+                      strokeWidth={0}
                       dot={{ r: 6, fill: 'rgba(239, 68, 68, 1)' }}
                       connectNulls={false}
+                      isAnimationActive={false}
                     />
                   )}
                   {/* 各個人を点で表示（最大20人まで） */}
