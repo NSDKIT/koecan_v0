@@ -345,7 +345,7 @@ export default function MonitorDashboard() {
           return;
       }
 
-      const { error } = await supabase
+      const { data: insertedResponse, error } = await supabase
         .from('responses')
         .insert([
           {
@@ -353,17 +353,65 @@ export default function MonitorDashboard() {
             monitor_id: user.id,
             answers: answers,
           },
-        ]);
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      console.log('アンケート回答を挿入しました:', insertedResponse);
+      console.log('獲得ポイント:', insertedResponse?.points_earned);
+
+      // 現在のポイントを取得（更新前の値）
+      const { data: profileBeforeUpdate } = await supabase
+        .from('monitor_profiles')
+        .select('points')
+        .eq('user_id', user.id)
+        .single();
+      
+      const pointsBefore = profileBeforeUpdate?.points || 0;
+      const pointsToAdd = insertedResponse?.points_earned || 0;
+      const expectedPoints = pointsBefore + pointsToAdd;
+      
+      console.log(`ポイント更新前: ${pointsBefore}, 追加ポイント: ${pointsToAdd}, 期待値: ${expectedPoints}`);
 
       alert(`アンケートを送信しました！${selectedSurvey.points_reward}ポイントを獲得しました。`);
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
       
-      // トリガー（update_monitor_points_trigger）がポイントを更新するまで少し待機
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // トリガー（update_monitor_points_trigger）がポイントを更新するまで待機
+      // 最大3回、1秒間隔でプロフィールを再取得してポイントが更新されるまで待つ
+      let retryCount = 0;
+      const maxRetries = 3;
+      let pointsUpdated = false;
+      
+      while (retryCount < maxRetries && !pointsUpdated) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { data: currentProfile, error: profileError } = await supabase
+          .from('monitor_profiles')
+          .select('points')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!profileError && currentProfile) {
+          const currentPoints = currentProfile.points || 0;
+          
+          console.log(`再取得試行 ${retryCount + 1}: 現在のポイント=${currentPoints}, 期待値=${expectedPoints}`);
+          
+          if (currentPoints >= expectedPoints) {
+            pointsUpdated = true;
+            console.log('ポイントが更新されました！');
+          }
+        }
+        
+        retryCount++;
+      }
+      
+      if (!pointsUpdated) {
+        console.warn('ポイントの更新が確認できませんでした。手動で再取得します。');
+      }
       
       // プロフィールとアンケートリストを再取得
       await Promise.all([
