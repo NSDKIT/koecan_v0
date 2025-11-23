@@ -994,6 +994,38 @@ export default function MonitorDashboard() {
                   </div>
                 </div>
               )}
+
+              {/* キャラクター動画表示 */}
+              {personalityType && (() => {
+                // "/"を含む場合は最初の4文字のタイプを使用
+                let videoType = personalityType;
+                if (personalityType.includes('/')) {
+                  // "/"を含む場合は、最初の4文字のタイプを生成
+                  // 例: "E/ISRO" -> "E" + "I" + "S" + "R" = "EISR" (最初の4文字)
+                  const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                  if (parts.length === 4) {
+                    videoType = parts;
+                  } else {
+                    return null; // 4文字未満の場合は表示しない
+                  }
+                }
+                // 4文字のタイプのみ動画を表示
+                if (videoType.length === 4) {
+                  return (
+                    <div className="flex-1 flex items-center justify-center">
+                      <video
+                        src={`/character/${videoType}.mp4`}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-32 h-32 object-cover rounded-lg shadow-lg"
+                      />
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           )}
 
