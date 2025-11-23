@@ -489,12 +489,28 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
+    // 全従業員の平均値を追加
+    dataPoint['平均'] = averageAxes[axisData.axis];
+
     // 各職種/年代別の平均値を追加（面積として表示）
     categoryGroups.forEach((group) => {
       const categoryAvg = categoryAverages[group.category];
       if (categoryAvg) {
         dataPoint[`${group.category}_平均`] = categoryAvg[axisData.axis];
       }
+    });
+
+    // 学生自身の値を追加
+    if (studentAxes) {
+      dataPoint['あなた'] = studentAxes[axisData.axis];
+    }
+
+    // 職種別/年代別にグループ化して追加（各グループを異なる色で点として表示）
+    categoryGroups.forEach((group, groupIndex) => {
+      group.items.forEach((axes: Record<string, number>, itemIndex: number) => {
+        const dataKey = `${group.category}_${itemIndex + 1}`;
+        dataPoint[dataKey] = axes[axisData.axis];
+      });
     });
 
     return dataPoint;
@@ -692,6 +708,9 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
                         <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
+                        <li><span className="font-semibold">面積（全体平均）:</span> 全従業員の平均値を結んで面積として表示</li>
+                        <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を個別の点で表示（線で接続しない）</li>
+                        <li><span className="font-semibold">点（あなた）:</span> 学生自身の価値観を点で表示</li>
                       </ul>
                     </div>
                     <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
