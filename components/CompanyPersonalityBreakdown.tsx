@@ -205,10 +205,10 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   // レーダーチャート用のデータを準備
   const prepareChartData = () => {
     if (selectedForComparison.size === 0 && currentResults.length > 0) {
-      // 何も選択されていない場合は、最初の3つを自動選択
-      const autoSelected = currentResults.slice(0, Math.min(3, currentResults.length));
-      setSelectedForComparison(new Set(autoSelected.map(r => r.id)));
-      return autoSelected;
+      // 何も選択されていない場合は、すべてを自動選択
+      const allSelected = currentResults;
+      setSelectedForComparison(new Set(allSelected.map(r => r.id)));
+      return allSelected;
     }
     return currentResults.filter(r => selectedForComparison.has(r.id));
   };
@@ -271,11 +271,14 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       if (storedData) {
         const data = JSON.parse(storedData);
         // 選択されたカテゴリーに該当するデータのみをフィルタリング
+        // 選択されたカテゴリーのすべての従業員データを取得
         const filtered = data.filter((row: any) => {
           if (!row.company_id || row.company_id !== companyId) return false;
           if (selectedView === 'job') {
+            // 職種別の場合：選択された職種に該当するすべての従業員
             return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
           } else {
+            // 年代別の場合：選択された年代に該当するすべての従業員
             return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
           }
         });
@@ -339,7 +342,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     return axes;
   });
 
-  // 各軸の平均値を計算
+  // 各軸の平均値を計算（Eの平均、Iの平均、...というふうに8項目の平均）
   const averageAxes: Record<string, number> = {
     E: 0, I: 0,
     N: 0, S: 0,
@@ -348,6 +351,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   };
 
   if (individual8AxesData.length > 0) {
+    // 各従業員の8軸データから、各軸（E, I, N, S, P, R, F, O）の平均を計算
     individual8AxesData.forEach((axes: Record<string, number>) => {
       Object.keys(averageAxes).forEach(key => {
         averageAxes[key] += axes[key];
@@ -357,7 +361,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       averageAxes[key] /= individual8AxesData.length;
     });
   } else {
-    // 個人データがない場合は、集計結果から計算
+    // 個人データがない場合は、集計結果から計算（フォールバック）
     selectedResults.forEach((result: PersonalityResult) => {
       const axes = decomposeTo8Axes(result);
       Object.keys(averageAxes).forEach(key => {
@@ -517,8 +521,11 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border-2 border-purple-200">
             <div className="flex items-center mb-3">
               <TrendingUp className="w-5 h-5 text-purple-600 mr-2" />
-              <h3 className="font-bold text-gray-800">比較対象を選択（最大6つ）</h3>
+              <h3 className="font-bold text-gray-800">表示するカテゴリーを選択</h3>
             </div>
+            <p className="text-sm text-gray-600 mb-3">
+              選択したカテゴリーの全従業員を点で表示し、8軸（E, I, N, S, P, R, F, O）の平均を面積として表示します
+            </p>
             <div className="flex flex-wrap gap-2">
               {currentResults.map((result) => {
                 const isSelected = selectedForComparison.has(result.id);
