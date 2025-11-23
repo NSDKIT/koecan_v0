@@ -489,28 +489,12 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
-    // 全従業員の平均値を追加
-    dataPoint['平均'] = averageAxes[axisData.axis];
-
     // 各職種/年代別の平均値を追加（面積として表示）
     categoryGroups.forEach((group) => {
       const categoryAvg = categoryAverages[group.category];
       if (categoryAvg) {
         dataPoint[`${group.category}_平均`] = categoryAvg[axisData.axis];
       }
-    });
-
-    // 学生自身の値を追加
-    if (studentAxes) {
-      dataPoint['あなた'] = studentAxes[axisData.axis];
-    }
-
-    // 職種別/年代別にグループ化して追加（各グループを異なる色で点として表示）
-    categoryGroups.forEach((group, groupIndex) => {
-      group.items.forEach((axes: Record<string, number>, itemIndex: number) => {
-        const dataKey = `${group.category}_${itemIndex + 1}`;
-        dataPoint[dataKey] = axes[axisData.axis];
-      });
     });
 
     return dataPoint;
@@ -708,9 +692,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
                         <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
-                        <li><span className="font-semibold">面積（全体平均）:</span> 全従業員の平均値を結んで面積として表示</li>
-                        <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を個別の点で表示（線で接続しない）</li>
-                        <li><span className="font-semibold">点（あなた）:</span> 学生自身の価値観を点で表示</li>
                       </ul>
                     </div>
                     <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
@@ -732,16 +713,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     tick={{ fill: '#9ca3af', fontSize: 10 }}
                     label={{ value: 'スコア (0-100)', position: 'insideStart', offset: 10, fill: '#6b7280', fontSize: 11 }}
                   />
-                  {/* 全従業員の平均値を面積で表示 */}
-                  <Radar
-                    name="平均"
-                    dataKey="平均"
-                    stroke="rgba(139, 92, 246, 1)"
-                    fill="rgba(139, 92, 246, 0.4)"
-                    fillOpacity={0.6}
-                    strokeWidth={3}
-                    dot={false}
-                  />
                   {/* 各職種/年代別の平均値を面積で表示（各グループを異なる色で） */}
                   {categoryGroups.map((group, groupIndex) => {
                     const color = categoryColors[groupIndex % categoryColors.length];
@@ -758,49 +729,15 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       />
                     );
                   })}
-                  {/* 学生自身を点で表示（目立つ色、線で結ばない） */}
-                  {studentAxes && (
-                    <Radar
-                      name="あなた"
-                      dataKey="あなた"
-                      stroke="rgba(239, 68, 68, 1)"
-                      fill="none"
-                      strokeWidth={0}
-                      dot={{ r: 6, fill: 'rgba(239, 68, 68, 1)' }}
-                      connectNulls={false}
-                      isAnimationActive={false}
-                    />
-                  )}
-                  {/* 職種別/年代別にグループ化して点で表示（各グループを異なる色で） */}
-                  {categoryGroups.map((group, groupIndex) => {
-                    const color = categoryColors[groupIndex % categoryColors.length];
-                    return group.items.map((_: Record<string, number>, itemIndex: number) => (
-                      <Radar
-                        key={`${group.category}-${itemIndex}`}
-                        name={`${group.category}_${itemIndex + 1}`}
-                        dataKey={`${group.category}_${itemIndex + 1}`}
-                        stroke={color.stroke}
-                        fill="none"
-                        strokeWidth={0}
-                        dot={{ r: 4, fill: color.stroke, strokeWidth: 0 }}
-                        connectNulls={false}
-                        isAnimationActive={false}
-                      />
-                    ));
-                  }).flat()}
                   <Legend 
                     wrapperStyle={{ paddingTop: '20px' }}
-                    iconType="circle"
+                    iconType="line"
                     formatter={(value: string) => {
-                      // カテゴリー名を表示
+                      // カテゴリー名のみを表示（点は表示しない）
                       if (value.includes('_平均')) {
-                        // 職種/年代別の平均値
                         return value.replace('_平均', '');
-                      } else if (value.includes('_')) {
-                        // 個別の従業員（凡例には表示しない）
-                        return '';
                       }
-                      return value;
+                      return '';
                     }}
                   />
                 </RadarChart>
