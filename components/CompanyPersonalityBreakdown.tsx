@@ -497,6 +497,11 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       }
     });
 
+    // 学生自身の値を追加
+    if (studentAxes) {
+      dataPoint['あなた'] = studentAxes[axisData.axis];
+    }
+
     return dataPoint;
   });
 
@@ -682,6 +687,19 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       />
                     );
                   })}
+                  {/* 学生自身を点で表示（目立つ色、線で結ばない） */}
+                  {studentAxes && (
+                    <Radar
+                      name="あなた"
+                      dataKey="あなた"
+                      stroke="rgba(239, 68, 68, 1)"
+                      fill="none"
+                      strokeWidth={0}
+                      dot={{ r: 6, fill: 'rgba(239, 68, 68, 1)' }}
+                      connectNulls={false}
+                      isAnimationActive={false}
+                    />
+                  )}
                   <Legend 
                     wrapperStyle={{ paddingTop: '20px' }}
                     iconType="line"
