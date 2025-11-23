@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
 import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse } from '@/types'; 
@@ -101,6 +101,43 @@ export default function MonitorDashboard() {
     }
   }, [user]);
 
+  // リアルタイムでmonitor_profilesのポイント更新を監視
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('MonitorDashboard: リアルタイム購読を設定中...');
+    
+    const channel = supabase
+      .channel(`monitor_profile_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'monitor_profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          console.log('MonitorDashboard: プロフィールが更新されました:', payload);
+          const updatedProfile = payload.new;
+          
+          // ポイントが更新された場合、プロフィールを再取得
+          if (updatedProfile.points !== undefined) {
+            console.log('MonitorDashboard: ポイントが更新されました。プロフィールを再取得します。');
+            fetchProfile();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('MonitorDashboard: リアルタイム購読の状態:', status);
+      });
+
+    return () => {
+      console.log('MonitorDashboard: リアルタイム購読を解除します。');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchProfile]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuButtonRef.current && menuButtonRef.current.contains(event.target as Node)) {
@@ -118,7 +155,7 @@ export default function MonitorDashboard() {
     };
   }, []); 
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
     if (!user?.id) throw new Error("User ID is missing.");
     
@@ -158,7 +195,7 @@ export default function MonitorDashboard() {
       } as MonitorProfile); 
       throw error;
     }
-  };
+  }, [user?.id]);
 
   const fetchSurveysAndResponses = async () => {
     console.log("MonitorDashboard: fetchSurveysAndResponses started.");
@@ -380,40 +417,13 @@ export default function MonitorDashboard() {
       setSurveyQuestions([]);
       setAnswers([]);
       
+      // リアルタイム購読がポイント更新を検知するため、少し待機してから再取得
       // トリガー（update_monitor_points_trigger）がポイントを更新するまで待機
-      // 最大3回、1秒間隔でプロフィールを再取得してポイントが更新されるまで待つ
-      let retryCount = 0;
-      const maxRetries = 3;
-      let pointsUpdated = false;
-      
-      while (retryCount < maxRetries && !pointsUpdated) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const { data: currentProfile, error: profileError } = await supabase
-          .from('monitor_profiles')
-          .select('points')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (!profileError && currentProfile) {
-          const currentPoints = currentProfile.points || 0;
-          
-          console.log(`再取得試行 ${retryCount + 1}: 現在のポイント=${currentPoints}, 期待値=${expectedPoints}`);
-          
-          if (currentPoints >= expectedPoints) {
-            pointsUpdated = true;
-            console.log('ポイントが更新されました！');
-          }
-        }
-        
-        retryCount++;
-      }
-      
-      if (!pointsUpdated) {
-        console.warn('ポイントの更新が確認できませんでした。手動で再取得します。');
-      }
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // プロフィールとアンケートリストを再取得
+      // リアルタイム購読がポイント更新を検知して自動的にfetchProfile()が呼ばれるが、
+      // 念のため手動でも再取得する
       await Promise.all([
         fetchProfile(), 
         fetchSurveysAndResponses()
