@@ -421,20 +421,55 @@ export default function MonitorDashboard() {
       // プロフィールとアンケートリストの再取得は、エラーが発生してもユーザーには影響しないように
       // バックグラウンドで実行（エラーはログに記録するだけ）
       try {
-        // リアルタイム購読がポイント更新を検知するため、少し待機してから再取得
         // トリガー（update_monitor_points_trigger）がポイントを更新するまで待機
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // 最大5回、1秒間隔でプロフィールを再取得してポイントが更新されるまで待つ
+        const pointsBefore = profile?.points || 0;
+        let retryCount = 0;
+        const maxRetries = 5;
+        let pointsUpdated = false;
         
-        // プロフィールとアンケートリストを再取得
-        // リアルタイム購読がポイント更新を検知して自動的にfetchProfile()が呼ばれるが、
-        // 念のため手動でも再取得する
-        await Promise.all([
-          fetchProfile(), 
-          fetchSurveysAndResponses()
-        ]);
+        while (retryCount < maxRetries && !pointsUpdated) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const { data: currentProfile, error: profileError } = await supabase
+            .from('monitor_profiles')
+            .select('points')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (!profileError && currentProfile) {
+            const currentPoints = currentProfile.points || 0;
+            
+            console.log(`再取得試行 ${retryCount + 1}: 現在のポイント=${currentPoints}, 以前のポイント=${pointsBefore}`);
+            
+            if (currentPoints > pointsBefore) {
+              pointsUpdated = true;
+              console.log('ポイントが更新されました！プロフィールを再取得します。');
+              // プロフィールを再取得してUIを更新
+              await fetchProfile();
+            }
+          }
+          
+          retryCount++;
+        }
+        
+        if (!pointsUpdated) {
+          console.warn('ポイントの更新が確認できませんでした。手動で再取得します。');
+          // 最終的にプロフィールを再取得（トリガーが実行されていれば更新されているはず）
+          await fetchProfile();
+        }
+        
+        // アンケートリストを再取得
+        await fetchSurveysAndResponses();
       } catch (updateError) {
         // 再取得のエラーはログに記録するだけ（INSERTは成功しているので、ユーザーには影響しない）
         console.warn('プロフィール再取得エラー（無視されます）:', updateError);
+        // エラーが発生しても、念のためプロフィールを再取得を試みる
+        try {
+          await fetchProfile();
+        } catch (e) {
+          console.warn('プロフィール再取得の再試行も失敗:', e);
+        }
       } 
     } catch (error: any) {
       console.error('アンケート送信エラー:', error);
