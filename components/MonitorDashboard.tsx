@@ -93,13 +93,55 @@ export default function MonitorDashboard() {
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
 
+  const fetchProfile = useCallback(async () => {
+    console.log("MonitorDashboard: fetchProfile started.");
+    if (!user?.id) throw new Error("User ID is missing.");
+    
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('monitor_profiles')
+        .select('*') 
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // monitor_profilesテーブルから直接pointsを取得
+      // トリガー（update_monitor_points_trigger）がpointsを更新するため、直接取得する
+      const pointsBalance = profileData?.points || 0;
+      
+      const combinedProfile: MonitorProfile = {
+          ...profileData, 
+          points: pointsBalance, 
+          monitor_id: profileData.id 
+      } as MonitorProfile;
+
+      setProfile(combinedProfile);
+
+      console.log("MonitorDashboard: fetchProfile completed. Points: " + pointsBalance);
+      return combinedProfile; 
+    } catch (error) {
+      console.error('プロフィール取得エラー:', error);
+      setProfile({ 
+          id: user.id, 
+          user_id: user.id,
+          points: 0,
+          age: 0, 
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          monitor_id: user.id 
+      } as MonitorProfile); 
+      throw error;
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchSurveysAndResponses(); 
       fetchAdvertisements();
     }
-  }, [user]);
+  }, [user, fetchProfile]);
 
   // リアルタイムでmonitor_profilesのポイント更新を監視
   useEffect(() => {
@@ -153,49 +195,7 @@ export default function MonitorDashboard() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []); 
-
-  const fetchProfile = useCallback(async () => {
-    console.log("MonitorDashboard: fetchProfile started.");
-    if (!user?.id) throw new Error("User ID is missing.");
-    
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('monitor_profiles')
-        .select('*') 
-        .eq('user_id', user.id)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // monitor_profilesテーブルから直接pointsを取得
-      // トリガー（update_monitor_points_trigger）がpointsを更新するため、直接取得する
-      const pointsBalance = profileData?.points || 0;
-      
-      const combinedProfile: MonitorProfile = {
-          ...profileData, 
-          points: pointsBalance, 
-          monitor_id: profileData.id 
-      } as MonitorProfile;
-
-      setProfile(combinedProfile);
-
-      console.log("MonitorDashboard: fetchProfile completed. Points: " + pointsBalance);
-      return combinedProfile; 
-    } catch (error) {
-      console.error('プロフィール取得エラー:', error);
-      setProfile({ 
-          id: user.id, 
-          user_id: user.id,
-          points: 0,
-          age: 0, 
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          monitor_id: user.id 
-      } as MonitorProfile); 
-      throw error;
-    }
-  }, [user?.id]);
+  }, []);
 
   const fetchSurveysAndResponses = async () => {
     console.log("MonitorDashboard: fetchSurveysAndResponses started.");
