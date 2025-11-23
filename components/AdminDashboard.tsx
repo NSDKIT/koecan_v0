@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey } from '@/types'; // Survey 型をインポート
+import { Survey, Advertisement } from '@/types'; // Survey, Advertisement 型をインポート
 import { 
   Users, 
   BarChart3, 
