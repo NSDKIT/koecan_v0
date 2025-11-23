@@ -184,6 +184,16 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // UI値（1〜5）をDB値（-2〜+2）に変換
+  const convertUIToDB = (uiValue: number): number => {
+    return uiValue - 3; // 1→-2, 2→-1, 3→0, 4→+1, 5→+2
+  };
+
+  // DB値（-2〜+2）をUI値（1〜5）に変換
+  const convertDBToUI = (dbValue: number): number => {
+    return dbValue + 3; // -2→1, -1→2, 0→3, +1→4, +2→5
+  };
+
   // 既存の回答を読み込む
   useEffect(() => {
     const loadAnswers = async () => {
@@ -203,7 +213,8 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
           if (!loadedAnswers[item.category]) {
             loadedAnswers[item.category] = {};
           }
-          loadedAnswers[item.category][item.question_key] = item.answer;
+          // DB値（-2〜+2）をUI値（1〜5）に変換して保存
+          loadedAnswers[item.category][item.question_key] = convertDBToUI(item.answer);
         });
 
         setAnswers(loadedAnswers);
@@ -251,13 +262,14 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
 
       categories.forEach((category) => {
         category.questions.forEach((question) => {
-          const answer = answers[category.id]?.[question.key];
-          if (answer && answer >= 1 && answer <= 5) {
+          const uiAnswer = answers[category.id]?.[question.key];
+          if (uiAnswer && uiAnswer >= 1 && uiAnswer <= 5) {
+            // UI値（1〜5）をDB値（-2〜+2）に変換して保存
             responses.push({
               user_id: user.id,
               category: category.id,
               question_key: question.key,
-              answer: answer
+              answer: convertUIToDB(uiAnswer)
             });
           }
         });
