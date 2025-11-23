@@ -187,35 +187,37 @@ export default function MonitorDashboard() {
       });
 
       // タイプコードを生成
+      // 注意: スコアの符号とタイプの対応
+      // マイナス → E, N, P, F / プラス → I, S, R, O
       let typeCode = '';
       // スコアが0の場合は両方の可能性を示す（例: "E/I"）
-      if (scores.market_engagement > 0) {
+      if (scores.market_engagement < 0) {
         typeCode += 'E';
-      } else if (scores.market_engagement < 0) {
+      } else if (scores.market_engagement > 0) {
         typeCode += 'I';
       } else {
         typeCode += 'E/I';
       }
       
-      if (scores.growth_strategy > 0) {
+      if (scores.growth_strategy < 0) {
         typeCode += 'N';
-      } else if (scores.growth_strategy < 0) {
+      } else if (scores.growth_strategy > 0) {
         typeCode += 'S';
       } else {
         typeCode += 'N/S';
       }
       
-      if (scores.organization_style > 0) {
+      if (scores.organization_style < 0) {
         typeCode += 'P';
-      } else if (scores.organization_style < 0) {
+      } else if (scores.organization_style > 0) {
         typeCode += 'R';
       } else {
         typeCode += 'P/R';
       }
       
-      if (scores.decision_making > 0) {
+      if (scores.decision_making < 0) {
         typeCode += 'F';
-      } else if (scores.decision_making < 0) {
+      } else if (scores.decision_making > 0) {
         typeCode += 'O';
       } else {
         typeCode += 'F/O';

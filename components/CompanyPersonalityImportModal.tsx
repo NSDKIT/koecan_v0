@@ -52,35 +52,37 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
   }, []);
 
   // タイプコードを生成する関数
+  // 注意: スコアの符号とタイプの対応
+  // マイナス → E, N, P, F / プラス → I, S, R, O
   const calculateType = (scores: { market_engagement: number; growth_strategy: number; organization_style: number; decision_making: number }): string => {
     let typeCode = '';
-    if (scores.market_engagement > 0) {
+    if (scores.market_engagement < 0) {
       typeCode += 'E';
-    } else if (scores.market_engagement < 0) {
+    } else if (scores.market_engagement > 0) {
       typeCode += 'I';
     } else {
       typeCode += 'E/I';
     }
     
-    if (scores.growth_strategy > 0) {
+    if (scores.growth_strategy < 0) {
       typeCode += 'N';
-    } else if (scores.growth_strategy < 0) {
+    } else if (scores.growth_strategy > 0) {
       typeCode += 'S';
     } else {
       typeCode += 'N/S';
     }
     
-    if (scores.organization_style > 0) {
+    if (scores.organization_style < 0) {
       typeCode += 'P';
-    } else if (scores.organization_style < 0) {
+    } else if (scores.organization_style > 0) {
       typeCode += 'R';
     } else {
       typeCode += 'P/R';
     }
     
-    if (scores.decision_making > 0) {
+    if (scores.decision_making < 0) {
       typeCode += 'F';
-    } else if (scores.decision_making < 0) {
+    } else if (scores.decision_making > 0) {
       typeCode += 'O';
     } else {
       typeCode += 'F/O';
