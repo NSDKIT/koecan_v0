@@ -382,7 +382,7 @@ export default function MonitorDashboard() {
           return;
       }
 
-      const { data: insertedResponse, error } = await supabase
+      const { data: insertedResponse, error: insertError } = await supabase
         .from('responses')
         .insert([
           {
@@ -394,40 +394,38 @@ export default function MonitorDashboard() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('アンケート回答の挿入エラー:', insertError);
+        throw insertError;
+      }
 
       console.log('アンケート回答を挿入しました:', insertedResponse);
       console.log('獲得ポイント:', insertedResponse?.points_earned);
 
-      // 現在のポイントを取得（更新前の値）
-      const { data: profileBeforeUpdate } = await supabase
-        .from('monitor_profiles')
-        .select('points')
-        .eq('user_id', user.id)
-        .single();
-      
-      const pointsBefore = profileBeforeUpdate?.points || 0;
-      const pointsToAdd = insertedResponse?.points_earned || 0;
-      const expectedPoints = pointsBefore + pointsToAdd;
-      
-      console.log(`ポイント更新前: ${pointsBefore}, 追加ポイント: ${pointsToAdd}, 期待値: ${expectedPoints}`);
-
+      // INSERTが成功したら、まず成功メッセージを表示
       alert(`アンケートを送信しました！${selectedSurvey.points_reward}ポイントを獲得しました。`);
       setSelectedSurvey(null);
       setSurveyQuestions([]);
       setAnswers([]);
       
-      // リアルタイム購読がポイント更新を検知するため、少し待機してから再取得
-      // トリガー（update_monitor_points_trigger）がポイントを更新するまで待機
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // プロフィールとアンケートリストを再取得
-      // リアルタイム購読がポイント更新を検知して自動的にfetchProfile()が呼ばれるが、
-      // 念のため手動でも再取得する
-      await Promise.all([
-        fetchProfile(), 
-        fetchSurveysAndResponses()
-      ]); 
+      // プロフィールとアンケートリストの再取得は、エラーが発生してもユーザーには影響しないように
+      // バックグラウンドで実行（エラーはログに記録するだけ）
+      try {
+        // リアルタイム購読がポイント更新を検知するため、少し待機してから再取得
+        // トリガー（update_monitor_points_trigger）がポイントを更新するまで待機
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // プロフィールとアンケートリストを再取得
+        // リアルタイム購読がポイント更新を検知して自動的にfetchProfile()が呼ばれるが、
+        // 念のため手動でも再取得する
+        await Promise.all([
+          fetchProfile(), 
+          fetchSurveysAndResponses()
+        ]);
+      } catch (updateError) {
+        // 再取得のエラーはログに記録するだけ（INSERTは成功しているので、ユーザーには影響しない）
+        console.warn('プロフィール再取得エラー（無視されます）:', updateError);
+      } 
     } catch (error: any) {
       console.error('アンケート送信エラー:', error);
       console.error('エラー詳細:', {
