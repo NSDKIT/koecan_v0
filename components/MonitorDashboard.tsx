@@ -1330,7 +1330,10 @@ export default function MonitorDashboard() {
                       <div
                         key={ad.id}
                         className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedAdvertisement(ad)} 
+                        onClick={() => {
+                          setSelectedAdvertisement(ad);
+                          setCompanyDetailView('info'); // 企業を選択した際に「企業情報」タブを表示
+                        }} 
                       >
                         {(() => {
                           const imageUrl = ad.image_url;
