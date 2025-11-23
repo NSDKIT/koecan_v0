@@ -31,7 +31,8 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Brain
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -42,6 +43,7 @@ import { PointExchangeModal } from '@/components/PointExchangeModal';
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
 import { MatchingFeature } from '@/components/MatchingFeature';
 import { PersonalityAssessmentModal } from '@/components/PersonalityAssessmentModal';
+import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
@@ -93,6 +95,8 @@ export default function MonitorDashboard() {
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
   const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
   const [showPersonalityAssessmentModal, setShowPersonalityAssessmentModal] = useState(false);
+  const [showPersonalityTypeModal, setShowPersonalityTypeModal] = useState(false);
+  const [personalityType, setPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
 
   const fetchProfile = useCallback(async () => {
@@ -137,13 +141,59 @@ export default function MonitorDashboard() {
     }
   }, [user?.id]);
 
+  // パーソナリティタイプを計算する関数
+  const calculatePersonalityType = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('monitor_personality_responses')
+        .select('category, answer')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setPersonalityType(null);
+        return;
+      }
+
+      // 各カテゴリーのスコアを合計
+      const scores: Record<string, number> = {
+        market_engagement: 0, // E vs I
+        growth_strategy: 0,   // N vs S
+        organization_style: 0,// P vs R
+        decision_making: 0    // F vs O
+      };
+
+      data.forEach((response: { category: string; answer: number }) => {
+        if (scores.hasOwnProperty(response.category)) {
+          scores[response.category] += response.answer;
+        }
+      });
+
+      // タイプコードを生成
+      let typeCode = '';
+      typeCode += scores.market_engagement >= 0 ? 'E' : 'I';
+      typeCode += scores.growth_strategy >= 0 ? 'N' : 'S';
+      typeCode += scores.organization_style >= 0 ? 'P' : 'R';
+      typeCode += scores.decision_making >= 0 ? 'F' : 'O';
+
+      setPersonalityType(typeCode);
+    } catch (error) {
+      console.error('パーソナリティタイプの計算エラー:', error);
+      setPersonalityType(null);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchSurveysAndResponses(); 
       fetchAdvertisements();
+      calculatePersonalityType();
     }
-  }, [user, fetchProfile]);
+  }, [user, fetchProfile, calculatePersonalityType]);
 
   // リアルタイムでmonitor_profilesのポイント更新を監視
   useEffect(() => {
@@ -186,11 +236,32 @@ export default function MonitorDashboard() {
         }
       });
 
+    // パーソナリティ診断のリアルタイム購読
+    const personalityChannel = supabase
+      .channel(`monitor_personality_responses_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE全て
+          schema: 'public',
+          table: 'monitor_personality_responses',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload: any) => {
+          console.log('MonitorDashboard: パーソナリティ診断の回答が更新されました:', payload);
+          calculatePersonalityType(); // 回答が変更されたらタイプを再計算
+        }
+      )
+      .subscribe((status: string) => {
+        console.log('MonitorDashboard: パーソナリティ診断リアルタイム購読の状態:', status);
+      });
+
     return () => {
       console.log('MonitorDashboard: リアルタイム購読を解除します。');
       supabase.removeChannel(channel);
+      supabase.removeChannel(personalityChannel);
     };
-  }, [user?.id, fetchProfile]);
+  }, [user?.id, fetchProfile, calculatePersonalityType]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -754,6 +825,18 @@ export default function MonitorDashboard() {
                 <p className="text-gray-600 text-lg">獲得ポイント</p>
                 <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
               </div>
+              {/* パーソナリティタイプ表示 */}
+              {personalityType && (
+                <div 
+                  className="ml-auto bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-lg font-semibold cursor-pointer hover:bg-blue-200 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation(); // 親のonClickが発火しないようにする
+                    setShowPersonalityTypeModal(true);
+                  }}
+                >
+                  {personalityType}
+                </div>
+              )}
             </div>
           )}
 
@@ -1427,9 +1510,14 @@ export default function MonitorDashboard() {
       {showPersonalityAssessmentModal && (
         <PersonalityAssessmentModal
           onClose={() => setShowPersonalityAssessmentModal(false)}
-          onSaveSuccess={() => {
-            console.log('パーソナリティ診断が保存されました');
-          }}
+          onSaveSuccess={calculatePersonalityType}
+        />
+      )}
+
+      {personalityType && showPersonalityTypeModal && (
+        <PersonalityTypeModal
+          type={personalityType}
+          onClose={() => setShowPersonalityTypeModal(false)}
         />
       )}
       
