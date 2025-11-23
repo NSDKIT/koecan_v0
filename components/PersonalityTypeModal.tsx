@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 interface PersonalityTypeModalProps {
@@ -347,17 +347,13 @@ const personalityTypes: Record<string, PersonalityType> = {
 };
 
 export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProps) {
-  // スコアが0の場合、タイプコードに "/" が含まれる（例: "E/IN/SP/RF/O"）
-  const hasAmbiguousScores = type.includes('/');
+  const [selectedType, setSelectedType] = useState<string | null>(null);
   
-  const personalityType = personalityTypes[type];
-
-  // スコアが0でタイプが特定できない場合の特別な表示
-  if (hasAmbiguousScores && !personalityType) {
-    // タイプコードを解析（例: "E/IN/SP/RF/O" → ["E/I", "N/S", "P/R", "F/O"]）
-    const parseTypeCode = (code: string): string[] => {
+  // タイプコードから全ての可能性を生成する関数
+  const generatePossibleTypes = (code: string): string[] => {
+    // タイプコードを解析（例: "E/ISRO" → ["E/I", "S", "R", "O"]）
+    const parseTypeCode = (typeCode: string): string[] => {
       const result: string[] = [];
-      // 各軸のパターンを順番に抽出
       const patterns = [
         /([EI]\/?[EI]?)/,  // E, I, または E/I
         /([NS]\/?[NS]?)/,  // N, S, または N/S
@@ -365,7 +361,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
         /([FO]\/?[FO]?)/   // F, O, または F/O
       ];
       
-      let remaining = code;
+      let remaining = typeCode;
       for (const pattern of patterns) {
         const match = remaining.match(pattern);
         if (match && match.index !== undefined) {
@@ -377,14 +373,45 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
       return result;
     };
     
-    const parts = parseTypeCode(type);
-    const axisLabels = [
-      '市場への関わり方（外向型E vs 内向型I）',
-      '成長・戦略スタンス（革新型N vs 安定型S）',
-      '組織運営スタンス（人材志向P vs 成果志向R）',
-      '意思決定・マネジメントスタイル（柔軟型F vs 規律型O）'
-    ];
+    const parts = parseTypeCode(code);
     
+    // 各軸の可能性を配列に変換
+    const possibilities = parts.map(part => {
+      if (part.includes('/')) {
+        return part.split('/');
+      }
+      return [part];
+    });
+    
+    // 全ての組み合わせを生成（デカルト積）
+    const combinations: string[] = [];
+    const generateCombinations = (current: string, index: number) => {
+      if (index === possibilities.length) {
+        combinations.push(current);
+        return;
+      }
+      
+      for (const option of possibilities[index]) {
+        generateCombinations(current + option, index + 1);
+      }
+    };
+    
+    generateCombinations('', 0);
+    return combinations;
+  };
+  
+  // スコアが0の場合、タイプコードに "/" が含まれる（例: "E/ISRO"）
+  const hasAmbiguousScores = type.includes('/');
+  
+  const personalityType = personalityTypes[type];
+  const possibleTypes = hasAmbiguousScores ? generatePossibleTypes(type) : [];
+  
+  // 選択されたタイプの詳細を表示
+  const displayType = selectedType || type;
+  const displayPersonalityType = personalityTypes[displayType];
+
+  // スコアが0で複数の可能性がある場合のタイプ選択画面
+  if (hasAmbiguousScores && possibleTypes.length > 0 && !selectedType) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
         <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
@@ -409,30 +436,33 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
               <p className="text-yellow-800 font-semibold mb-2">中間的なスコアについて</p>
               <p className="text-yellow-700 text-sm">
-                一部の軸でスコアが0（中間）のため、どちらのタイプにも当てはまる可能性があります。
-                より明確なタイプを判定するには、診断を再度回答してください。
+                一部の軸でスコアが0（中間）のため、以下の{possibleTypes.length}つのタイプの可能性があります。
+                各タイプをクリックして詳細を確認してください。
               </p>
             </div>
             
             <section>
-              <h3 className="text-xl font-bold text-gray-800 mb-4">各軸の可能性</h3>
-              <div className="space-y-4">
-                {parts.map((part, index) => {
-                  if (index >= axisLabels.length) return null;
-                  const isAmbiguous = part.includes('/');
+              <h3 className="text-xl font-bold text-gray-800 mb-4">可能性のあるタイプ</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {possibleTypes.map((possibleType) => {
+                  const typeInfo = personalityTypes[possibleType];
+                  if (!typeInfo) return null;
+                  
                   return (
-                    <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-800 mb-2">{axisLabels[index]}</h4>
-                      {isAmbiguous ? (
-                        <p className="text-gray-700">
-                          <span className="font-semibold text-purple-600">{part}</span> - どちらのタイプにも当てはまる可能性があります
-                        </p>
-                      ) : (
-                        <p className="text-gray-700">
-                          <span className="font-semibold text-purple-600">{part}</span>
-                        </p>
-                      )}
-                    </div>
+                    <button
+                      key={possibleType}
+                      onClick={() => setSelectedType(possibleType)}
+                      className="bg-white border-2 border-purple-200 rounded-xl p-6 hover:border-purple-500 hover:shadow-lg transition-all text-left"
+                    >
+                      <div className="flex items-center mb-3">
+                        <span className="text-2xl font-bold text-purple-600 mr-3">{typeInfo.code}</span>
+                        <span className="text-lg font-semibold text-gray-800">{typeInfo.name}</span>
+                      </div>
+                      <p className="text-gray-600 text-sm line-clamp-2">{typeInfo.description}</p>
+                      <div className="mt-4 text-purple-600 text-sm font-medium">
+                        詳細を見る →
+                      </div>
+                    </button>
                   );
                 })}
               </div>
@@ -452,7 +482,8 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
     );
   }
 
-  if (!personalityType) {
+  // エラー: タイプが見つからない場合
+  if (!displayPersonalityType) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6">
@@ -465,7 +496,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
               <X className="w-6 h-6" />
             </button>
           </div>
-          <p className="text-gray-600">パーソナリティタイプ「{type}」が見つかりませんでした。</p>
+          <p className="text-gray-600">パーソナリティタイプ「{displayType}」が見つかりませんでした。</p>
         </div>
       </div>
     );
@@ -479,17 +510,27 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center mb-2">
-                <span className="text-3xl font-bold mr-3">{personalityType.code}</span>
-                <span className="text-xl font-semibold">{personalityType.name}</span>
+                <span className="text-3xl font-bold mr-3">{displayPersonalityType.code}</span>
+                <span className="text-xl font-semibold">{displayPersonalityType.name}</span>
               </div>
-              <p className="text-purple-50 text-sm">{personalityType.description}</p>
+              <p className="text-purple-50 text-sm">{displayPersonalityType.description}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-purple-100 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              {selectedType && (
+                <button
+                  onClick={() => setSelectedType(null)}
+                  className="text-white hover:text-purple-100 transition-colors text-sm px-3 py-1 bg-purple-700 rounded-lg"
+                >
+                  戻る
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="text-white hover:text-purple-100 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -500,7 +541,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               基本性格
             </h3>
-            <p className="text-gray-700 leading-relaxed">{personalityType.details.basicPersonality}</p>
+            <p className="text-gray-700 leading-relaxed">{displayPersonalityType.details.basicPersonality}</p>
           </section>
 
           {/* 強み */}
@@ -508,11 +549,11 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               強み
             </h3>
-            <p className="text-gray-700 leading-relaxed mb-4">{personalityType.details.strengths}</p>
+            <p className="text-gray-700 leading-relaxed mb-4">{displayPersonalityType.details.strengths}</p>
             <div className="bg-purple-50 rounded-lg p-4">
               <h4 className="font-semibold text-gray-800 mb-2">主な強み</h4>
               <ul className="space-y-2">
-                {personalityType.details.keyStrengths.map((strength, index) => (
+                {displayPersonalityType.details.keyStrengths.map((strength, index) => (
                   <li key={index} className="flex items-start">
                     <span className="text-purple-600 mr-2">✓</span>
                     <span className="text-gray-700">{strength}</span>
@@ -527,7 +568,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               弱み・注意点
             </h3>
-            <p className="text-gray-700 leading-relaxed">{personalityType.details.weaknesses}</p>
+            <p className="text-gray-700 leading-relaxed">{displayPersonalityType.details.weaknesses}</p>
           </section>
 
           {/* 仕事観 */}
@@ -535,7 +576,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               仕事観
             </h3>
-            <p className="text-gray-700 leading-relaxed">{personalityType.details.workValues}</p>
+            <p className="text-gray-700 leading-relaxed">{displayPersonalityType.details.workValues}</p>
           </section>
 
           {/* 理想の職場 */}
@@ -543,7 +584,7 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               理想の職場
             </h3>
-            <p className="text-gray-700 leading-relaxed">{personalityType.details.idealWorkplaces}</p>
+            <p className="text-gray-700 leading-relaxed">{displayPersonalityType.details.idealWorkplaces}</p>
           </section>
 
           {/* 就活軸 */}
@@ -551,13 +592,13 @@ export function PersonalityTypeModal({ type, onClose }: PersonalityTypeModalProp
             <h3 className="text-xl font-bold text-gray-800 mb-3 border-b-2 border-purple-200 pb-2">
               就活軸
             </h3>
-            <p className="text-gray-700 leading-relaxed">{personalityType.details.jobHuntingAxis}</p>
+            <p className="text-gray-700 leading-relaxed">{displayPersonalityType.details.jobHuntingAxis}</p>
           </section>
 
           {/* まとめ */}
           <section className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-6 border-l-4 border-purple-500">
             <h3 className="text-xl font-bold text-gray-800 mb-3">まとめ</h3>
-            <p className="text-gray-800 leading-relaxed font-medium">{personalityType.details.summary}</p>
+            <p className="text-gray-800 leading-relaxed font-medium">{displayPersonalityType.details.summary}</p>
           </section>
         </div>
 
