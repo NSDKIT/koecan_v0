@@ -147,7 +147,7 @@ export default function MonitorDashboard() {
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('MonitorDashboard: リアルタイム購読を設定中...');
+    console.log('MonitorDashboard: リアルタイム購読を設定中... (user_id:', user.id, ')');
     
     const channel = supabase
       .channel(`monitor_profile_${user.id}`)
@@ -161,17 +161,27 @@ export default function MonitorDashboard() {
         },
         (payload: any) => {
           console.log('MonitorDashboard: プロフィールが更新されました:', payload);
+          console.log('MonitorDashboard: 更新前:', payload.old);
+          console.log('MonitorDashboard: 更新後:', payload.new);
           const updatedProfile = payload.new;
           
           // ポイントが更新された場合、プロフィールを再取得
-          if (updatedProfile.points !== undefined) {
-            console.log('MonitorDashboard: ポイントが更新されました。プロフィールを再取得します。');
+          if (updatedProfile && updatedProfile.points !== undefined) {
+            const oldPoints = payload.old?.points || 0;
+            const newPoints = updatedProfile.points || 0;
+            console.log(`MonitorDashboard: ポイントが更新されました。${oldPoints} → ${newPoints}`);
+            console.log('MonitorDashboard: プロフィールを再取得します。');
             fetchProfile();
           }
         }
       )
       .subscribe((status: string) => {
         console.log('MonitorDashboard: リアルタイム購読の状態:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('MonitorDashboard: リアルタイム購読が正常に開始されました');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('MonitorDashboard: リアルタイム購読でエラーが発生しました');
+        }
       });
 
     return () => {
