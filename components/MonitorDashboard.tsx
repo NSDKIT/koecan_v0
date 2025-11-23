@@ -45,6 +45,8 @@ import { MatchingFeature } from '@/components/MatchingFeature';
 import { PersonalityAssessmentModal } from '@/components/PersonalityAssessmentModal';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
+import { IndustryFilterModal } from '@/components/IndustryFilterModal';
+import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'matching';
 
@@ -101,6 +103,15 @@ export default function MonitorDashboard() {
   const [showCompanyPersonalityTypeModal, setShowCompanyPersonalityTypeModal] = useState(false);
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
+  
+  // フィルター関連のstate
+  const [showIndustryFilter, setShowIndustryFilter] = useState(false);
+  const [showPersonalityFilter, setShowPersonalityFilter] = useState(false);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [selectedPersonalityTypes, setSelectedPersonalityTypes] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isMatchingSearch, setIsMatchingSearch] = useState(false);
+  const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -220,11 +231,117 @@ export default function MonitorDashboard() {
   useEffect(() => {
     if (user) {
       fetchProfile();
-      fetchSurveysAndResponses(); 
+      fetchSurveysAndResponses();
       fetchAdvertisements();
       calculatePersonalityType();
     }
   }, [user, fetchProfile, calculatePersonalityType]);
+
+  // フィルター適用関数
+  const applyFilters = useCallback(() => {
+    let filtered = [...advertisements];
+
+    // 業界フィルター
+    if (selectedIndustries.length > 0) {
+      filtered = filtered.filter(ad => {
+        if (!ad.industries || !Array.isArray(ad.industries)) return false;
+        return selectedIndustries.some(industry => 
+          ad.industries!.some(adIndustry => adIndustry === industry)
+        );
+      });
+    }
+
+    // 価値観（パーソナリティタイプ）フィルター
+    if (selectedPersonalityTypes.length > 0) {
+      filtered = filtered.filter(ad => {
+        if (!ad.personality_type) return false;
+        // タイプが完全一致するか、"/"を含む場合は部分一致もチェック
+        return selectedPersonalityTypes.some(type => {
+          if (ad.personality_type === type) return true;
+          // "/"を含む場合（例: "E/ISRO"）は、各文字が一致するかチェック
+          if (ad.personality_type.includes('/')) {
+            const adTypeParts = ad.personality_type.split('');
+            const typeParts = type.split('');
+            // 4文字の各位置で一致または"/"を含むかチェック
+            for (let i = 0; i < 4; i++) {
+              if (adTypeParts[i] !== typeParts[i] && !adTypeParts[i].includes(typeParts[i])) {
+                return false;
+              }
+            }
+            return true;
+          }
+          return false;
+        });
+      });
+    }
+
+    // 検索クエリ
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(ad => {
+        const companyName = (ad.company_name || '').toLowerCase();
+        const vision = (ad.company_vision || '').toLowerCase();
+        const description = (ad.description || '').toLowerCase();
+        return companyName.includes(query) || vision.includes(query) || description.includes(query);
+      });
+    }
+
+    // マッチング検索（学生のパーソナリティタイプと企業のパーソナリティタイプをマッチング）
+    if (isMatchingSearch && personalityType) {
+      filtered = filtered.filter(ad => {
+        if (!ad.personality_type) return false;
+        
+        // 学生のタイプと企業のタイプを比較
+        // "/"を含む場合は、共通する文字があればマッチ
+        const studentType = personalityType;
+        const companyType = ad.personality_type;
+        
+        // 完全一致
+        if (studentType === companyType) return true;
+        
+        // 部分一致（"/"を含む場合）
+        const studentParts = studentType.split('');
+        const companyParts = companyType.split('');
+        
+        // 4文字の各位置で一致するかチェック
+        let matchCount = 0;
+        for (let i = 0; i < 4; i++) {
+          const studentChar = studentParts[i];
+          const companyChar = companyParts[i];
+          
+          // 完全一致
+          if (studentChar === companyChar) {
+            matchCount++;
+          }
+          // "/"を含む場合の部分一致
+          else if (studentChar.includes('/') || companyChar.includes('/')) {
+            const studentOptions = studentChar.includes('/') ? studentChar.split('/') : [studentChar];
+            const companyOptions = companyChar.includes('/') ? companyChar.split('/') : [companyChar];
+            if (studentOptions.some(s => companyOptions.includes(s))) {
+              matchCount++;
+            }
+          }
+        }
+        
+        // 2文字以上一致すればマッチ
+        return matchCount >= 2;
+      });
+    }
+
+    setFilteredAdvertisements(filtered);
+  }, [advertisements, selectedIndustries, selectedPersonalityTypes, searchQuery, isMatchingSearch, personalityType]);
+
+  // フィルターが変更されたときに適用
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // advertisementsが読み込まれたときに初期化
+  useEffect(() => {
+    if (advertisements.length > 0) {
+      applyFilters();
+    }
+  }, [advertisements.length]);
 
   // リアルタイムでmonitor_profilesのポイント更新を監視
   useEffect(() => {
@@ -989,13 +1106,157 @@ export default function MonitorDashboard() {
 
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
-                {advertisements.length === 0 ? (
+                {/* フィルターセクション */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    {/* 業界選択ボタン */}
+                    <button
+                      onClick={() => setShowIndustryFilter(true)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                        selectedIndustries.length > 0
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      <Building className="w-4 h-4 mr-2" />
+                      業界を選択する
+                      {selectedIndustries.length > 0 && (
+                        <span className="ml-2 bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">
+                          {selectedIndustries.length}
+                        </span>
+                      )}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
+
+                    {/* 価値観選択ボタン */}
+                    <button
+                      onClick={() => setShowPersonalityFilter(true)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                        selectedPersonalityTypes.length > 0
+                          ? 'border-purple-500 bg-purple-50 text-purple-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                    >
+                      <Brain className="w-4 h-4 mr-2" />
+                      価値観を選択する
+                      {selectedPersonalityTypes.length > 0 && (
+                        <span className="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs">
+                          {selectedPersonalityTypes.length}
+                        </span>
+                      )}
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </button>
+
+                    {/* 検索ボタン */}
+                    <div className="flex-1 min-w-[200px]">
+                      <input
+                        type="text"
+                        placeholder="企業名や説明で検索..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* マッチング検索ボタン */}
+                    <button
+                      onClick={() => setIsMatchingSearch(!isMatchingSearch)}
+                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                        isMatchingSearch
+                          ? 'border-orange-500 bg-orange-50 text-orange-700'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                      }`}
+                      disabled={!personalityType}
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      マッチング検索
+                    </button>
+                  </div>
+
+                  {/* フィルター表示 */}
+                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || searchQuery || isMatchingSearch) && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedIndustries.map((industry) => (
+                        <span
+                          key={industry}
+                          className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                        >
+                          {industry}
+                          <button
+                            onClick={() => setSelectedIndustries(prev => prev.filter(i => i !== industry))}
+                            className="ml-2 hover:text-blue-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {selectedPersonalityTypes.map((type) => (
+                        <span
+                          key={type}
+                          className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
+                        >
+                          {type}
+                          <button
+                            onClick={() => setSelectedPersonalityTypes(prev => prev.filter(t => t !== type))}
+                            className="ml-2 hover:text-purple-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {searchQuery && (
+                        <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
+                          「{searchQuery}」
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="ml-2 hover:text-gray-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {isMatchingSearch && (
+                        <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                          マッチング検索
+                          <button
+                            onClick={() => setIsMatchingSearch(false)}
+                            className="ml-2 hover:text-orange-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      <button
+                        onClick={() => {
+                          setSelectedIndustries([]);
+                          setSelectedPersonalityTypes([]);
+                          setSearchQuery('');
+                          setIsMatchingSearch(false);
+                        }}
+                        className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      >
+                        すべてクリア
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 企業一覧 */}
+                {filteredAdvertisements.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">現在、公開されている企業情報はありません。</p>
+                    <p className="text-gray-600">
+                      {advertisements.length === 0
+                        ? '現在、公開されている企業情報はありません。'
+                        : '条件に一致する企業が見つかりませんでした。'}
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {advertisements.map((ad) => (
+                  <div className="p-6">
+                    <p className="text-sm text-gray-600 mb-4">
+                      {filteredAdvertisements.length}件の企業が見つかりました
+                    </p>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredAdvertisements.map((ad) => (
                       <div
                         key={ad.id}
                         className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
@@ -1046,7 +1307,8 @@ export default function MonitorDashboard() {
                           </p>
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1615,6 +1877,28 @@ export default function MonitorDashboard() {
           </div>
       )}
 
+      {/* フィルターモーダル */}
+      {showIndustryFilter && (
+        <IndustryFilterModal
+          selectedIndustries={selectedIndustries}
+          onClose={() => setShowIndustryFilter(false)}
+          onApply={(industries) => {
+            setSelectedIndustries(industries);
+            setShowIndustryFilter(false);
+          }}
+        />
+      )}
+
+      {showPersonalityFilter && (
+        <PersonalityFilterModal
+          selectedTypes={selectedPersonalityTypes}
+          onClose={() => setShowPersonalityFilter(false)}
+          onApply={(types) => {
+            setSelectedPersonalityTypes(types);
+            setShowPersonalityFilter(false);
+          }}
+        />
+      )}
     </div>
   );
 }
