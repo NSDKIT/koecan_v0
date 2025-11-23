@@ -134,6 +134,11 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
   const selectedResults = prepareChartData();
 
+  // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
+  const normalizeScore = (score: number) => {
+    return ((score + 2) / 4) * 100;
+  };
+
   // レーダーチャート用のデータ構造（各軸ごとにデータポイントを作成）
   const chartData = [
     { axis: '市場への関わり方', fullMark: 100 },
@@ -143,12 +148,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
-    selectedResults.forEach((result, index) => {
-      // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
-      const normalizeScore = (score: number) => {
-        return ((score + 2) / 4) * 100;
-      };
-
+    selectedResults.forEach((result) => {
       let score = 0;
       switch (axisData.axis) {
         case '市場への関わり方':
@@ -165,7 +165,9 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           break;
       }
 
-      dataPoint[result.category_value] = score;
+      // カテゴリー名をキーとして使用（特殊文字を除去）
+      const key = result.category_value.replace(/[^a-zA-Z0-9]/g, '_');
+      dataPoint[key] = score;
     });
 
     return dataPoint;
@@ -332,11 +334,12 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   />
                   {selectedResults.map((result, index) => {
                     const color = chartColors[index % chartColors.length];
+                    const key = result.category_value.replace(/[^a-zA-Z0-9]/g, '_');
                     return (
                       <Radar
                         key={result.id}
                         name={result.category_value}
-                        dataKey={result.category_value}
+                        dataKey={key}
                         stroke={color.stroke}
                         fill={color.fill}
                         fillOpacity={0.6}
