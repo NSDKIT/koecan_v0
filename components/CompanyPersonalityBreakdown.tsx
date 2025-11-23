@@ -321,8 +321,8 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     }
   }, [selectedResults, selectedView, companyId]);
 
-  // 個人データを8軸に変換
-  const individual8AxesData = individualData.map((row: any) => {
+  // 個人データを8軸に変換し、職種別/年代別にグループ化
+  const individual8AxesDataWithCategory = individualData.map((row: any) => {
     // 各質問の回答を合計してスコアを計算
     const marketEngagement = (row.market_engagement_q1 || 0) + (row.market_engagement_q2 || 0) + (row.market_engagement_q3 || 0);
     const growthStrategy = (row.growth_strategy_q1 || 0) + (row.growth_strategy_q2 || 0) + (row.growth_strategy_q3 || 0) + (row.growth_strategy_q4 || 0);
@@ -371,8 +371,30 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       axes.O = normalizeScore(decisionScore);
     }
 
-    return axes;
+    // カテゴリー情報を追加
+    const categoryValue = selectedView === 'job' ? row.job_type : row.years_of_service;
+    
+    return {
+      axes,
+      categoryValue: categoryValue || '未分類'
+    };
   });
+
+  // 職種別/年代別にグループ化
+  const groupedByCategory = individual8AxesDataWithCategory.reduce((acc: Record<string, any[]>, item) => {
+    const category = item.categoryValue;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {});
+
+  // グループ化されたデータを配列に変換
+  const categoryGroups = Object.entries(groupedByCategory).map(([category, items]) => ({
+    category,
+    items: items.map(item => item.axes)
+  }));
 
   // 各軸の平均値を計算（Eの平均、Iの平均、...というふうに8項目の平均）
   const averageAxes: Record<string, number> = {
@@ -429,22 +451,29 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       dataPoint['あなた'] = studentAxes[axisData.axis];
     }
 
-    // 各個人の値を追加（点で表示）
-    individual8AxesData.forEach((axes: Record<string, number>, index: number) => {
-      dataPoint[`個人${index + 1}`] = axes[axisData.axis];
+    // 職種別/年代別にグループ化して追加（各グループを異なる色で表示）
+    categoryGroups.forEach((group, groupIndex) => {
+      group.items.forEach((axes: Record<string, number>, itemIndex: number) => {
+        const dataKey = `${group.category}_${itemIndex + 1}`;
+        dataPoint[dataKey] = axes[axisData.axis];
+      });
     });
 
     return dataPoint;
   });
 
-  // チャート用の色配列
-  const chartColors = [
+  // チャート用の色配列（職種別/年代別のグループごとに異なる色）
+  const categoryColors = [
     { fill: 'rgba(139, 92, 246, 0.6)', stroke: 'rgba(139, 92, 246, 1)' }, // purple
     { fill: 'rgba(59, 130, 246, 0.6)', stroke: 'rgba(59, 130, 246, 1)' }, // blue
     { fill: 'rgba(16, 185, 129, 0.6)', stroke: 'rgba(16, 185, 129, 1)' }, // green
     { fill: 'rgba(245, 158, 11, 0.6)', stroke: 'rgba(245, 158, 11, 1)' }, // yellow
     { fill: 'rgba(239, 68, 68, 0.6)', stroke: 'rgba(239, 68, 68, 1)' }, // red
     { fill: 'rgba(168, 85, 247, 0.6)', stroke: 'rgba(168, 85, 247, 1)' }, // violet
+    { fill: 'rgba(236, 72, 153, 0.6)', stroke: 'rgba(236, 72, 153, 1)' }, // pink
+    { fill: 'rgba(34, 197, 94, 0.6)', stroke: 'rgba(34, 197, 94, 1)' }, // emerald
+    { fill: 'rgba(251, 146, 60, 0.6)', stroke: 'rgba(251, 146, 60, 1)' }, // orange
+    { fill: 'rgba(99, 102, 241, 0.6)', stroke: 'rgba(99, 102, 241, 1)' }, // indigo
   ];
 
   const toggleComparison = (resultId: string) => {
@@ -671,14 +700,14 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       isAnimationActive={false}
                     />
                   )}
-                  {/* 各個人を点で表示（線は表示しない） */}
-                  {individual8AxesData.map((_: Record<string, number>, index: number) => {
-                    const color = chartColors[index % chartColors.length];
-                    return (
+                  {/* 職種別/年代別にグループ化して点で表示（各グループを異なる色で） */}
+                  {categoryGroups.map((group, groupIndex) => {
+                    const color = categoryColors[groupIndex % categoryColors.length];
+                    return group.items.map((_: Record<string, number>, itemIndex: number) => (
                       <Radar
-                        key={`individual-${index}`}
-                        name={`個人${index + 1}`}
-                        dataKey={`個人${index + 1}`}
+                        key={`${group.category}-${itemIndex}`}
+                        name={`${group.category}_${itemIndex + 1}`}
+                        dataKey={`${group.category}_${itemIndex + 1}`}
                         stroke={color.stroke}
                         fill="none"
                         strokeWidth={0}
@@ -686,11 +715,24 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                         connectNulls={false}
                         isAnimationActive={false}
                       />
-                    );
-                  })}
+                    ));
+                  }).flat()}
                   <Legend 
                     wrapperStyle={{ paddingTop: '20px' }}
                     iconType="circle"
+                    formatter={(value: string) => {
+                      // カテゴリー名を表示（例: "経営層・管理職_1" → "経営層・管理職"）
+                      if (value.includes('_')) {
+                        const category = value.split('_')[0];
+                        // 同じカテゴリーの最初の項目のみ表示
+                        const itemIndex = parseInt(value.split('_')[1]);
+                        if (itemIndex === 1) {
+                          return category;
+                        }
+                        return '';
+                      }
+                      return value;
+                    }}
                   />
                 </RadarChart>
               </ResponsiveContainer>
