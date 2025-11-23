@@ -3,12 +3,12 @@
 -- ============================================
 -- JWTのuser_metadataではなく、usersテーブルを直接参照するように修正
 -- これにより、RLSポリシーが正しく動作します
+-- 
+-- 注意: DROP FUNCTIONは使用しません（多くのRLSポリシーが依存しているため）
+-- CREATE OR REPLACE FUNCTIONを使用して関数を再定義します
 -- ============================================
 
--- 既存のis_admin()関数を削除
-DROP FUNCTION IF EXISTS is_admin();
-
--- usersテーブルを参照するis_admin()関数を作成
+-- usersテーブルを参照するis_admin()関数を再定義
 -- SECURITY DEFINERを使用して、RLSをバイパスしてusersテーブルにアクセス
 CREATE OR REPLACE FUNCTION is_admin() RETURNS boolean AS $$
 BEGIN
