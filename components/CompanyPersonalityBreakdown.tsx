@@ -742,7 +742,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
               {/* 凡例と詳細情報 */}
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {selectedResults.map((result, index) => {
-                  const color = chartColors[index % chartColors.length];
+                  const color = categoryColors[index % categoryColors.length];
                   return (
                     <div
                       key={result.id}
