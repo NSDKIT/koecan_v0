@@ -428,9 +428,30 @@ export default function MonitorDashboard() {
         fetchProfile(), 
         fetchSurveysAndResponses()
       ]); 
-    } catch (error) {
+    } catch (error: any) {
       console.error('アンケート送信エラー:', error);
-      alert('アンケートの送信に失敗しました。');
+      console.error('エラー詳細:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint,
+        status: error?.status,
+        statusText: error?.statusText
+      });
+      
+      // より詳細なエラーメッセージを表示
+      let errorMessage = 'アンケートの送信に失敗しました。';
+      if (error?.message) {
+        errorMessage += `\n\nエラー: ${error.message}`;
+      }
+      if (error?.code) {
+        errorMessage += `\nコード: ${error.code}`;
+      }
+      if (error?.hint) {
+        errorMessage += `\nヒント: ${error.hint}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
