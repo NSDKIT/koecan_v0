@@ -136,38 +136,179 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
   // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
   const normalizeScore = (score: number) => {
-    return ((score + 2) / 4) * 100;
+    // 絶対値を取って0-100に変換（-2→100, 0→0, +2→100）
+    return Math.abs(score) * 50; // -2から+2の範囲を0-100に変換
   };
 
-  // レーダーチャート用のデータ構造（各軸ごとにデータポイントを作成）
+  // 4つのスコアを8軸に分解する関数
+  const decomposeTo8Axes = (result: PersonalityResult) => {
+    const axes: Record<string, number> = {
+      E: 0, I: 0,
+      N: 0, S: 0,
+      P: 0, R: 0,
+      F: 0, O: 0
+    };
+
+    // 市場への関わり方: E ⇄ I
+    if (result.market_engagement_score < 0) {
+      axes.E = normalizeScore(result.market_engagement_score);
+    } else if (result.market_engagement_score > 0) {
+      axes.I = normalizeScore(result.market_engagement_score);
+    }
+
+    // 成長・戦略スタンス: N ⇄ S
+    if (result.growth_strategy_score < 0) {
+      axes.N = normalizeScore(result.growth_strategy_score);
+    } else if (result.growth_strategy_score > 0) {
+      axes.S = normalizeScore(result.growth_strategy_score);
+    }
+
+    // 組織運営スタンス: P ⇄ R
+    if (result.organization_style_score < 0) {
+      axes.P = normalizeScore(result.organization_style_score);
+    } else if (result.organization_style_score > 0) {
+      axes.R = normalizeScore(result.organization_style_score);
+    }
+
+    // 意思決定スタイル: F ⇄ O
+    if (result.decision_making_score < 0) {
+      axes.F = normalizeScore(result.decision_making_score);
+    } else if (result.decision_making_score > 0) {
+      axes.O = normalizeScore(result.decision_making_score);
+    }
+
+    return axes;
+  };
+
+  // 個人データを取得（localStorageから）
+  const [individualData, setIndividualData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    // localStorageから個人データを取得
+    try {
+      const storedData = localStorage.getItem('company_personality_data');
+      if (storedData) {
+        const data = JSON.parse(storedData);
+        // 選択されたカテゴリーに該当するデータのみをフィルタリング
+        const filtered = data.filter((row: any) => {
+          if (!row.company_id || row.company_id !== companyId) return false;
+          if (selectedView === 'job') {
+            return selectedResults.some((r: PersonalityResult) => r.category_value === row.job_type);
+          } else {
+            return selectedResults.some((r: PersonalityResult) => r.category_value === row.years_of_service);
+          }
+        });
+        setIndividualData(filtered);
+      }
+    } catch (err) {
+      console.error('Error loading individual data:', err);
+    }
+  }, [selectedResults, selectedView, companyId]);
+
+  // 個人データを8軸に変換
+  const individual8AxesData = individualData.map((row: any) => {
+    // 各質問の回答を合計してスコアを計算
+    const marketEngagement = (row.market_engagement_q1 || 0) + (row.market_engagement_q2 || 0) + (row.market_engagement_q3 || 0);
+    const growthStrategy = (row.growth_strategy_q1 || 0) + (row.growth_strategy_q2 || 0) + (row.growth_strategy_q3 || 0) + (row.growth_strategy_q4 || 0);
+    const organizationStyle = (row.organization_style_q1 || 0) + (row.organization_style_q2 || 0) + (row.organization_style_q3 || 0);
+    const decisionMaking = (row.decision_making_q1 || 0) + (row.decision_making_q2 || 0) + (row.decision_making_q3 || 0);
+
+    // UI値（1-5）をDB値（-2〜+2）に変換して平均を計算
+    const convertToDBValue = (sum: number, count: number) => {
+      const avg = sum / count;
+      return avg - 3; // 1→-2, 2→-1, 3→0, 4→+1, 5→+2
+    };
+
+    const marketScore = convertToDBValue(marketEngagement, 3);
+    const growthScore = convertToDBValue(growthStrategy, 4);
+    const orgScore = convertToDBValue(organizationStyle, 3);
+    const decisionScore = convertToDBValue(decisionMaking, 3);
+
+    const axes: Record<string, number> = {
+      E: 0, I: 0,
+      N: 0, S: 0,
+      P: 0, R: 0,
+      F: 0, O: 0
+    };
+
+    if (marketScore < 0) {
+      axes.E = normalizeScore(marketScore);
+    } else if (marketScore > 0) {
+      axes.I = normalizeScore(marketScore);
+    }
+
+    if (growthScore < 0) {
+      axes.N = normalizeScore(growthScore);
+    } else if (growthScore > 0) {
+      axes.S = normalizeScore(growthScore);
+    }
+
+    if (orgScore < 0) {
+      axes.P = normalizeScore(orgScore);
+    } else if (orgScore > 0) {
+      axes.R = normalizeScore(orgScore);
+    }
+
+    if (decisionScore < 0) {
+      axes.F = normalizeScore(decisionScore);
+    } else if (decisionScore > 0) {
+      axes.O = normalizeScore(decisionScore);
+    }
+
+    return axes;
+  });
+
+  // 各軸の平均値を計算
+  const averageAxes: Record<string, number> = {
+    E: 0, I: 0,
+    N: 0, S: 0,
+    P: 0, R: 0,
+    F: 0, O: 0
+  };
+
+  if (individual8AxesData.length > 0) {
+    individual8AxesData.forEach((axes: Record<string, number>) => {
+      Object.keys(averageAxes).forEach(key => {
+        averageAxes[key] += axes[key];
+      });
+    });
+    Object.keys(averageAxes).forEach(key => {
+      averageAxes[key] /= individual8AxesData.length;
+    });
+  } else {
+    // 個人データがない場合は、集計結果から計算
+    selectedResults.forEach((result: PersonalityResult) => {
+      const axes = decomposeTo8Axes(result);
+      Object.keys(averageAxes).forEach(key => {
+        averageAxes[key] += axes[key];
+      });
+    });
+    if (selectedResults.length > 0) {
+      Object.keys(averageAxes).forEach(key => {
+        averageAxes[key] /= selectedResults.length;
+      });
+    }
+  }
+
+  // レーダーチャート用のデータ構造（8軸）
   const chartData = [
-    { axis: '市場への関わり方', fullMark: 100 },
-    { axis: '成長・戦略スタンス', fullMark: 100 },
-    { axis: '組織運営スタンス', fullMark: 100 },
-    { axis: '意思決定スタイル', fullMark: 100 },
+    { axis: 'E', fullMark: 100 },
+    { axis: 'I', fullMark: 100 },
+    { axis: 'N', fullMark: 100 },
+    { axis: 'S', fullMark: 100 },
+    { axis: 'P', fullMark: 100 },
+    { axis: 'R', fullMark: 100 },
+    { axis: 'F', fullMark: 100 },
+    { axis: 'O', fullMark: 100 },
   ].map(axisData => {
     const dataPoint: any = { axis: axisData.axis, fullMark: 100 };
     
-    selectedResults.forEach((result) => {
-      let score = 0;
-      switch (axisData.axis) {
-        case '市場への関わり方':
-          score = normalizeScore(result.market_engagement_score);
-          break;
-        case '成長・戦略スタンス':
-          score = normalizeScore(result.growth_strategy_score);
-          break;
-        case '組織運営スタンス':
-          score = normalizeScore(result.organization_style_score);
-          break;
-        case '意思決定スタイル':
-          score = normalizeScore(result.decision_making_score);
-          break;
-      }
+    // 平均値を追加
+    dataPoint['平均'] = averageAxes[axisData.axis];
 
-      // カテゴリー名をキーとして使用（特殊文字を除去）
-      const key = result.category_value.replace(/[^a-zA-Z0-9]/g, '_');
-      dataPoint[key] = score;
+    // 各個人の値を追加（点で表示）
+    individual8AxesData.forEach((axes, index) => {
+      dataPoint[`個人${index + 1}`] = axes[axisData.axis];
     });
 
     return dataPoint;
@@ -324,46 +465,40 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                 <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-200">
                   <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
                     <Brain className="w-4 h-4 mr-2 text-purple-600" />
-                    レーダーチャートの数値について
+                    八角形レーダーチャートについて
                   </h4>
                   <div className="text-sm text-gray-700 space-y-2">
                     <p className="font-semibold text-purple-700 mb-2">
                       ⚠️ 重要: 数値の大小は優劣ではなく、価値観の違いを表しています
                     </p>
                     <div className="space-y-1">
-                      <p>
-                        <span className="font-semibold">0〜50:</span> 以下の価値観の傾向
-                      </p>
+                      <p className="font-semibold">8つの軸:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
-                        <li>市場への関わり方: <span className="font-semibold">E（外向型）</span> - 外部との交流を重視</li>
-                        <li>成長・戦略スタンス: <span className="font-semibold">N（革新型）</span> - 新しいアイデアや未来の可能性を重視</li>
-                        <li>組織運営スタンス: <span className="font-semibold">P（人材志向）</span> - チームの和や個々の成長を重視</li>
-                        <li>意思決定スタイル: <span className="font-semibold">F（柔軟型）</span> - 状況に応じた柔軟な対応を重視</li>
+                        <li><span className="font-semibold">E（外向型）⇄ I（内向型）</span> - 市場への関わり方</li>
+                        <li><span className="font-semibold">N（革新型）⇄ S（安定型）</span> - 成長・戦略スタンス</li>
+                        <li><span className="font-semibold">P（人材志向）⇄ R（成果志向）</span> - 組織運営スタンス</li>
+                        <li><span className="font-semibold">F（柔軟型）⇄ O（規律型）</span> - 意思決定スタイル</li>
                       </ul>
                     </div>
                     <div className="space-y-1 mt-3">
-                      <p>
-                        <span className="font-semibold">50〜100:</span> 以下の価値観の傾向
-                      </p>
+                      <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
-                        <li>市場への関わり方: <span className="font-semibold">I（内向型）</span> - 社内の改善や既存顧客との関係強化を重視</li>
-                        <li>成長・戦略スタンス: <span className="font-semibold">S（安定型）</span> - 現在の成果や実績のある方法を重視</li>
-                        <li>組織運営スタンス: <span className="font-semibold">R（成果志向）</span> - 目標達成や数値的な成果を重視</li>
-                        <li>意思決定スタイル: <span className="font-semibold">O（規律型）</span> - 明確な手順や長期計画を重視</li>
+                        <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を点で表示</li>
+                        <li><span className="font-semibold">面積（平均）:</span> 全従業員の平均値を結んで面積として表示</li>
                       </ul>
                     </div>
                     <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
-                      ※ 元のスコア（-2〜+2）を0〜100の範囲に正規化して表示しています。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
+                      ※ 各軸の値は0〜100の範囲で表示されます。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
                     </p>
                   </div>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={500}>
                 <RadarChart data={chartData}>
                   <PolarGrid stroke="#e0e7ff" />
                   <PolarAngleAxis 
                     dataKey="axis" 
-                    tick={{ fill: '#4b5563', fontSize: 12, fontWeight: 'bold' }}
+                    tick={{ fill: '#4b5563', fontSize: 14, fontWeight: 'bold' }}
                   />
                   <PolarRadiusAxis 
                     angle={90} 
@@ -371,18 +506,29 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     tick={{ fill: '#9ca3af', fontSize: 10 }}
                     label={{ value: 'スコア (0-100)', position: 'insideStart', offset: 10, fill: '#6b7280', fontSize: 11 }}
                   />
-                  {selectedResults.map((result, index) => {
+                  {/* 平均値を面積で表示 */}
+                  <Radar
+                    name="平均"
+                    dataKey="平均"
+                    stroke="rgba(139, 92, 246, 1)"
+                    fill="rgba(139, 92, 246, 0.4)"
+                    fillOpacity={0.6}
+                    strokeWidth={3}
+                    dot={false}
+                  />
+                  {/* 各個人を点で表示（最大20人まで） */}
+                  {individual8AxesData.slice(0, 20).map((_: Record<string, number>, index: number) => {
                     const color = chartColors[index % chartColors.length];
-                    const key = result.category_value.replace(/[^a-zA-Z0-9]/g, '_');
                     return (
                       <Radar
-                        key={result.id}
-                        name={result.category_value}
-                        dataKey={key}
+                        key={`individual-${index}`}
+                        name={`個人${index + 1}`}
+                        dataKey={`個人${index + 1}`}
                         stroke={color.stroke}
-                        fill={color.fill}
-                        fillOpacity={0.6}
-                        strokeWidth={2}
+                        fill="none"
+                        strokeWidth={1}
+                        dot={{ r: 3, fill: color.stroke }}
+                        connectNulls={false}
                       />
                     );
                   })}
