@@ -404,15 +404,16 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     F: 0, O: 0
   };
 
-  if (individual8AxesData.length > 0) {
+  if (individual8AxesDataWithCategory.length > 0) {
     // 各従業員の8軸データから、各軸（E, I, N, S, P, R, F, O）の平均を計算
-    individual8AxesData.forEach((axes: Record<string, number>) => {
+    individual8AxesDataWithCategory.forEach((item) => {
+      const axes = item.axes;
       Object.keys(averageAxes).forEach(key => {
         averageAxes[key] += axes[key];
       });
     });
     Object.keys(averageAxes).forEach(key => {
-      averageAxes[key] /= individual8AxesData.length;
+      averageAxes[key] /= individual8AxesDataWithCategory.length;
     });
   } else {
     // 個人データがない場合は、集計結果から計算（フォールバック）
