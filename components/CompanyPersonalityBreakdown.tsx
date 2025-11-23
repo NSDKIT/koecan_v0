@@ -624,8 +624,9 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     <div className="space-y-1 mt-3">
                       <p className="font-semibold">表示方法:</p>
                       <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
-                        <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を点で表示</li>
+                        <li><span className="font-semibold">点（個人）:</span> 各従業員の価値観を個別の点で表示（線で接続しない）</li>
                         <li><span className="font-semibold">面積（平均）:</span> 全従業員の平均値を結んで面積として表示</li>
+                        <li><span className="font-semibold">点（あなた）:</span> 学生自身の価値観を点で表示</li>
                       </ul>
                     </div>
                     <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-purple-200">
@@ -670,8 +671,8 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       isAnimationActive={false}
                     />
                   )}
-                  {/* 各個人を点で表示（最大20人まで） */}
-                  {individual8AxesData.slice(0, 20).map((_: Record<string, number>, index: number) => {
+                  {/* 各個人を点で表示（線は表示しない） */}
+                  {individual8AxesData.map((_: Record<string, number>, index: number) => {
                     const color = chartColors[index % chartColors.length];
                     return (
                       <Radar
@@ -680,9 +681,10 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                         dataKey={`個人${index + 1}`}
                         stroke={color.stroke}
                         fill="none"
-                        strokeWidth={1}
-                        dot={{ r: 3, fill: color.stroke }}
+                        strokeWidth={0}
+                        dot={{ r: 4, fill: color.stroke, strokeWidth: 0 }}
                         connectNulls={false}
+                        isAnimationActive={false}
                       />
                     );
                   })}
