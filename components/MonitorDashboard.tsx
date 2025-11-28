@@ -765,6 +765,8 @@ export default function MonitorDashboard() {
       const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : null;
       const isPerfect = score === 100;
 
+      console.log('スコア計算:', { correctCount, totalQuestions, score, isPerfect });
+
       // 既存の回答がある場合は更新、ない場合は新規作成
       const { data: existingResponse, error: checkError } = await supabase
         .from('quiz_responses')
@@ -792,6 +794,7 @@ export default function MonitorDashboard() {
         const newPointsEarned = isPerfect ? selectedQuiz.points_reward : 0;
         const pointsDifference = newPointsEarned - oldPointsEarned;
 
+        console.log('UPDATE前のスコア:', score);
         const { error: updateError } = await supabase
           .from('quiz_responses')
           .update({
@@ -813,6 +816,8 @@ export default function MonitorDashboard() {
           alert(`クイズの送信に失敗しました: ${updateError.message || JSON.stringify(updateError)}`);
           throw updateError;
         }
+        
+        console.log('UPDATE成功、更新後のデータを取得します...');
 
         // ポイントが増えた場合、手動でプロフィールを更新（UPDATE時はトリガーが動作しないため）
         if (pointsDifference > 0 && user.id) {
@@ -849,6 +854,9 @@ export default function MonitorDashboard() {
           console.warn('更新後の回答データ取得に失敗:', fetchUpdatedError);
           throw new Error('更新後の回答データが取得できませんでした');
         }
+        
+        console.log('UPDATE後のスコア:', updatedResponse?.score);
+        console.log('UPDATE後のpoints_earned:', updatedResponse?.points_earned);
         insertedResponse = updatedResponse;
       } else {
         // 新規作成
