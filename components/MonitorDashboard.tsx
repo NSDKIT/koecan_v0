@@ -795,7 +795,14 @@ export default function MonitorDashboard() {
         const pointsDifference = newPointsEarned - oldPointsEarned;
 
         console.log('UPDATE前のスコア:', score);
-        const { error: updateError } = await supabase
+        console.log('UPDATEするデータ:', {
+          answers: quizAnswers,
+          score: score,
+          points_earned: newPointsEarned,
+          completed_at: new Date().toISOString()
+        });
+        
+        const { data: updateResult, error: updateError } = await supabase
           .from('quiz_responses')
           .update({
             answers: quizAnswers,
@@ -803,7 +810,8 @@ export default function MonitorDashboard() {
             points_earned: newPointsEarned,
             completed_at: new Date().toISOString()
           })
-          .eq('id', existingResponse.id);
+          .eq('id', existingResponse.id)
+          .select(); // UPDATE結果を取得
 
         if (updateError) {
           console.error('クイズ回答の更新エラー:', updateError);
@@ -817,7 +825,13 @@ export default function MonitorDashboard() {
           throw updateError;
         }
         
-        console.log('UPDATE成功、更新後のデータを取得します...');
+        console.log('UPDATE結果（即座に取得）:', updateResult);
+        if (updateResult && updateResult.length > 0) {
+          console.log('UPDATE結果のスコア:', updateResult[0]?.score);
+          console.log('UPDATE結果のpoints_earned:', updateResult[0]?.points_earned);
+        }
+        
+        console.log('UPDATE成功、更新後のデータを再取得します...');
 
         // ポイントが増えた場合、手動でプロフィールを更新（UPDATE時はトリガーが動作しないため）
         if (pointsDifference > 0 && user.id) {
