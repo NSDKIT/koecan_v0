@@ -667,7 +667,7 @@ export default function MonitorDashboard() {
         .eq('quiz_id', quiz.id)
         .eq('monitor_id', user?.id)
         .eq('score', 100)
-        .single();
+        .maybeSingle(); // .single() → .maybeSingle() に変更（回答がない場合もエラーにならない）
 
       if (perfectResponse) {
         alert('このクイズは既に全問正解で回答済みです。');
@@ -928,6 +928,8 @@ export default function MonitorDashboard() {
           await fetchProfile();
         }
         
+        // クイズリストの再取得（データベースへの反映を待つ）
+        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5秒待機
         await fetchQuizzesAndResponses();
       } catch (updateError) {
         console.warn('プロフィール再取得エラー（無視されます）:', updateError);

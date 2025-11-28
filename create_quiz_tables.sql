@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS quiz_responses (
 -- ただし、既存の構造を壊さないように、別のアプローチを取ることも検討
 
 -- updated_at トリガー
+DROP TRIGGER IF EXISTS update_quizzes_updated_at ON quizzes;
 CREATE TRIGGER update_quizzes_updated_at 
   BEFORE UPDATE ON quizzes 
   FOR EACH ROW 
@@ -76,6 +77,15 @@ CREATE TRIGGER update_quizzes_updated_at
 
 -- Quizzes table policies
 ALTER TABLE quizzes ENABLE ROW LEVEL SECURITY;
+
+-- 既存のポリシーを削除
+DROP POLICY IF EXISTS "Clients can manage own quizzes" ON quizzes;
+DROP POLICY IF EXISTS "Monitors can view active quizzes" ON quizzes;
+DROP POLICY IF EXISTS "Clients and admins can manage quiz questions" ON quiz_questions;
+DROP POLICY IF EXISTS "Monitors can view active quiz questions" ON quiz_questions;
+DROP POLICY IF EXISTS "Monitors can create own quiz responses" ON quiz_responses;
+DROP POLICY IF EXISTS "Monitors can view own quiz responses" ON quiz_responses;
+DROP POLICY IF EXISTS "Clients and admins can view all quiz responses" ON quiz_responses;
 
 -- クライアントは自分のクイズを管理可能
 CREATE POLICY "Clients can manage own quizzes" 
@@ -155,6 +165,14 @@ CREATE POLICY "Clients and admins can view all quiz responses"
 -- ============================================
 -- Point Management Functions and Triggers
 -- ============================================
+
+-- 既存のトリガーと関数を削除（既に存在する場合）
+DROP TRIGGER IF EXISTS set_quiz_response_points_trigger ON quiz_responses;
+DROP TRIGGER IF EXISTS update_monitor_points_from_quiz_trigger ON quiz_responses;
+DROP TRIGGER IF EXISTS update_monitor_points_from_quiz_update_trigger ON quiz_responses;
+DROP FUNCTION IF EXISTS set_quiz_response_points();
+DROP FUNCTION IF EXISTS update_monitor_points_from_quiz();
+DROP FUNCTION IF EXISTS update_monitor_points_from_quiz_update();
 
 -- クイズ回答時にポイントを設定する関数（全問正解の場合のみポイント付与）
 CREATE OR REPLACE FUNCTION set_quiz_response_points()
