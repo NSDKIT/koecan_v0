@@ -761,12 +761,17 @@ export default function MonitorDashboard() {
       const isPerfect = score === 100;
 
       // 既存の回答がある場合は更新、ない場合は新規作成
-      const { data: existingResponse } = await supabase
+      const { data: existingResponse, error: checkError } = await supabase
         .from('quiz_responses')
         .select('id')
         .eq('quiz_id', selectedQuiz.id)
         .eq('monitor_id', user.id)
-        .single();
+        .maybeSingle(); // .single() の代わりに .maybeSingle() を使用（0件でもエラーにならない）
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116は「行が見つからない」エラー（無視）
+        console.error('既存回答の確認エラー:', checkError);
+        throw checkError;
+      }
 
       let insertedResponse;
       if (existingResponse) {
@@ -785,6 +790,13 @@ export default function MonitorDashboard() {
 
         if (updateError) {
           console.error('クイズ回答の更新エラー:', updateError);
+          console.error('更新データ:', {
+            answers: quizAnswers,
+            score: score,
+            points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+            completed_at: new Date().toISOString()
+          });
+          alert(`クイズの送信に失敗しました: ${updateError.message || JSON.stringify(updateError)}`);
           throw updateError;
         }
         insertedResponse = updatedResponse;
@@ -806,6 +818,14 @@ export default function MonitorDashboard() {
 
         if (insertError) {
           console.error('クイズ回答の挿入エラー:', insertError);
+          console.error('挿入データ:', {
+            quiz_id: selectedQuiz.id,
+            monitor_id: user.id,
+            answers: quizAnswers,
+            score: score,
+            points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+          });
+          alert(`クイズの送信に失敗しました: ${insertError.message || JSON.stringify(insertError)}`);
           throw insertError;
         }
         insertedResponse = newResponse;
