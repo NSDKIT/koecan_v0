@@ -367,11 +367,22 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           decision_making: 0
         };
 
+        // UI値（1-5）をDB値（-2〜+2）に変換してから計算
+        const convertUIToDB = (uiValue: number): number => {
+          return uiValue - 3; // 1→-2, 2→-1, 3→0, 4→+1, 5→+2
+        };
+
         rows.forEach(row => {
-          yearsScores.market_engagement += row.answers.market_engagement.reduce((a, b) => a + b, 0);
-          yearsScores.growth_strategy += row.answers.growth_strategy.reduce((a, b) => a + b, 0);
-          yearsScores.organization_style += row.answers.organization_style.reduce((a, b) => a + b, 0);
-          yearsScores.decision_making += row.answers.decision_making.reduce((a, b) => a + b, 0);
+          // 各質問のUI値をDB値に変換してから合計
+          const marketDBValues = row.answers.market_engagement.map(v => convertUIToDB(v));
+          const growthDBValues = row.answers.growth_strategy.map(v => convertUIToDB(v));
+          const orgDBValues = row.answers.organization_style.map(v => convertUIToDB(v));
+          const decisionDBValues = row.answers.decision_making.map(v => convertUIToDB(v));
+
+          yearsScores.market_engagement += marketDBValues.reduce((a, b) => a + b, 0);
+          yearsScores.growth_strategy += growthDBValues.reduce((a, b) => a + b, 0);
+          yearsScores.organization_style += orgDBValues.reduce((a, b) => a + b, 0);
+          yearsScores.decision_making += decisionDBValues.reduce((a, b) => a + b, 0);
         });
 
         const count = rows.length;
