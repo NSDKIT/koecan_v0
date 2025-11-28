@@ -710,6 +710,30 @@ export default function MonitorDashboard() {
     );
   };
 
+  const normalizeAnswerArray = (value?: string | null) => {
+    if (!value) return [];
+    return value
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v.length > 0)
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  };
+
+  const answersMatch = (question: QuizQuestion, userAnswer?: string) => {
+    if (!question.correct_answer) return false;
+    if (question.is_multiple_select) {
+      const userValues = normalizeAnswerArray(userAnswer);
+      const correctValues = normalizeAnswerArray(question.correct_answer);
+      if (correctValues.length === 0) return false;
+      if (userValues.length !== correctValues.length) return false;
+      return correctValues.every(
+        (val, idx) => val.toLowerCase() === userValues[idx].toLowerCase()
+      );
+    }
+    if (!userAnswer) return false;
+    return userAnswer.trim().toLowerCase() === question.correct_answer.trim().toLowerCase();
+  };
+
   const handleQuizSubmit = async () => {
     if (!selectedQuiz || !user) return;
 
@@ -728,7 +752,7 @@ export default function MonitorDashboard() {
         if (q.correct_answer) {
           totalQuestions++;
           const userAnswer = quizAnswers.find(a => a.question_id === q.id)?.answer;
-          if (userAnswer && userAnswer.trim() === q.correct_answer.trim()) {
+          if (answersMatch(q, userAnswer)) {
             correctCount++;
           }
         }
@@ -1024,11 +1048,16 @@ export default function MonitorDashboard() {
                             onChange={(e) => {
                               const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
                               if (question.is_multiple_select) {
-                                const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : [];
+                                const currentAnswersArray = currentAnswer
+                                  ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
+                                  : [];
                                 if (e.target.checked) {
-                                  handleAnswerChange(question.id, [...currentAnswersArray, option].join(','));
+                                  handleAnswerChange(question.id, [...currentAnswersArray, option].join(', '));
                                 } else {
-                                  handleAnswerChange(question.id, currentAnswersArray.filter(a => a !== option).join(','));
+                                  handleAnswerChange(
+                                    question.id,
+                                    currentAnswersArray.filter(a => a !== option).join(', ')
+                                  );
                                 }
                               } else {
                                 handleAnswerChange(question.id, option);
@@ -1157,11 +1186,16 @@ export default function MonitorDashboard() {
                             onChange={(e) => {
                               const currentAnswer = quizAnswers.find(a => a.question_id === question.id)?.answer || '';
                               if (question.is_multiple_select) {
-                                const currentAnswersArray = currentAnswer ? currentAnswer.split(',') : [];
+                                const currentAnswersArray = currentAnswer
+                                  ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
+                                  : [];
                                 if (e.target.checked) {
-                                  handleQuizAnswerChange(question.id, [...currentAnswersArray, option].join(','));
+                                  handleQuizAnswerChange(question.id, [...currentAnswersArray, option].join(', '));
                                 } else {
-                                  handleQuizAnswerChange(question.id, currentAnswersArray.filter(a => a !== option).join(','));
+                                  handleQuizAnswerChange(
+                                    question.id,
+                                    currentAnswersArray.filter(a => a !== option).join(', ')
+                                  );
                                 }
                               } else {
                                 handleQuizAnswerChange(question.id, option);

@@ -31,6 +31,23 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
   correct_answer text DEFAULT NULL -- クイズ用：正解を保存
 );
 
+-- 既存環境で古いチェック制約が残っている場合に備えて更新
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE constraint_name = 'quiz_questions_question_type_check'
+      AND table_name = 'quiz_questions'
+  ) THEN
+    ALTER TABLE quiz_questions
+      DROP CONSTRAINT quiz_questions_question_type_check;
+  END IF;
+
+  ALTER TABLE quiz_questions
+    ADD CONSTRAINT quiz_questions_question_type_check
+    CHECK (question_type IN ('text', 'multiple_choice', 'rating', 'yes_no', 'ranking'));
+END $$;
+
 -- Quiz responses table
 CREATE TABLE IF NOT EXISTS quiz_responses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

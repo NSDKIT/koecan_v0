@@ -20,132 +20,197 @@ interface ParsedQuiz {
 }
 
 const parseMarkdown = (text: string): ParsedQuiz[] => {
-    console.log("parseMarkdown: Input text:", text);
-    
-    // 各クイズのタイトル (例: "# 最初のクイズタイトル") を基準にドキュメントを分割
-    const rawDocuments = text.trim().split(/(?:\r?\n|^)#\s+/g).filter(doc => doc.trim());
-    
-    console.log("parseMarkdown: Raw documents after split and filter:", rawDocuments);
+    const sanitized = text.replace(/\r/g, '');
+    const lines = sanitized.split('\n');
     const finalQuizzes: ParsedQuiz[] = [];
 
-    rawDocuments.forEach((docText, docIndex) => {
-        const fullDocText = `# ${docText}`;
-        const lines = fullDocText.trim().split('\n').filter(line => line.trim());
-        
-        console.log(`--- Processing Document ${docIndex + 1} ---`);
-        console.log("Full Doc text (after re-adding #):", fullDocText);
-        console.log("Lines after splitting and trimming:", lines);
-        if (lines.length === 0) {
-            console.log("Document has no valid lines, skipping.");
+    let currentQuiz: ParsedQuiz | null = null;
+    let currentQuestion: any = null;
+
+    const finalizeQuestion = () => {
+        if (!currentQuestion || !currentQuiz) return;
+        if (
+            currentQuestion.question_type === 'yes_no' &&
+            (!currentQuestion.options || currentQuestion.options.length === 0)
+        ) {
+            currentQuestion.options = ['はい', 'いいえ'];
+        }
+        currentQuiz.questions.push(currentQuestion);
+        currentQuestion = null;
+    };
+
+    const finalizeQuiz = () => {
+        finalizeQuestion();
+        if (currentQuiz && currentQuiz.title && currentQuiz.questions.length > 0) {
+            finalQuizzes.push(currentQuiz);
+        }
+        currentQuiz = null;
+    };
+
+    const parseQuestionHeading = (line: string, questionIndex: number) => {
+        if (line.startsWith('$$$')) {
+            const parts = line.split(' ');
+            const maxSelections = parts[0].includes('-')
+                ? parseInt(parts[0].split('-')[1])
+                : 3;
+            const questionText = line.substring(line.indexOf(' ') + 1).trim();
+            return {
+                question_text: questionText,
+                question_type: 'ranking',
+                options: [],
+                required: true,
+                order_index: questionIndex,
+                is_multiple_select: true,
+                max_selections: maxSelections,
+                correct_answer: null,
+            };
+        }
+
+        const headingMatch = line.match(/^(#{3,5})\s*(?:\[(.+?)\])?\s*(.+)$/);
+        if (!headingMatch) {
+            return null;
+        }
+
+        const hashCount = headingMatch[1].length;
+        const typeTag = headingMatch[2];
+        let questionText = headingMatch[3].trim();
+
+        const defaultConfig = {
+            question_type: 'multiple_choice',
+            is_multiple_select: hashCount === 4,
+            max_selections: null as number | null,
+            required: hashCount !== 5,
+        };
+
+        const config = { ...defaultConfig };
+
+        if (typeTag) {
+            const [typeTokenRaw, ...paramTokens] = typeTag.split(/\s+/);
+            const typeToken = typeTokenRaw.toLowerCase();
+            const params: Record<string, string> = {};
+            paramTokens.forEach((token) => {
+                const [key, value] = token.split('=');
+                if (key && value) {
+                    params[key.toLowerCase()] = value;
+                }
+            });
+
+            switch (typeToken) {
+                case 'single':
+                    config.question_type = 'multiple_choice';
+                    config.is_multiple_select = false;
+                    break;
+                case 'multi':
+                    config.question_type = 'multiple_choice';
+                    config.is_multiple_select = true;
+                    if (params.max) {
+                        const maxVal = parseInt(params.max);
+                        config.max_selections = isNaN(maxVal) ? null : maxVal;
+                    }
+                    break;
+                case 'text':
+                    config.question_type = 'text';
+                    config.is_multiple_select = false;
+                    config.required = false;
+                    break;
+                case 'yesno':
+                case 'yes_no':
+                    config.question_type = 'yes_no';
+                    config.is_multiple_select = false;
+                    break;
+                case 'ranking':
+                    config.question_type = 'ranking';
+                    config.is_multiple_select = true;
+                    config.required = true;
+                    {
+                        const maxVal = params.max ? parseInt(params.max) : 3;
+                        config.max_selections = isNaN(maxVal) ? 3 : maxVal;
+                    }
+                    break;
+                case 'rating':
+                    config.question_type = 'rating';
+                    config.is_multiple_select = false;
+                    break;
+                default:
+                    break;
+            }
+
+            if (params.required === 'false') {
+                config.required = false;
+            }
+        } else {
+            if (hashCount === 5) {
+                config.question_type = 'text';
+                config.is_multiple_select = false;
+                config.required = false;
+            }
+        }
+
+        return {
+            question_text: questionText,
+            question_type: config.question_type,
+            options: [] as string[],
+            required: config.required,
+            order_index: questionIndex,
+            is_multiple_select: config.is_multiple_select,
+            max_selections: config.max_selections,
+            correct_answer: null,
+        };
+    };
+
+    lines.forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) return;
+
+        if (/^---+$/.test(line)) {
+            finalizeQuiz();
             return;
         }
 
-        let title = '';
-        let description = '';
-        const questions: any[] = [];
-        let currentQuestion: any = null;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            console.log(`Line ${i + 1}: "${line}"`);
-
-            // Title (# heading)
-            if (line.startsWith('# ') && !title) {
-                title = line.substring(2).trim();
-                console.log("  -> Title found:", title);
-                continue;
+        if (line.startsWith('# ')) {
+            if (/^#\s*（.+）/.test(line)) {
+                return;
             }
-
-            // Description (## heading)
-            if (line.startsWith('## ') && !description) {
-                description = line.substring(3).trim();
-                console.log("  -> Description found:", description);
-                continue;
-            }
-
-            // Question (###, ####, ##### heading, $$$ ranking)
-            const isRanking = line.startsWith('$$$');
-            const isText = line.startsWith('##### ');
-            const isMulti = line.startsWith('#### ');
-            const isSingle = line.startsWith('### ');
-
-            if (isRanking || isText || isMulti || isSingle) {
-                // 既存の質問を保存
-                if (currentQuestion) {
-                    questions.push(currentQuestion);
-                    console.log("  -> Pushing previous question:", currentQuestion.question_text);
-                }
-                
-                const questionText = line.substring(line.indexOf(' ') + 1).trim();
-                const questionIndex = questions.length;
-
-                if (isRanking) {
-                    const parts = line.split(' ');
-                    const maxSelections = parts[0].includes('-') ? 
-                        parseInt(parts[0].split('-')[1]) : 3;
-                    
-                    currentQuestion = {
-                        question_text: questionText,
-                        question_type: 'ranking',
-                        options: [],
-                        required: true,
-                        order_index: questionIndex,
-                        is_multiple_select: true,
-                        max_selections: maxSelections,
-                        correct_answer: null
-                    };
-                    console.log("  -> Ranking Question found:", currentQuestion);
-                } else {
-                    currentQuestion = {
-                        question_text: questionText,
-                        question_type: isText ? 'text' : 'multiple_choice',
-                        options: [],
-                        required: !isText,
-                        order_index: questionIndex,
-                        is_multiple_select: isMulti,
-                        max_selections: null,
-                        correct_answer: null
-                    };
-                    console.log("  -> Regular Question found:", currentQuestion);
-                }
-                continue;
-            }
-
-            // Options (□ checkbox)
-            if (line.startsWith('□ ') && currentQuestion) {
-                currentQuestion.options.push(line.substring(2).trim());
-                console.log("  -> Option added:", line.substring(2).trim());
-                continue;
-            }
-
-            // Correct answer (正解: または 答え:)
-            if ((line.startsWith('正解:') || line.startsWith('答え:')) && currentQuestion) {
-                const correctAnswer = line.substring(line.indexOf(':') + 1).trim();
-                currentQuestion.correct_answer = correctAnswer;
-                console.log("  -> Correct answer found:", correctAnswer);
-                continue;
-            }
-
-            console.log("  -> Line not recognized as title, description, question, option, or correct answer.");
+            finalizeQuiz();
+            const title = line.substring(2).trim();
+            currentQuiz = { title, description: '', questions: [] };
+            return;
         }
 
-        // 最後の質問を保存
-        if (currentQuestion) {
-            questions.push(currentQuestion);
-            console.log("--- Pushing final question for document:", currentQuestion.question_text);
+        if (line.startsWith('## ')) {
+            if (currentQuiz && !currentQuiz.description) {
+                currentQuiz.description = line.substring(3).trim();
+            }
+            return;
         }
 
-        // クイズとして有効な場合のみ追加
-        if (title && questions.length > 0) {
-            finalQuizzes.push({ title, description, questions });
-            console.log(`--- Document ${docIndex + 1} successfully parsed as a quiz! ---`);
-            console.log("Final Quiz Object:", { title, description, questions });
-        } else {
-            console.log(`--- Document ${docIndex + 1} NOT parsed as a valid quiz (title: ${title || 'N/A'}, description: ${description || 'N/A'}, questions.length: ${questions.length}) ---`);
+        if (line.startsWith('###') || line.startsWith('####') || line.startsWith('#####') || line.startsWith('$$$')) {
+            if (!currentQuiz) {
+                return;
+            }
+            finalizeQuestion();
+            const questionIndex = currentQuiz.questions.length;
+            const parsedQuestion = parseQuestionHeading(line, questionIndex);
+            if (parsedQuestion) {
+                currentQuestion = parsedQuestion;
+            }
+            return;
+        }
+
+        if (line.startsWith('□ ') && currentQuestion) {
+            currentQuestion.options.push(line.substring(2).trim());
+            return;
+        }
+
+        if ((line.startsWith('正解:') || line.startsWith('答え:')) && currentQuestion) {
+            const answerText = line.substring(line.indexOf(':') + 1).trim();
+            const answers = answerText.split(',').map((a) => a.trim()).filter(Boolean);
+            currentQuestion.correct_answer = answers.join(', ');
+            return;
         }
     });
-    console.log("parseMarkdown: Final quizzes count:", finalQuizzes.length);
-    console.log("parseMarkdown: Returning:", finalQuizzes);
+
+    finalizeQuiz();
     return finalQuizzes;
 };
 
@@ -155,6 +220,18 @@ export function ImportQuizModal({ onClose, onImport }: ImportQuizModalProps) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParsedQuiz[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const formatError = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'object' && error !== null) {
+      try {
+        return JSON.stringify(error, null, 2);
+      } catch (_) {
+        return String(error);
+      }
+    }
+    return String(error);
+  };
 
   const handlePreview = () => {
     setError(null);
@@ -222,7 +299,7 @@ export function ImportQuizModal({ onClose, onImport }: ImportQuizModalProps) {
       onClose();
     } catch (error: unknown) {
       console.error('Error importing quiz:', error);
-      setError(`クイズのインポートに失敗しました: ${error instanceof Error ? error.message : String(error)}`);
+      setError(`クイズのインポートに失敗しました: ${formatError(error)}`);
     } finally {
       setLoading(false);
     }
