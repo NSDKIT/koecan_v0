@@ -779,7 +779,7 @@ export default function MonitorDashboard() {
       let insertedResponse;
       if (existingResponse) {
         // 既存の回答を更新（再チャレンジ）
-        const { data: updatedResponse, error: updateError } = await supabase
+        const { error: updateError } = await supabase
           .from('quiz_responses')
           .update({
             answers: quizAnswers,
@@ -787,9 +787,7 @@ export default function MonitorDashboard() {
             points_earned: isPerfect ? selectedQuiz.points_reward : 0,
             completed_at: new Date().toISOString()
           })
-          .eq('id', existingResponse.id)
-          .select()
-          .maybeSingle(); // .single() → .maybeSingle() に変更
+          .eq('id', existingResponse.id);
 
         if (updateError) {
           console.error('クイズ回答の更新エラー:', updateError);
@@ -802,7 +800,16 @@ export default function MonitorDashboard() {
           alert(`クイズの送信に失敗しました: ${updateError.message || JSON.stringify(updateError)}`);
           throw updateError;
         }
-        if (!updatedResponse) {
+
+        // 更新後のデータを改めて取得
+        const { data: updatedResponse, error: fetchUpdatedError } = await supabase
+          .from('quiz_responses')
+          .select('*')
+          .eq('id', existingResponse.id)
+          .single();
+
+        if (fetchUpdatedError || !updatedResponse) {
+          console.warn('更新後の回答データ取得に失敗:', fetchUpdatedError);
           throw new Error('更新後の回答データが取得できませんでした');
         }
         insertedResponse = updatedResponse;
@@ -820,7 +827,7 @@ export default function MonitorDashboard() {
             },
           ])
           .select()
-          .maybeSingle(); // .single() → .maybeSingle() に変更
+          .single();
 
         if (insertError) {
           console.error('クイズ回答の挿入エラー:', insertError);
@@ -1225,9 +1232,16 @@ export default function MonitorDashboard() {
                               checked={isChecked}
                               onChange={(e) => {
                                 if (question.is_multiple_select) {
-                                  const updated = e.target.checked
-                                    ? [...currentAnswersArray, option]
-                                    : currentAnswersArray.filter(a => a !== option);
+                                  let updated: string[];
+                                  if (e.target.checked) {
+                                    // チェックされた場合：重複を防ぎつつ追加
+                                    updated = currentAnswersArray.includes(option)
+                                      ? currentAnswersArray
+                                      : [...currentAnswersArray, option];
+                                  } else {
+                                    // チェック解除された場合：該当項目を削除
+                                    updated = currentAnswersArray.filter(a => a !== option);
+                                  }
                                   handleQuizAnswerChange(question.id, updated.join(', '));
                                 } else {
                                   handleQuizAnswerChange(question.id, option);
