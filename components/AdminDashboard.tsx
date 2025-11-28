@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey, Advertisement } from '@/types'; // Survey, Advertisement 型をインポート
+import { Survey, Advertisement, Quiz, QuizQuestion } from '@/types'; // Survey, Advertisement 型をインポート
 import { 
   Users, 
   BarChart3, 
@@ -27,7 +27,8 @@ import {
   ClipboardList,
   Edit, // 追加: 編集アイコン
   Trash2, // 追加: 削除アイコン
-  Trophy // 追加: クイズアイコン
+  Trophy,
+  Upload // 追加: クイズ管理用インポートアイコン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
@@ -166,12 +167,164 @@ const AdminSurveyManager: React.FC<AdminSurveyManagerProps> = ({ surveys, fetchS
     );
 }
 
+interface AdminQuizManagerProps {
+  quizzes: Quiz[];
+  loading: boolean;
+  onOpenImport: () => void;
+  fetchQuizzes: () => void;
+  onPreview: (quiz: Quiz) => void;
+}
+
+const AdminQuizManager: React.FC<AdminQuizManagerProps> = ({
+  quizzes,
+  loading,
+  onOpenImport,
+  fetchQuizzes,
+  onPreview
+}) => {
+  const handleStatusChange = async (quizId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('quizzes')
+        .update({ status: newStatus })
+        .eq('id', quizId);
+
+      if (error) throw error;
+      fetchQuizzes();
+    } catch (error) {
+      console.error('Error updating quiz status:', error);
+      alert('ステータスの更新に失敗しました。');
+    }
+  };
+
+  const handleDeleteQuiz = async (quizId: string) => {
+    if (!confirm('本当にこのクイズを削除しますか？全ての関連データも削除されます。')) {
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('quizzes')
+        .delete()
+        .eq('id', quizId);
+
+      if (error) throw error;
+      alert('クイズを削除しました。');
+      fetchQuizzes();
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('クイズの削除に失敗しました。');
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 flex items-center space-x-2">
+            <Trophy className="w-5 h-5 text-purple-600" />
+            <span>クイズ一覧</span>
+          </h3>
+          <p className="text-sm text-gray-500">全{quizzes.length}件のクイズを管理します</p>
+        </div>
+        <button
+          onClick={onOpenImport}
+          className="flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          クイズをインポート
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">クイズを読み込み中...</div>
+      ) : quizzes.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+          <p className="text-gray-600">現在、管理対象のクイズはありません。</p>
+          <p className="text-sm text-gray-400">Markdownをインポートしてクイズを追加しましょう。</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {quizzes.map((quiz) => (
+            <div key={quiz.id} className="bg-white rounded-xl border p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3">
+                  <p className="font-semibold text-gray-900">{quiz.title}</p>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(quiz.status)}`}>
+                    {quiz.status}
+                  </span>
+                </div>
+                {quiz.description && (
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{quiz.description}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-2">
+                  作成日: {quiz.created_at ? new Date(quiz.created_at).toLocaleString('ja-JP') : '-'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => onPreview(quiz)}
+                  className="px-3 py-1 border border-purple-200 text-purple-600 rounded-md text-sm hover:bg-purple-50"
+                >
+                  プレビュー
+                </button>
+                <button
+                  onClick={() => handleDeleteQuiz(quiz.id)}
+                  className="px-3 py-1 border border-red-200 text-red-600 rounded-md text-sm hover:bg-red-50"
+                >
+                  削除
+                </button>
+                {quiz.status === 'draft' && (
+                  <button
+                    onClick={() => handleStatusChange(quiz.id, 'active')}
+                    className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
+                  >
+                    公開
+                  </button>
+                )}
+                {quiz.status === 'active' && (
+                  <button
+                    onClick={() => handleStatusChange(quiz.id, 'completed')}
+                    className="px-3 py-1 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600"
+                  >
+                    終了
+                  </button>
+                )}
+                {quiz.status === 'completed' && (
+                  <button
+                    onClick={() => handleStatusChange(quiz.id, 'active')}
+                    className="px-3 py-1 bg-indigo-500 text-white rounded-md text-sm hover:bg-indigo-600"
+                  >
+                    再公開
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // =========================================================================
 // AdminDashboard コンポーネント本体
 // =========================================================================
 
 // ★★★ 修正: タブの型に 'survey_manager' を追加 ★★★
-type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'chat_monitoring' | 'point_exchange' | 'company_personality' | 'bulletin_board';
+type AdminDashboardTab = 'overview' | 'job_info_manager' | 'survey_manager' | 'quiz_manager' | 'chat_monitoring' | 'point_exchange' | 'company_personality' | 'bulletin_board';
 
 
 export function AdminDashboard() {
@@ -195,6 +348,10 @@ export function AdminDashboard() {
 
   // ★★★ 追加: アンケートデータと取得関数 ★★★
   const [allSurveys, setAllSurveys] = useState<Survey[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [previewQuiz, setPreviewQuiz] = useState<{ quiz: Quiz; questions: QuizQuestion[] } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const fetchAllSurveys = async () => {
     if (!user?.id) return;
@@ -213,6 +370,44 @@ export function AdminDashboard() {
   };
   // ★★★ 追加ここまで ★★★
 
+  const fetchQuizzes = async () => {
+    setQuizLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('quizzes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setQuizzes(data || []);
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handlePreviewQuiz = async (quiz: Quiz) => {
+    setPreviewLoading(true);
+    setPreviewQuiz({ quiz, questions: [] });
+    try {
+      const { data, error } = await supabase
+        .from('quiz_questions')
+        .select('*')
+        .eq('quiz_id', quiz.id)
+        .order('order_index');
+
+      if (error) throw error;
+      setPreviewQuiz({ quiz, questions: data || [] });
+    } catch (error) {
+      console.error('Error fetching quiz questions:', error);
+      alert('クイズの詳細取得に失敗しました。');
+      setPreviewQuiz(null);
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
 
   // チャット監視用ステート
   const [chatRooms, setChatRooms] = useState<any[]>([]);
@@ -225,6 +420,7 @@ export function AdminDashboard() {
     if (user) {
       fetchStats();
       fetchAllSurveys(); // ★★★ アンケートデータを初期ロード ★★★
+      fetchQuizzes();
       // 企業一覧を取得（パーソナリティ診断用）
       const fetchCompaniesForPersonality = async () => {
         try {
@@ -508,6 +704,16 @@ export function AdminDashboard() {
               >
                 アンケート管理
               </button>
+              <button
+                onClick={() => setActiveTab('quiz_manager')}
+                className={`flex-1 py-3 text-center text-lg font-semibold transition-colors ${
+                  activeTab === 'quiz_manager'
+                    ? 'text-purple-600 border-b-2 border-purple-600'
+                    : 'text-gray-600 hover:text-purple-500'
+                }`}
+              >
+                クイズ管理
+              </button>
               {/* ★★★ 修正箇所ここまで ★★★ */}
               <button
                 onClick={() => setActiveTab('chat_monitoring')}
@@ -561,6 +767,15 @@ export function AdminDashboard() {
             {/* ★★★ 修正箇所: 新しいタブのコンテンツ ★★★ */}
             {activeTab === 'survey_manager' && (
                 <AdminSurveyManager surveys={allSurveys} fetchSurveys={fetchAllSurveys} />
+            )}
+            {activeTab === 'quiz_manager' && (
+              <AdminQuizManager
+                quizzes={quizzes}
+                loading={quizLoading}
+                onOpenImport={() => setShowImportQuizModal(true)}
+                fetchQuizzes={fetchQuizzes}
+                onPreview={handlePreviewQuiz}
+              />
             )}
             {/* ★★★ 修正箇所ここまで ★★★ */}
             {activeTab === 'chat_monitoring' && renderChatMonitoringTab()}
@@ -643,6 +858,58 @@ export function AdminDashboard() {
         </main>
       </div>
 
+      {/* Quiz Preview Modal */}
+      {previewQuiz && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b px-6 py-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-800">{previewQuiz.quiz.title}</h3>
+                <p className="text-sm text-gray-500">{previewQuiz.quiz.description}</p>
+              </div>
+              <button
+                onClick={() => setPreviewQuiz(null)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="px-6 py-4">
+              {previewLoading ? (
+                <div className="text-center py-12 text-gray-500">クイズ内容を読み込み中...</div>
+              ) : previewQuiz.questions.length === 0 ? (
+                <p className="text-gray-600">このクイズにはまだ質問が登録されていません。</p>
+              ) : (
+                <div className="space-y-6">
+                  {previewQuiz.questions.map((question, index) => (
+                    <div key={question.id || index} className="border-b pb-4">
+                      <p className="font-semibold text-gray-800 mb-2">
+                        Q{index + 1}. {question.question_text}
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+                          {question.question_type}
+                        </span>
+                      </p>
+                      {question.options && question.options.length > 0 && (
+                        <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                          {question.options.map((opt: string, optIdx: number) => (
+                            <li key={optIdx}>{opt}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {question.correct_answer && (
+                        <p className="text-sm text-green-600 mt-2">
+                          正解: {question.correct_answer}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Chat Modal for Admin (Read-Only) */}
       {isChatModalOpen && user && selectedRoomId && (
         <ChatModal
@@ -668,7 +935,7 @@ export function AdminDashboard() {
           onClose={() => setShowImportQuizModal(false)}
           onImport={() => {
             setShowImportQuizModal(false);
-            // クイズリストを再取得する場合はここに追加
+            fetchQuizzes();
           }}
         />
       )}

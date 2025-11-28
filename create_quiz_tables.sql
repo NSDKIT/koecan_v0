@@ -83,8 +83,8 @@ CREATE POLICY "Clients can manage own quizzes"
   FOR ALL 
   TO authenticated 
   USING (
-    client_id = uid() OR 
-    EXISTS (SELECT 1 FROM users WHERE id = uid() AND role IN ('admin', 'support'))
+    client_id = auth.uid() OR 
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'support'))
   );
 
 -- モニター学生はアクティブなクイズを閲覧可能
@@ -94,7 +94,7 @@ CREATE POLICY "Monitors can view active quizzes"
   TO authenticated 
   USING (
     status = 'active' OR 
-    EXISTS (SELECT 1 FROM users WHERE id = uid() AND role IN ('admin', 'support', 'client'))
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'support', 'client'))
   );
 
 -- Quiz questions table policies
@@ -109,7 +109,7 @@ CREATE POLICY "Clients and admins can manage quiz questions"
     EXISTS (
       SELECT 1 FROM quizzes q 
       WHERE q.id = quiz_questions.quiz_id 
-      AND (q.client_id = uid() OR EXISTS (SELECT 1 FROM users WHERE id = uid() AND role IN ('admin', 'support')))
+      AND (q.client_id = auth.uid() OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'support')))
     )
   );
 
@@ -124,7 +124,7 @@ CREATE POLICY "Monitors can view active quiz questions"
       WHERE q.id = quiz_questions.quiz_id 
       AND q.status = 'active'
     ) OR 
-    EXISTS (SELECT 1 FROM users WHERE id = uid() AND role IN ('admin', 'support', 'client'))
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'support', 'client'))
   );
 
 -- Quiz responses table policies
@@ -135,13 +135,13 @@ CREATE POLICY "Monitors can create own quiz responses"
   ON quiz_responses 
   FOR INSERT 
   TO authenticated 
-  WITH CHECK (monitor_id = uid());
+  WITH CHECK (monitor_id = auth.uid());
 
 CREATE POLICY "Monitors can view own quiz responses" 
   ON quiz_responses 
   FOR SELECT 
   TO authenticated 
-  USING (monitor_id = uid());
+  USING (monitor_id = auth.uid());
 
 -- クライアントと管理者は全回答を閲覧可能
 CREATE POLICY "Clients and admins can view all quiz responses" 

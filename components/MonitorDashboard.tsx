@@ -1039,35 +1039,37 @@ export default function MonitorDashboard() {
 
                   {question.question_type === 'multiple_choice' && (
                     <div className="space-y-2">
-                      {question.options?.map((option, optionIndex) => (
-                        <label key={optionIndex} className="flex items-center">
-                          <input
-                            type={question.is_multiple_select ? 'checkbox' : 'radio'}
-                            name={`question_${question.id}`}
-                            value={option}
-                            onChange={(e) => {
-                              const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
-                              if (question.is_multiple_select) {
-                                const currentAnswersArray = currentAnswer
-                                  ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
-                                  : [];
-                                if (e.target.checked) {
-                                  handleAnswerChange(question.id, [...currentAnswersArray, option].join(', '));
+                      {question.options?.map((option, optionIndex) => {
+                        const currentAnswer = answers.find(a => a.question_id === question.id)?.answer || '';
+                        const currentAnswersArray = currentAnswer
+                          ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
+                          : [];
+                        const isChecked = question.is_multiple_select
+                          ? currentAnswersArray.includes(option)
+                          : currentAnswer === option;
+                        return (
+                          <label key={optionIndex} className="flex items-center">
+                            <input
+                              type={question.is_multiple_select ? 'checkbox' : 'radio'}
+                              name={`question_${question.id}`}
+                              value={option}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (question.is_multiple_select) {
+                                  const updated = e.target.checked
+                                    ? [...currentAnswersArray, option]
+                                    : currentAnswersArray.filter(a => a !== option);
+                                  handleAnswerChange(question.id, updated.join(', '));
                                 } else {
-                                  handleAnswerChange(
-                                    question.id,
-                                    currentAnswersArray.filter(a => a !== option).join(', ')
-                                  );
+                                  handleAnswerChange(question.id, option);
                                 }
-                              } else {
-                                handleAnswerChange(question.id, option);
-                              }
-                            }}
-                            className="mr-2"
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
+                              }}
+                              className="mr-2"
+                            />
+                            <span>{option}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
 
@@ -1177,35 +1179,37 @@ export default function MonitorDashboard() {
 
                   {question.question_type === 'multiple_choice' && (
                     <div className="space-y-2">
-                      {question.options?.map((option, optionIndex) => (
-                        <label key={optionIndex} className="flex items-center">
-                          <input
-                            type={question.is_multiple_select ? 'checkbox' : 'radio'}
-                            name={`quiz_question_${question.id}`}
-                            value={option}
-                            onChange={(e) => {
-                              const currentAnswer = quizAnswers.find(a => a.question_id === question.id)?.answer || '';
-                              if (question.is_multiple_select) {
-                                const currentAnswersArray = currentAnswer
-                                  ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
-                                  : [];
-                                if (e.target.checked) {
-                                  handleQuizAnswerChange(question.id, [...currentAnswersArray, option].join(', '));
+                      {question.options?.map((option, optionIndex) => {
+                        const currentAnswer = quizAnswers.find(a => a.question_id === question.id)?.answer || '';
+                        const currentAnswersArray = currentAnswer
+                          ? currentAnswer.split(',').map((a) => a.trim()).filter((a) => a.length > 0)
+                          : [];
+                        const isChecked = question.is_multiple_select
+                          ? currentAnswersArray.includes(option)
+                          : currentAnswer === option;
+                        return (
+                          <label key={optionIndex} className="flex items-center">
+                            <input
+                              type={question.is_multiple_select ? 'checkbox' : 'radio'}
+                              name={`quiz_question_${question.id}`}
+                              value={option}
+                              checked={isChecked}
+                              onChange={(e) => {
+                                if (question.is_multiple_select) {
+                                  const updated = e.target.checked
+                                    ? [...currentAnswersArray, option]
+                                    : currentAnswersArray.filter(a => a !== option);
+                                  handleQuizAnswerChange(question.id, updated.join(', '));
                                 } else {
-                                  handleQuizAnswerChange(
-                                    question.id,
-                                    currentAnswersArray.filter(a => a !== option).join(', ')
-                                  );
+                                  handleQuizAnswerChange(question.id, option);
                                 }
-                              } else {
-                                handleQuizAnswerChange(question.id, option);
-                              }
-                            }}
-                            className="mr-2"
-                          />
-                          <span>{option}</span>
-                        </label>
-                      ))}
+                              }}
+                              className="mr-2"
+                            />
+                            <span>{option}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
 
