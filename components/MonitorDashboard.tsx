@@ -726,9 +726,12 @@ export default function MonitorDashboard() {
       const correctValues = normalizeAnswerArray(question.correct_answer);
       if (correctValues.length === 0) return false;
       if (userValues.length !== correctValues.length) return false;
-      return correctValues.every(
-        (val, idx) => val.toLowerCase() === userValues[idx].toLowerCase()
-      );
+      // セットとして比較（順序に依存しない）
+      const userSet = new Set(userValues.map(v => v.toLowerCase()));
+      const correctSet = new Set(correctValues.map(v => v.toLowerCase()));
+      if (userSet.size !== correctSet.size) return false;
+      // 全ての正解がユーザー回答に含まれているか確認
+      return Array.from(correctSet).every(val => userSet.has(val));
     }
     if (!userAnswer) return false;
     return userAnswer.trim().toLowerCase() === question.correct_answer.trim().toLowerCase();
@@ -786,7 +789,7 @@ export default function MonitorDashboard() {
           })
           .eq('id', existingResponse.id)
           .select()
-          .single();
+          .maybeSingle(); // .single() → .maybeSingle() に変更
 
         if (updateError) {
           console.error('クイズ回答の更新エラー:', updateError);
@@ -798,6 +801,9 @@ export default function MonitorDashboard() {
           });
           alert(`クイズの送信に失敗しました: ${updateError.message || JSON.stringify(updateError)}`);
           throw updateError;
+        }
+        if (!updatedResponse) {
+          throw new Error('更新後の回答データが取得できませんでした');
         }
         insertedResponse = updatedResponse;
       } else {
@@ -814,7 +820,7 @@ export default function MonitorDashboard() {
             },
           ])
           .select()
-          .single();
+          .maybeSingle(); // .single() → .maybeSingle() に変更
 
         if (insertError) {
           console.error('クイズ回答の挿入エラー:', insertError);
@@ -827,6 +833,9 @@ export default function MonitorDashboard() {
           });
           alert(`クイズの送信に失敗しました: ${insertError.message || JSON.stringify(insertError)}`);
           throw insertError;
+        }
+        if (!newResponse) {
+          throw new Error('挿入後の回答データが取得できませんでした');
         }
         insertedResponse = newResponse;
       }
