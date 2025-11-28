@@ -518,7 +518,9 @@ export default function MonitorDashboard() {
         throw quizResponsesError;
       }
 
+      console.log('全問正解の回答:', userQuizResponses);
       const answeredQuizIds = new Set(userQuizResponses?.map((res: {quiz_id: string}) => res.quiz_id));
+      console.log('回答済みクイズID:', Array.from(answeredQuizIds));
 
       const newAvailableQuizzes: Quiz[] = [];
       const newAnsweredQuizzes: Quiz[] = [];
@@ -884,6 +886,8 @@ export default function MonitorDashboard() {
 
       console.log('クイズ回答を保存しました:', insertedResponse);
       console.log('獲得ポイント:', insertedResponse?.points_earned);
+      console.log('スコア:', insertedResponse?.score);
+      console.log('全問正解:', isPerfect);
 
       // メッセージを表示
       if (isPerfect) {
@@ -929,7 +933,20 @@ export default function MonitorDashboard() {
         }
         
         // クイズリストの再取得（データベースへの反映を待つ）
-        await new Promise(resolve => setTimeout(resolve, 500)); // 0.5秒待機
+        console.log('クイズリストを再取得します...');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒待機（データベースへの反映を確実にする）
+        
+        // 保存された回答を確認
+        const { data: savedResponse, error: checkError } = await supabase
+          .from('quiz_responses')
+          .select('quiz_id, score')
+          .eq('quiz_id', selectedQuiz.id)
+          .eq('monitor_id', user.id)
+          .single();
+        
+        console.log('保存された回答を確認:', savedResponse);
+        console.log('スコア:', savedResponse?.score);
+        
         await fetchQuizzesAndResponses();
       } catch (updateError) {
         console.warn('プロフィール再取得エラー（無視されます）:', updateError);
