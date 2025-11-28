@@ -26,7 +26,8 @@ import {
   FileText,
   ClipboardList,
   Edit, // 追加: 編集アイコン
-  Trash2 // 追加: 削除アイコン
+  Trash2, // 追加: 削除アイコン
+  Trophy // 追加: クイズアイコン
 } from 'lucide-react';
 import { SparklesCore } from '@/components/ui/sparkles';
 import { AdminJobInfoManager } from '@/components/AdminJobInfoManager';
@@ -36,6 +37,7 @@ import { LineLinkButton } from '@/components/LineLinkButton';
 
 // ★★★ 追加: インポートモーダルをインポート ★★★
 import { ImportSurveyModal } from '@/components/ImportSurveyModal';
+import { ImportQuizModal } from '@/components/ImportQuizModal';
 import { ImportCsvModal } from '@/components/ImportCsvModal';
 import { CompanyPersonalityImportModal } from '@/components/CompanyPersonalityImportModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
@@ -185,6 +187,7 @@ export function AdminDashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const [showLineLinkModal, setShowLineLinkModal] = useState(false); 
   const [showImportSurveyModal, setShowImportSurveyModal] = useState(false);
+  const [showImportQuizModal, setShowImportQuizModal] = useState(false);
   const [showImportCsvModal, setShowImportCsvModal] = useState(false);
   const [showCompanyPersonalityImportModal, setShowCompanyPersonalityImportModal] = useState(false);
   const [selectedCompanyForPersonality, setSelectedCompanyForPersonality] = useState<string>('');
@@ -454,6 +457,13 @@ export function AdminDashboard() {
                 アンケート（Markdown）インポート
             </button>
             <button
+                onClick={() => setShowImportQuizModal(true)}
+                className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
+            >
+                <Trophy className="w-5 h-5 mr-2" />
+                クイズ（Markdown）インポート
+            </button>
+            <button
                 onClick={() => setShowImportCsvModal(true)} 
                 className="bg-white/80 backdrop-blur-sm border border-purple-200 hover:border-purple-300 text-purple-700 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center"
             >
@@ -651,6 +661,15 @@ export function AdminDashboard() {
         <ImportSurveyModal
           onClose={() => setShowImportSurveyModal(false)}
           onImport={fetchAllSurveys} // アンケートリストの再取得
+        />
+      )}
+      {showImportQuizModal && (
+        <ImportQuizModal
+          onClose={() => setShowImportQuizModal(false)}
+          onImport={() => {
+            setShowImportQuizModal(false);
+            // クイズリストを再取得する場合はここに追加
+          }}
         />
       )}
       {showImportCsvModal && (

@@ -226,3 +226,39 @@ export interface PersonalityResponse {
   created_at: string;
   updated_at: string;
 }
+
+// Quiz types
+export interface Quiz {
+  id: string;
+  client_id: string;
+  title: string;
+  description: string;
+  status: 'draft' | 'active' | 'completed' | 'rejected';
+  points_reward: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  quiz_id: string;
+  question_text: string;
+  question_type: 'text' | 'multiple_choice' | 'rating' | 'yes_no' | 'ranking';
+  options?: string[];
+  required: boolean;
+  order_index: number;
+  created_at: string;
+  is_multiple_select?: boolean;
+  max_selections?: number | null;
+  correct_answer?: string | null;
+}
+
+export interface QuizResponse {
+  id: string;
+  quiz_id: string;
+  monitor_id: string;
+  answers: any;
+  completed_at: string;
+  points_earned: number;
+  score?: number | null;
+}
