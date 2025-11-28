@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS quiz_responses (
   answers jsonb DEFAULT '[]' NOT NULL,
   completed_at timestamptz DEFAULT now(),
   points_earned integer DEFAULT 0,
-  score integer DEFAULT NULL, -- クイズ用：正答率やスコア
-  UNIQUE(quiz_id, monitor_id)
+  score integer DEFAULT NULL, -- クイズ用：正答率やスコア（0-100）
+  UNIQUE(quiz_id, monitor_id) -- 1ユーザー1クイズにつき1回答（再チャレンジ時は更新）
 );
 
 -- Point transactions table に quiz_id カラムを追加（既存の場合はスキップ）
