@@ -80,7 +80,7 @@ const getSecureImageUrl = (url: string | null | undefined): string | null => {
 export default function MonitorDashboard() {
   const { user, signOut, loading: authLoading } = useAuth(); 
   const [availableSurveys, setAvailableSurveys] = useState<Survey[]>([]); 
-  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);
+  const [answeredSurveys, setAnsweredSurveys] = useState<Survey[]>([]);   
   const [availableQuizzes, setAvailableQuizzes] = useState<Quiz[]>([]);
   const [answeredQuizzes, setAnsweredQuizzes] = useState<Quiz[]>([]);
   const [profile, setProfile] = useState<MonitorProfile | null>(null);
@@ -506,10 +506,12 @@ export default function MonitorDashboard() {
         throw quizzesError;
       }
 
+      // 全問正解（score = 100）の回答のみを「回答済み」として扱う
       const { data: userQuizResponses, error: quizResponsesError } = await supabase
         .from('quiz_responses')
-        .select('quiz_id')
-        .eq('monitor_id', user.id);
+        .select('quiz_id, score')
+        .eq('monitor_id', user.id)
+        .eq('score', 100); // 全問正解のみ
 
       if (quizResponsesError) {
         console.error('クイズ回答履歴取得エラー:', quizResponsesError);
@@ -658,15 +660,17 @@ export default function MonitorDashboard() {
 
   const handleQuizClick = async (quiz: Quiz) => {
     try {
-      const { data: existingResponse } = await supabase
+      // 全問正解（score = 100）の回答があるかチェック
+      const { data: perfectResponse } = await supabase
         .from('quiz_responses')
-        .select('id')
+        .select('id, score')
         .eq('quiz_id', quiz.id)
         .eq('monitor_id', user?.id)
+        .eq('score', 100)
         .single();
 
-      if (existingResponse) {
-        alert('このクイズは既に回答済みです。');
+      if (perfectResponse) {
+        alert('このクイズは既に全問正解で回答済みです。');
         return;
       }
 
@@ -730,31 +734,69 @@ export default function MonitorDashboard() {
         }
       });
       const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : null;
+      const isPerfect = score === 100;
 
-      const { data: insertedResponse, error: insertError } = await supabase
+      // 既存の回答がある場合は更新、ない場合は新規作成
+      const { data: existingResponse } = await supabase
         .from('quiz_responses')
-        .insert([
-          {
-            quiz_id: selectedQuiz.id,
-            monitor_id: user.id,
-            answers: quizAnswers,
-            score: score,
-          },
-        ])
-        .select()
+        .select('id')
+        .eq('quiz_id', selectedQuiz.id)
+        .eq('monitor_id', user.id)
         .single();
 
-      if (insertError) {
-        console.error('クイズ回答の挿入エラー:', insertError);
-        throw insertError;
+      let insertedResponse;
+      if (existingResponse) {
+        // 既存の回答を更新（再チャレンジ）
+        const { data: updatedResponse, error: updateError } = await supabase
+          .from('quiz_responses')
+          .update({
+            answers: quizAnswers,
+            score: score,
+            points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', existingResponse.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('クイズ回答の更新エラー:', updateError);
+          throw updateError;
+        }
+        insertedResponse = updatedResponse;
+      } else {
+        // 新規作成
+        const { data: newResponse, error: insertError } = await supabase
+          .from('quiz_responses')
+          .insert([
+            {
+              quiz_id: selectedQuiz.id,
+              monitor_id: user.id,
+              answers: quizAnswers,
+              score: score,
+              points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+            },
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('クイズ回答の挿入エラー:', insertError);
+          throw insertError;
+        }
+        insertedResponse = newResponse;
       }
 
-      console.log('クイズ回答を挿入しました:', insertedResponse);
+      console.log('クイズ回答を保存しました:', insertedResponse);
       console.log('獲得ポイント:', insertedResponse?.points_earned);
 
-      // INSERTが成功したら、まず成功メッセージを表示
-      const scoreMessage = score !== null ? `正答率: ${score}%` : '';
-      alert(`クイズを送信しました！${selectedQuiz.points_reward}ポイントを獲得しました。${scoreMessage ? ` ${scoreMessage}` : ''}`);
+      // メッセージを表示
+      if (isPerfect) {
+        alert(`🎉 全問正解です！${selectedQuiz.points_reward}ポイントを獲得しました！`);
+      } else {
+        alert(`正答率: ${score}%\n全問正解でないため、ポイントは付与されませんでした。\nもう一度チャレンジできます！`);
+      }
+
       setSelectedQuiz(null);
       setQuizQuestions([]);
       setQuizAnswers([]);
@@ -1396,8 +1438,8 @@ export default function MonitorDashboard() {
                             <div className="flex items-center mb-2">
                               <FileText className="w-5 h-5 mr-2 text-blue-600" />
                               <h3 className="text-xl font-semibold text-gray-800">
-                                {survey.title}
-                              </h3>
+                              {survey.title}
+                            </h3>
                             </div>
                             <p className="text-gray-600 mb-4 line-clamp-2">{survey.description}</p>
                             <div className="flex items-center space-x-4 text-sm text-gray-500">
@@ -1492,8 +1534,8 @@ export default function MonitorDashboard() {
                             <div className="flex items-center mb-2">
                               <FileText className="w-5 h-5 mr-2 text-blue-600" />
                               <h3 className="text-xl font-semibold text-gray-700">
-                                {survey.title}
-                              </h3>
+                              {survey.title}
+                            </h3>
                             </div>
                             <p className="text-gray-500 mb-4 line-clamp-2">{survey.description}</p>
                             <div className="flex items-center space-x-4 text-sm text-gray-400">

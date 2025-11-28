@@ -139,36 +139,44 @@ CREATE POLICY "Clients and admins can view all quiz responses"
 -- Point Management Functions and Triggers
 -- ============================================
 
--- クイズ回答時にポイントを設定する関数
+-- クイズ回答時にポイントを設定する関数（全問正解の場合のみポイント付与）
 CREATE OR REPLACE FUNCTION set_quiz_response_points()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.points_earned := (SELECT points_reward FROM quizzes WHERE id = NEW.quiz_id);
+  -- 全問正解（score = 100）の場合のみポイントを付与
+  IF NEW.score = 100 THEN
+    NEW.points_earned := (SELECT points_reward FROM quizzes WHERE id = NEW.quiz_id);
+  ELSE
+    NEW.points_earned := 0; -- 全問正解でない場合は0ポイント
+  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- クイズ回答時にモニターのポイントを更新する関数
+-- クイズ回答時にモニターのポイントを更新する関数（全問正解の場合のみ）
 CREATE OR REPLACE FUNCTION update_monitor_points_from_quiz()
 RETURNS TRIGGER AS $$
 DECLARE
   affected_rows integer;
 BEGIN
-  -- Update monitor points
-  UPDATE monitor_profiles 
-  SET points = points + NEW.points_earned 
-  WHERE user_id = NEW.monitor_id;
-  
-  GET DIAGNOSTICS affected_rows = ROW_COUNT;
-  
-  IF affected_rows = 0 THEN
-    RAISE WARNING 'monitor_profilesレコードが見つかりませんでした。user_id: %, quiz_id: %', NEW.monitor_id, NEW.quiz_id;
+  -- 全問正解（points_earned > 0）の場合のみポイントを更新
+  IF NEW.points_earned > 0 THEN
+    -- Update monitor points
+    UPDATE monitor_profiles 
+    SET points = points + NEW.points_earned 
+    WHERE user_id = NEW.monitor_id;
+    
+    GET DIAGNOSTICS affected_rows = ROW_COUNT;
+    
+    IF affected_rows = 0 THEN
+      RAISE WARNING 'monitor_profilesレコードが見つかりませんでした。user_id: %, quiz_id: %', NEW.monitor_id, NEW.quiz_id;
+    END IF;
+    
+    -- Create point transaction record (survey_idの代わりにquiz_idを使用)
+    -- 注意: point_transactionsテーブルにquiz_idカラムがない場合は、別の方法を検討
+    -- ここでは、survey_idをNULLにして、notesにquiz_idを記録する方法も考えられる
+    -- または、point_transactionsテーブルにquiz_idカラムを追加する
   END IF;
-  
-  -- Create point transaction record (survey_idの代わりにquiz_idを使用)
-  -- 注意: point_transactionsテーブルにquiz_idカラムがない場合は、別の方法を検討
-  -- ここでは、survey_idをNULLにして、notesにquiz_idを記録する方法も考えられる
-  -- または、point_transactionsテーブルにquiz_idカラムを追加する
   
   RETURN NEW;
 END;
