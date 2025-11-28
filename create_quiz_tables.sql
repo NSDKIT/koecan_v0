@@ -175,24 +175,38 @@ CREATE OR REPLACE FUNCTION update_monitor_points_from_quiz()
 RETURNS TRIGGER AS $$
 DECLARE
   affected_rows integer;
+  points_diff integer;
 BEGIN
-  -- 全問正解（points_earned > 0）の場合のみポイントを更新
-  IF NEW.points_earned > 0 THEN
-    -- Update monitor points
-    UPDATE monitor_profiles 
-    SET points = points + NEW.points_earned 
-    WHERE user_id = NEW.monitor_id;
-    
-    GET DIAGNOSTICS affected_rows = ROW_COUNT;
-    
-    IF affected_rows = 0 THEN
-      RAISE WARNING 'monitor_profilesレコードが見つかりませんでした。user_id: %, quiz_id: %', NEW.monitor_id, NEW.quiz_id;
+  -- INSERT時は新しいポイントを追加
+  IF TG_OP = 'INSERT' THEN
+    -- 全問正解（points_earned > 0）の場合のみポイントを更新
+    IF NEW.points_earned > 0 THEN
+      UPDATE monitor_profiles 
+      SET points = points + NEW.points_earned 
+      WHERE user_id = NEW.monitor_id;
+      
+      GET DIAGNOSTICS affected_rows = ROW_COUNT;
+      
+      IF affected_rows = 0 THEN
+        RAISE WARNING 'monitor_profilesレコードが見つかりませんでした。user_id: %, quiz_id: %', NEW.monitor_id, NEW.quiz_id;
+      END IF;
     END IF;
+  -- UPDATE時はポイントの差分を計算して更新
+  ELSIF TG_OP = 'UPDATE' THEN
+    points_diff := NEW.points_earned - COALESCE(OLD.points_earned, 0);
     
-    -- Create point transaction record (survey_idの代わりにquiz_idを使用)
-    -- 注意: point_transactionsテーブルにquiz_idカラムがない場合は、別の方法を検討
-    -- ここでは、survey_idをNULLにして、notesにquiz_idを記録する方法も考えられる
-    -- または、point_transactionsテーブルにquiz_idカラムを追加する
+    -- ポイントが増えた場合のみ更新
+    IF points_diff > 0 THEN
+      UPDATE monitor_profiles 
+      SET points = points + points_diff 
+      WHERE user_id = NEW.monitor_id;
+      
+      GET DIAGNOSTICS affected_rows = ROW_COUNT;
+      
+      IF affected_rows = 0 THEN
+        RAISE WARNING 'monitor_profilesレコードが見つかりませんでした。user_id: %, quiz_id: %', NEW.monitor_id, NEW.quiz_id;
+      END IF;
+    END IF;
   END IF;
   
   RETURN NEW;
@@ -202,13 +216,13 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- トリガーの作成
 DROP TRIGGER IF EXISTS set_quiz_response_points_trigger ON quiz_responses;
 CREATE TRIGGER set_quiz_response_points_trigger 
-  BEFORE INSERT ON quiz_responses 
+  BEFORE INSERT OR UPDATE ON quiz_responses 
   FOR EACH ROW 
   EXECUTE FUNCTION set_quiz_response_points();
 
 DROP TRIGGER IF EXISTS update_monitor_points_from_quiz_trigger ON quiz_responses;
 CREATE TRIGGER update_monitor_points_from_quiz_trigger 
-  AFTER INSERT ON quiz_responses 
+  AFTER INSERT OR UPDATE ON quiz_responses 
   FOR EACH ROW 
   EXECUTE FUNCTION update_monitor_points_from_quiz();
 

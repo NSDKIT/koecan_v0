@@ -779,12 +779,23 @@ export default function MonitorDashboard() {
       let insertedResponse;
       if (existingResponse) {
         // 既存の回答を更新（再チャレンジ）
+        // まず、既存の回答を取得して、以前のポイントを確認
+        const { data: oldResponse, error: fetchOldError } = await supabase
+          .from('quiz_responses')
+          .select('points_earned')
+          .eq('id', existingResponse.id)
+          .single();
+        
+        const oldPointsEarned = oldResponse?.points_earned || 0;
+        const newPointsEarned = isPerfect ? selectedQuiz.points_reward : 0;
+        const pointsDifference = newPointsEarned - oldPointsEarned;
+
         const { error: updateError } = await supabase
           .from('quiz_responses')
           .update({
             answers: quizAnswers,
             score: score,
-            points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+            points_earned: newPointsEarned,
             completed_at: new Date().toISOString()
           })
           .eq('id', existingResponse.id);
@@ -794,11 +805,35 @@ export default function MonitorDashboard() {
           console.error('更新データ:', {
             answers: quizAnswers,
             score: score,
-            points_earned: isPerfect ? selectedQuiz.points_reward : 0,
+            points_earned: newPointsEarned,
             completed_at: new Date().toISOString()
           });
           alert(`クイズの送信に失敗しました: ${updateError.message || JSON.stringify(updateError)}`);
           throw updateError;
+        }
+
+        // ポイントが増えた場合、手動でプロフィールを更新（UPDATE時はトリガーが動作しないため）
+        if (pointsDifference > 0 && user.id) {
+          // 現在のポイントを取得
+          const { data: currentProfile, error: fetchProfileError } = await supabase
+            .from('monitor_profiles')
+            .select('points')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!fetchProfileError && currentProfile) {
+            const newPoints = (currentProfile.points || 0) + pointsDifference;
+            const { error: pointsUpdateError } = await supabase
+              .from('monitor_profiles')
+              .update({ points: newPoints })
+              .eq('user_id', user.id);
+
+            if (pointsUpdateError) {
+              console.warn('ポイント更新エラー（無視されます）:', pointsUpdateError);
+            } else {
+              console.log(`ポイントを更新しました: ${currentProfile.points} → ${newPoints}`);
+            }
+          }
         }
 
         // 更新後のデータを改めて取得
