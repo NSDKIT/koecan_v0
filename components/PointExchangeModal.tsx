@@ -18,15 +18,20 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingLineLink, setCheckingLineLink] = useState(true);
 
   // LINE連携状態をチェックする関数
   const checkLineLink = useCallback(async () => {
     if (!user) {
       setIsLineLinked(false);
+      setCheckingLineLink(false);
       return;
     }
 
+    setCheckingLineLink(true);
     try {
+      console.log('LINE連携状態をチェック中...', { userId: user.id });
+      
       const { data, error } = await supabase
         .from('user_line_links')
         .select('line_user_id, user_id, created_at')
@@ -36,7 +41,14 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       
       if (error) {
         console.error('LINE連携状態の取得エラー:', error);
+        console.error('エラー詳細:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         setIsLineLinked(false);
+        setCheckingLineLink(false);
         return;
       }
       
@@ -45,7 +57,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       setIsLineLinked(linked);
       
       // デバッグログ
-      console.log('LINE連携状態チェック:', {
+      console.log('LINE連携状態チェック結果:', {
         userId: user.id,
         hasData: !!data,
         lineUserId: data?.line_user_id,
@@ -55,6 +67,8 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     } catch (err) {
       console.error('LINE連携状態の確認エラー:', err);
       setIsLineLinked(false);
+    } finally {
+      setCheckingLineLink(false);
     }
   }, [user]);
 
@@ -66,7 +80,9 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   // モーダルが開かれた時にも再チェック（LINE連携直後に対応）
   useEffect(() => {
     // モーダルが開かれた直後にチェック
-    checkLineLink();
+    const timer = setTimeout(() => {
+      checkLineLink();
+    }, 100); // 少し遅延させて確実に実行
     
     // ページのフォーカス時にも再チェック（LINE連携後に戻ってきた場合）
     const handleFocus = () => {
@@ -74,7 +90,14 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     };
     window.addEventListener('focus', handleFocus);
     
+    // 定期的に再チェック（LINE連携直後に対応）
+    const interval = setInterval(() => {
+      checkLineLink();
+    }, 3000); // 3秒ごとにチェック
+    
     return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
     };
   }, [checkLineLink]);
@@ -251,10 +274,26 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             <p className="text-4xl font-bold text-yellow-700">{currentPoints}pt</p>
           </div>
 
-          {!isLineLinked && (
+          {checkingLineLink && (
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-800 text-sm">
+                🔄 LINE連携状態を確認中...
+              </p>
+            </div>
+          )}
+          
+          {!checkingLineLink && !isLineLinked && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-800 text-sm">
                 ⚠️ ポイント交換にはLINE連携が必要です。まずLINEアカウントと連携してください。
+              </p>
+            </div>
+          )}
+          
+          {!checkingLineLink && isLineLinked && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-800 text-sm">
+                ✅ LINE連携済みです。ポイント交換が可能です。
               </p>
             </div>
           )}
