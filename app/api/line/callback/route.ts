@@ -141,37 +141,55 @@ export async function GET(request: NextRequest) {
       lineUserId: lineUserId?.substring(0, 10) + '...', // セキュリティのため一部のみ表示
     });
 
-    // まず既存レコードを確認
-    console.log('既存レコードを確認中...', { userId });
-    const { data: existingData, error: selectError } = await supabase
+    // 既存レコードを確認（user_idとline_user_idの両方で確認）
+    console.log('既存レコードを確認中...', { userId, lineUserId: lineUserId?.substring(0, 10) + '...' });
+    
+    // user_idで既存レコードを確認
+    const { data: existingByUserId, error: selectErrorByUserId } = await supabase
       .from('user_line_links')
       .select('user_id, line_user_id')
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (selectError) {
-      console.error('既存レコード確認エラー:', {
-        message: selectError.message,
-        code: selectError.code,
-        details: selectError.details,
-        hint: selectError.hint,
-      });
-    } else {
-      console.log('既存レコード確認結果:', existingData ? '存在する' : '存在しない');
+    // line_user_idで既存レコードを確認
+    const { data: existingByLineUserId, error: selectErrorByLineUserId } = await supabase
+      .from('user_line_links')
+      .select('user_id, line_user_id')
+      .eq('line_user_id', lineUserId)
+      .maybeSingle();
+
+    if (selectErrorByUserId) {
+      console.error('user_idでの既存レコード確認エラー:', selectErrorByUserId);
+    }
+    if (selectErrorByLineUserId) {
+      console.error('line_user_idでの既存レコード確認エラー:', selectErrorByLineUserId);
     }
 
     let upsertData;
     let upsertError;
 
-    if (existingData) {
-      // 既存レコードがある場合はUPDATE
-      console.log('既存レコードを更新します:', existingData);
+    if (existingByUserId) {
+      // user_idで既存レコードがある場合はUPDATE
+      console.log('user_idで既存レコードを更新します:', existingByUserId);
       const { data: updateData, error: updateError } = await supabase
         .from('user_line_links')
         .update({
           line_user_id: lineUserId,
         })
         .eq('user_id', userId)
+        .select();
+
+      upsertData = updateData;
+      upsertError = updateError;
+    } else if (existingByLineUserId) {
+      // line_user_idで既存レコードがある場合はUPDATE（別のユーザーに紐づいている場合）
+      console.log('line_user_idで既存レコードを更新します（ユーザーを変更）:', existingByLineUserId);
+      const { data: updateData, error: updateError } = await supabase
+        .from('user_line_links')
+        .update({
+          user_id: userId,
+        })
+        .eq('line_user_id', lineUserId)
         .select();
 
       upsertData = updateData;
