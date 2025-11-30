@@ -25,7 +25,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Supabaseクライアントを作成（サーバーサイド用）
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // service_roleキーを使用することで、RLSポリシーをバイパスします
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+    
+    console.log('Supabaseクライアント作成完了（service_role使用）');
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -130,16 +138,47 @@ export async function GET(request: NextRequest) {
       lineUserId: lineUserId?.substring(0, 10) + '...', // セキュリティのため一部のみ表示
     });
 
-    const { data: upsertData, error: upsertError } = await supabase
+    // まず既存レコードを確認
+    const { data: existingData, error: selectError } = await supabase
       .from('user_line_links')
-      .upsert({
-        user_id: userId,
-        line_user_id: lineUserId,
-        // access_tokenは不要（LINE通知にはLINE_CHANNEL_ACCESS_TOKENを使用）
-      }, {
-        onConflict: 'user_id',
-      })
-      .select();
+      .select('user_id, line_user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (selectError) {
+      console.error('既存レコード確認エラー:', selectError);
+    }
+
+    let upsertData;
+    let upsertError;
+
+    if (existingData) {
+      // 既存レコードがある場合はUPDATE
+      console.log('既存レコードを更新します:', existingData);
+      const { data: updateData, error: updateError } = await supabase
+        .from('user_line_links')
+        .update({
+          line_user_id: lineUserId,
+        })
+        .eq('user_id', userId)
+        .select();
+
+      upsertData = updateData;
+      upsertError = updateError;
+    } else {
+      // 新規レコードの場合はINSERT
+      console.log('新規レコードを挿入します');
+      const { data: insertData, error: insertError } = await supabase
+        .from('user_line_links')
+        .insert({
+          user_id: userId,
+          line_user_id: lineUserId,
+        })
+        .select();
+
+      upsertData = insertData;
+      upsertError = insertError;
+    }
 
     if (upsertError) {
       console.error('LINE連携データ保存エラー:', upsertError);
