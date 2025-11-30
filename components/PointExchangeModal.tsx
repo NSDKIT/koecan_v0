@@ -142,6 +142,41 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
     try {
       // 1. ポイントを減算
+      console.log('ポイント減算開始:', { userId: user.id, pointsAmount });
+      
+      // まず現在のポイントを取得
+      const { data: currentProfile, error: fetchProfileError } = await supabase
+        .from('monitor_profiles')
+        .select('points')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchProfileError) {
+        console.error('現在のポイント取得エラー:', fetchProfileError);
+        throw new Error('現在のポイントを取得できませんでした');
+      }
+
+      const currentPoints = currentProfile?.points || 0;
+      const newPoints = currentPoints - pointsAmount;
+
+      if (newPoints < 0) {
+        throw new Error('ポイントが不足しています');
+      }
+
+      console.log('ポイント更新:', { currentPoints, pointsAmount, newPoints });
+
+      // monitor_profilesのpointsを更新
+      const { error: updatePointsError } = await supabase
+        .from('monitor_profiles')
+        .update({ points: newPoints })
+        .eq('user_id', user.id);
+
+      if (updatePointsError) {
+        console.error('ポイント更新エラー:', updatePointsError);
+        throw updatePointsError;
+      }
+
+      // point_transactionsに記録
       const { error: transactionError } = await supabase
         .from('point_transactions')
         .insert([
@@ -155,7 +190,10 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
       if (transactionError) {
         console.error('Point Transaction Error:', transactionError);
-        throw transactionError;
+        // ポイント更新は成功しているので、トランザクション記録のエラーは警告のみ
+        console.warn('ポイント取引の記録に失敗しましたが、ポイントは減算済みです');
+      } else {
+        console.log('ポイント減算完了:', { currentPoints, newPoints });
       }
 
       // 2. Giftee APIを呼び出してギフトを送信
