@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface PointExchangeModalProps {
   currentPoints: number;
   onClose: () => void;
-  onExchangeSuccess: () => void;
+  onExchangeSuccess: (newPoints: number) => void;
 }
 
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
@@ -341,7 +341,8 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       }
 
       alert(`🎉 ポイント交換が完了しました！\n${exchangeName} ${pointsAmount}pt分のギフトをLINEでお送りしました。`);
-      onExchangeSuccess(); 
+      // リアルタイムでポイントを更新
+      onExchangeSuccess(newPoints); 
       onClose();
     } catch (err) {
       console.error('Error during point exchange:', err); 

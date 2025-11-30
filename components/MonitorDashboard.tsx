@@ -2647,7 +2647,14 @@ export default function MonitorDashboard() {
         <PointExchangeModal
           currentPoints={profile.points}
           onClose={() => setShowPointExchangeModal(false)}
-          onExchangeSuccess={fetchProfile}
+          onExchangeSuccess={(newPoints) => {
+            // リアルタイムでポイントを更新
+            if (profile) {
+              setProfile({ ...profile, points: newPoints });
+            }
+            // バックグラウンドでプロフィールを再取得して同期
+            fetchProfile();
+          }}
         />
       )}
 
