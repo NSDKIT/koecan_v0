@@ -139,7 +139,7 @@ export function AuthForm({ onBack }: AuthFormProps) {
     } catch (err) {
       console.error('Auth error:', err);
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
-      setLoading(false);
+        setLoading(false);
     }
   };
 

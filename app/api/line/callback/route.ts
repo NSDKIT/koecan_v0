@@ -47,16 +47,70 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // stateからuserIdを復元
-    let userId: string;
+    // stateから一時トークンを復元
+    let tempToken: string;
     try {
-      const decodedState = atob(state);
+      // URL-safe base64デコード（- → +, _ → /, パディング追加）
+      let stateBase64 = state.replace(/-/g, '+').replace(/_/g, '/');
+      // パディングを追加（必要に応じて）
+      while (stateBase64.length % 4) {
+        stateBase64 += '=';
+      }
+      const decodedState = Buffer.from(stateBase64, 'base64').toString('utf-8');
       const stateData = JSON.parse(decodedState);
-      userId = stateData.userId;
+      tempToken = stateData.token;
+      console.log('State復号化成功。トークン:', tempToken?.substring(0, 8) + '...');
     } catch (err) {
       console.error('State復号化エラー:', err);
       return NextResponse.redirect(
         new URL('/?line_link_status=failure&error=認証情報の検証に失敗しました', request.url)
+      );
+    }
+
+    if (!tempToken) {
+      console.error('トークンが抽出できませんでした');
+      return NextResponse.redirect(
+        new URL('/?line_link_status=failure&error=トークンが抽出できませんでした', request.url)
+      );
+    }
+
+    // 一時トークンからユーザーIDを取得
+    let userId: string;
+    try {
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('line_link_sessions')
+        .select('user_id, expires_at')
+        .eq('token', tempToken)
+        .single();
+
+      if (sessionError || !sessionData) {
+        console.error('セッション取得エラー:', sessionError);
+        return NextResponse.redirect(
+          new URL('/?line_link_status=failure&error=セッションが見つかりません', request.url)
+        );
+      }
+
+      // 期限チェック
+      const expiresAt = new Date(sessionData.expires_at);
+      if (expiresAt < new Date()) {
+        console.error('セッションの期限が切れています');
+        return NextResponse.redirect(
+          new URL('/?line_link_status=failure&error=セッションの期限が切れています', request.url)
+        );
+      }
+
+      userId = sessionData.user_id;
+      console.log('ユーザーID取得成功:', userId);
+
+      // セッションを削除（使い捨て）
+      await supabase
+        .from('line_link_sessions')
+        .delete()
+        .eq('token', tempToken);
+    } catch (err) {
+      console.error('セッション取得中にエラー:', err);
+      return NextResponse.redirect(
+        new URL('/?line_link_status=failure&error=セッション取得に失敗しました', request.url)
       );
     }
 
