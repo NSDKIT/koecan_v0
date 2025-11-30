@@ -22,15 +22,25 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   // LINE連携状態をチェック
   useEffect(() => {
     const checkLineLink = async () => {
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('user_line_links')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .limit(1)
-        .single();
-      
-      setIsLineLinked(!!data);
+      if (!user) {
+        setIsLineLinked(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('user_line_links')
+          .select('line_user_id')
+          .eq('user_id', user.id)
+          .limit(1)
+          .maybeSingle(); // .single()ではなく.maybeSingle()を使用（レコードが存在しない場合もエラーにならない）
+        
+        // line_user_idが存在し、かつNULLでない場合のみ連携済みと判定
+        setIsLineLinked(!!(data && data.line_user_id));
+      } catch (err) {
+        console.error('LINE連携状態の確認エラー:', err);
+        setIsLineLinked(false);
+      }
     };
 
     checkLineLink();
