@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Gift, Send, Loader2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,32 +19,65 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // LINE連携状態をチェック
-  useEffect(() => {
-    const checkLineLink = async () => {
-      if (!user) {
+  // LINE連携状態をチェックする関数
+  const checkLineLink = useCallback(async () => {
+    if (!user) {
+      setIsLineLinked(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_line_links')
+        .select('line_user_id, user_id, created_at')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('LINE連携状態の取得エラー:', error);
         setIsLineLinked(false);
         return;
       }
-
-      try {
-        const { data, error } = await supabase
-          .from('user_line_links')
-          .select('line_user_id')
-          .eq('user_id', user.id)
-          .limit(1)
-          .maybeSingle(); // .single()ではなく.maybeSingle()を使用（レコードが存在しない場合もエラーにならない）
-        
-        // line_user_idが存在し、かつNULLでない場合のみ連携済みと判定
-        setIsLineLinked(!!(data && data.line_user_id));
-      } catch (err) {
-        console.error('LINE連携状態の確認エラー:', err);
-        setIsLineLinked(false);
-      }
-    };
-
-    checkLineLink();
+      
+      // line_user_idが存在し、かつNULLでない場合のみ連携済みと判定
+      const linked = !!(data && data.line_user_id && data.line_user_id.trim() !== '');
+      setIsLineLinked(linked);
+      
+      // デバッグログ
+      console.log('LINE連携状態チェック:', {
+        userId: user.id,
+        hasData: !!data,
+        lineUserId: data?.line_user_id,
+        isLinked: linked,
+        fullData: data
+      });
+    } catch (err) {
+      console.error('LINE連携状態の確認エラー:', err);
+      setIsLineLinked(false);
+    }
   }, [user]);
+
+  // ユーザーが変わった時とモーダルが開かれた時にチェック
+  useEffect(() => {
+    checkLineLink();
+  }, [checkLineLink]);
+
+  // モーダルが開かれた時にも再チェック（LINE連携直後に対応）
+  useEffect(() => {
+    // モーダルが開かれた直後にチェック
+    checkLineLink();
+    
+    // ページのフォーカス時にも再チェック（LINE連携後に戻ってきた場合）
+    const handleFocus = () => {
+      checkLineLink();
+    };
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [checkLineLink]);
 
   const availableExchangeOptions: {
     type: 'erabepay' | 'erabegift';

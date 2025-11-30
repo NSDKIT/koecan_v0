@@ -59,19 +59,23 @@ export function LineLinkButton() {
         // ② LINE 認証 URL の生成
         const encodedRedirectUri = encodeURIComponent(LINE_REDIRECT_URI); 
 
-        // ★★★ 修正箇所: 文字列結合を修正し、リダイレクト処理を有効に戻す ★★★
+        // LINE Login v2.1の認証URLを生成
+        // bot_promptは削除（OAuth認証URLでは使用不可）
         const lineAuthUrl = `https://access.line.me/oauth2/v2.1/authorize?` +
             `response_type=code` +
             `&client_id=${LINE_CLIENT_ID}` +
-            `&redirect_uri=${encodedRedirectUri}` + // <-- 余分な + を削除
-            `&scope=${SCOPE}` +
-            `&state=${encodedState}` +
-            `&prompt=${PROMPT}` +
-            `&bot_prompt=${BOT_PROMPT}`;
+            `&redirect_uri=${encodedRedirectUri}` +
+            `&scope=${encodeURIComponent(SCOPE)}` +
+            `&state=${encodeURIComponent(encodedState)}` +
+            `&prompt=${PROMPT}`;
+        
+        // デバッグ用ログ（本番環境では削除推奨）
+        console.log('LINE認証URL:', lineAuthUrl);
+        console.log('Redirect URI:', LINE_REDIRECT_URI);
+        console.log('Client ID:', LINE_CLIENT_ID);
         
         // ③ リダイレクト
         window.location.href = lineAuthUrl;
-        // ★★★ 修正箇所ここまで ★★★
 
 
     } catch (e) {

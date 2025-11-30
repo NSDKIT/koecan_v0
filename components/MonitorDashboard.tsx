@@ -108,6 +108,7 @@ export default function MonitorDashboard() {
   const [showCompanyPersonalityTypeModal, setShowCompanyPersonalityTypeModal] = useState(false);
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
+  const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [companyDetailView, setCompanyDetailView] = useState<'info' | 'personality'>('info'); // 企業詳細の表示モード
   const [showQuizAnswersModal, setShowQuizAnswersModal] = useState(false);
   const [quizForAnswers, setQuizForAnswers] = useState<Quiz | null>(null);
@@ -613,6 +614,39 @@ export default function MonitorDashboard() {
     };
   }, [user, authLoading]); 
 
+  // LINE連携状態をチェック
+  const checkLineLinkStatus = useCallback(async () => {
+    if (!user) {
+      setIsLineLinked(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('user_line_links')
+        .select('line_user_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('LINE連携状態の取得エラー:', error);
+        setIsLineLinked(false);
+        return;
+      }
+      
+      const linked = !!(data && data.line_user_id && data.line_user_id.trim() !== '');
+      setIsLineLinked(linked);
+    } catch (err) {
+      console.error('LINE連携状態の確認エラー:', err);
+      setIsLineLinked(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    checkLineLinkStatus();
+  }, [checkLineLinkStatus]);
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('line_link_status');
@@ -620,6 +654,8 @@ export default function MonitorDashboard() {
 
     if (status === 'success') {
       alert('✅ LINE連携が完了しました！今後はLINEで通知を受け取れます。');
+      // LINE連携成功時は状態を再チェック
+      checkLineLinkStatus();
     } else if (status === 'failure') {
       alert(`❌ LINE連携に失敗しました。\nエラー: ${errorMsg || '不明なエラー'}`);
     }
@@ -628,7 +664,7 @@ export default function MonitorDashboard() {
         history.replaceState(null, '', window.location.pathname);
     }
     
-  }, []);
+  }, [checkLineLinkStatus]);
 
   const handleSurveyClick = async (survey: Survey) => {
     try {
@@ -1168,26 +1204,26 @@ export default function MonitorDashboard() {
                           ? currentAnswersArray.includes(option)
                           : currentAnswer === option;
                         return (
-                          <label key={optionIndex} className="flex items-center">
-                            <input
-                              type={question.is_multiple_select ? 'checkbox' : 'radio'}
-                              name={`question_${question.id}`}
-                              value={option}
+                        <label key={optionIndex} className="flex items-center">
+                          <input
+                            type={question.is_multiple_select ? 'checkbox' : 'radio'}
+                            name={`question_${question.id}`}
+                            value={option}
                               checked={isChecked}
-                              onChange={(e) => {
-                                if (question.is_multiple_select) {
+                            onChange={(e) => {
+                              if (question.is_multiple_select) {
                                   const updated = e.target.checked
                                     ? [...currentAnswersArray, option]
                                     : currentAnswersArray.filter(a => a !== option);
                                   handleAnswerChange(question.id, updated.join(', '));
-                                } else {
-                                  handleAnswerChange(question.id, option);
-                                }
-                              }}
-                              className="mr-2"
-                            />
-                            <span>{option}</span>
-                          </label>
+                              } else {
+                                handleAnswerChange(question.id, option);
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span>{option}</span>
+                        </label>
                         );
                       })}
                     </div>
@@ -1435,13 +1471,20 @@ export default function MonitorDashboard() {
               </div>
               
               <div className="flex items-center space-x-4">
-                <button 
-                  onClick={() => setShowLineLinkModal(true)}
-                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4 mr-1" />
-                  LINE連携
-                </button>
+                {isLineLinked ? (
+                  <div className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    LINE連携済み
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setShowLineLinkModal(true)}
+                    className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    LINE連携
+                  </button>
+                )}
                 
                 <button
                   ref={menuButtonRef}
@@ -2581,7 +2624,14 @@ export default function MonitorDashboard() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
                   <div className="flex justify-end p-4">
-                      <button onClick={() => setShowLineLinkModal(false)} className="text-gray-500 hover:text-gray-700">
+                      <button 
+                        onClick={() => {
+                          setShowLineLinkModal(false);
+                          // モーダルを閉じた後にLINE連携状態を再チェック
+                          setTimeout(() => checkLineLinkStatus(), 500);
+                        }} 
+                        className="text-gray-500 hover:text-gray-700"
+                      >
                           <X className="w-6 h-6" />
                       </button>
                   </div>
