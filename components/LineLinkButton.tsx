@@ -7,10 +7,10 @@ import { MessageSquare, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 // import { v4 as uuidv4 } from 'uuid'; // ★★★ 削除: uuidライブラリへの依存を解消 ★★★
 
-// 環境変数からGASのCallback URLとLINEのChannel IDを読み込む (ここでは仮のプレースホルダを使用)
+// 環境変数からNext.js APIルートのCallback URLとLINEのChannel IDを読み込む
 // 実際には .env.local にて定義が必要です。
 const LINE_CLIENT_ID = process.env.NEXT_PUBLIC_LINE_CLIENT_ID || 'YOUR_LINE_CHANNEL_ID';
-const LINE_REDIRECT_URI = process.env.NEXT_PUBLIC_LINE_REDIRECT_URI || 'YOUR_GAS_WEB_APP_URL';
+const LINE_REDIRECT_URI = process.env.NEXT_PUBLIC_LINE_REDIRECT_URI || 'YOUR_REDIRECT_URI';
 
 // 必須スコープ: profileとopenidは必須
 const SCOPE = 'profile openid'; 
@@ -42,7 +42,7 @@ export function LineLinkButton() {
     }
     
     // 環境変数チェック
-    if (LINE_CLIENT_ID === 'YOUR_LINE_CHANNEL_ID' || LINE_REDIRECT_URI === 'YOUR_GAS_WEB_APP_URL') {
+    if (LINE_CLIENT_ID === 'YOUR_LINE_CHANNEL_ID' || LINE_REDIRECT_URI === 'YOUR_REDIRECT_URI') {
          setError('環境変数(NEXT_PUBLIC_LINE_CLIENT_ID, NEXT_PUBLIC_LINE_REDIRECT_URI)を設定してください。');
          return;
     }

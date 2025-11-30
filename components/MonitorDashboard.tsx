@@ -109,6 +109,7 @@ export default function MonitorDashboard() {
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
   const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
+  const [lineUserId, setLineUserId] = useState<string | null>(null);
   const [companyDetailView, setCompanyDetailView] = useState<'info' | 'personality'>('info'); // 企業詳細の表示モード
   const [showQuizAnswersModal, setShowQuizAnswersModal] = useState(false);
   const [quizForAnswers, setQuizForAnswers] = useState<Quiz | null>(null);
@@ -618,6 +619,7 @@ export default function MonitorDashboard() {
   const checkLineLinkStatus = useCallback(async () => {
     if (!user) {
       setIsLineLinked(false);
+      setLineUserId(null);
       return;
     }
 
@@ -632,14 +634,17 @@ export default function MonitorDashboard() {
       if (error) {
         console.error('LINE連携状態の取得エラー:', error);
         setIsLineLinked(false);
+        setLineUserId(null);
         return;
       }
       
       const linked = !!(data && data.line_user_id && data.line_user_id.trim() !== '');
       setIsLineLinked(linked);
+      setLineUserId(linked ? data.line_user_id : null);
     } catch (err) {
       console.error('LINE連携状態の確認エラー:', err);
       setIsLineLinked(false);
+      setLineUserId(null);
     }
   }, [user]);
 
@@ -1472,9 +1477,16 @@ export default function MonitorDashboard() {
               
               <div className="flex items-center space-x-4">
                 {isLineLinked ? (
-                  <div className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    LINE連携済み
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-1">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      LINE連携済み
+                    </div>
+                    {lineUserId && (
+                      <div className="text-xs text-gray-500 font-mono">
+                        ID: {lineUserId.substring(0, 8)}...
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <button 
