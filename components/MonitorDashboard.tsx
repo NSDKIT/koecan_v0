@@ -1897,14 +1897,14 @@ export default function MonitorDashboard() {
               <>
                 <div className="flex flex-col items-center w-full">
                     <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_top_v2.png"
+                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/top_20251130.png"
                         alt="キャリア相談 上部"
                         className="w-full h-auto object-cover"
                     />
                     
                     <div className="relative w-full">
                         <img 
-                            src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_middle_v2.png"
+                            src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/down_20251130.png"
                             alt="キャリア相談 中部"
                             className="w-full h-auto object-cover"
                         />
@@ -1921,12 +1921,6 @@ export default function MonitorDashboard() {
                             </a>
                         </div>
                     </div>
-
-                    <img 
-                        src="https://raw.githubusercontent.com/NSDKIT/koecan_v0/refs/heads/main/img/c8_down_v2.png"
-                        alt="キャリア相談 下部"
-                        className="w-full h-auto object-cover"
-                    />
                 </div>
               </>
             )}
