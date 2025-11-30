@@ -77,14 +77,66 @@ export async function GET(request: NextRequest) {
     // 一時トークンからユーザーIDを取得
     let userId: string;
     try {
+      console.log('セッション検索開始:', {
+        token: tempToken?.substring(0, 8) + '...',
+        tokenLength: tempToken?.length
+      });
+
       const { data: sessionData, error: sessionError } = await supabase
         .from('line_link_sessions')
-        .select('user_id, expires_at')
+        .select('user_id, expires_at, created_at')
         .eq('token', tempToken)
         .single();
 
-      if (sessionError || !sessionData) {
-        console.error('セッション取得エラー:', sessionError);
+      console.log('セッション検索結果:', {
+        hasData: !!sessionData,
+        hasError: !!sessionError,
+        error: sessionError ? {
+          message: sessionError.message,
+          code: sessionError.code,
+          details: sessionError.details,
+          hint: sessionError.hint
+        } : null,
+        data: sessionData ? {
+          user_id: sessionData.user_id,
+          expires_at: sessionData.expires_at,
+          created_at: sessionData.created_at
+        } : null
+      });
+
+      if (sessionError) {
+        console.error('セッション取得エラー詳細:', {
+          message: sessionError.message,
+          code: sessionError.code,
+          details: sessionError.details,
+          hint: sessionError.hint
+        });
+
+        // エラーコードに応じた詳細なメッセージ
+        let errorMessage = 'セッションが見つかりません';
+        if (sessionError.code === 'PGRST116') {
+          errorMessage = 'セッションが見つかりません（テーブルが存在しないか、データがありません）';
+        } else if (sessionError.code === '42501') {
+          errorMessage = 'セッション取得権限がありません（RLSポリシーを確認してください）';
+        }
+
+        return NextResponse.redirect(
+          new URL(`/?line_link_status=failure&error=${encodeURIComponent(errorMessage)}`, request.url)
+        );
+      }
+
+      if (!sessionData) {
+        console.error('セッションデータがnullです');
+        
+        // デバッグ用: テーブル内の最新セッションを確認
+        const { data: debugData } = await supabase
+          .from('line_link_sessions')
+          .select('token, user_id, expires_at, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        console.log('デバッグ: テーブル内の最新セッション（最新5件）:', debugData);
+        
         return NextResponse.redirect(
           new URL('/?line_link_status=failure&error=セッションが見つかりません', request.url)
         );
