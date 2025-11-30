@@ -79,14 +79,16 @@ export async function GET(request: NextRequest) {
     try {
       console.log('セッション検索開始:', {
         token: tempToken?.substring(0, 8) + '...',
+        tokenFull: tempToken, // デバッグ用にフルトークンを表示
         tokenLength: tempToken?.length
       });
 
+      // トークンで検索（.maybeSingle()を使用して0行でもエラーにしない）
       const { data: sessionData, error: sessionError } = await supabase
         .from('line_link_sessions')
-        .select('user_id, expires_at, created_at')
+        .select('user_id, expires_at, created_at, token')
         .eq('token', tempToken)
-        .single();
+        .maybeSingle();
 
       console.log('セッション検索結果:', {
         hasData: !!sessionData,
@@ -100,9 +102,29 @@ export async function GET(request: NextRequest) {
         data: sessionData ? {
           user_id: sessionData.user_id,
           expires_at: sessionData.expires_at,
-          created_at: sessionData.created_at
+          created_at: sessionData.created_at,
+          token: sessionData.token // デバッグ用にトークンも表示
         } : null
       });
+
+      // デバッグ用: テーブル内の最新セッションを確認（トークン比較用）
+      if (!sessionData) {
+        const { data: debugData } = await supabase
+          .from('line_link_sessions')
+          .select('token, user_id, expires_at, created_at')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        console.log('デバッグ: テーブル内の最新セッション（最新5件）:', debugData);
+        console.log('デバッグ: 検索したトークンと比較:', {
+          searchedToken: tempToken,
+          tokensInDB: debugData?.map(s => ({
+            token: s.token,
+            matches: s.token === tempToken,
+            first8: s.token?.substring(0, 8)
+          }))
+        });
+      }
 
       if (sessionError) {
         console.error('セッション取得エラー詳細:', {
