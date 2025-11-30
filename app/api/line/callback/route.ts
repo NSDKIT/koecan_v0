@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
       .upsert({
         user_id: userId,
         line_user_id: lineUserId,
-        access_token: accessToken, // 必要に応じて保存（セキュリティに注意）
+        // access_tokenは不要（LINE通知にはLINE_CHANNEL_ACCESS_TOKENを使用）
       }, {
         onConflict: 'user_id',
       })
