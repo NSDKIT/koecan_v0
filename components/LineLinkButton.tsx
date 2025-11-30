@@ -51,20 +51,54 @@ export function LineLinkButton() {
         const tempToken = crypto.randomUUID();
         const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000);
 
-        const { error: sessionError } = await supabase
+        console.log('セッション作成を試行中...', {
+          token: tempToken.substring(0, 8) + '...',
+          userId: user.id,
+          expiresAt: expiresAt.toISOString()
+        });
+
+        const { data: sessionData, error: sessionError } = await supabase
           .from('line_link_sessions')
           .insert({
             token: tempToken,
             user_id: user.id,
             expires_at: expiresAt.toISOString(),
-          });
+          })
+          .select();
 
         if (sessionError) {
-          console.error('セッション作成失敗', sessionError);
-          setError('セッションの作成に失敗しました。再度お試しください。');
+          console.error('セッション作成失敗 - 詳細:', {
+            message: sessionError.message,
+            code: sessionError.code,
+            details: sessionError.details,
+            hint: sessionError.hint,
+            status: (sessionError as any)?.status,
+            statusText: (sessionError as any)?.statusText
+          });
+          
+          // より詳細なエラーメッセージを表示
+          let errorMessage = 'セッションの作成に失敗しました。';
+          if (sessionError.message) {
+            errorMessage += `\n\nエラー: ${sessionError.message}`;
+          }
+          if (sessionError.code) {
+            errorMessage += `\nコード: ${sessionError.code}`;
+          }
+          if (sessionError.hint) {
+            errorMessage += `\nヒント: ${sessionError.hint}`;
+          }
+          if (sessionError.code === '42P01') {
+            errorMessage += '\n\nテーブル "line_link_sessions" が存在しません。Supabaseでテーブルを作成してください。';
+          } else if (sessionError.code === '42501') {
+            errorMessage += '\n\nRLSポリシーが正しく設定されていない可能性があります。';
+          }
+          
+          setError(errorMessage);
           setLoading(false);
           return;
         }
+
+        console.log('セッション作成成功:', sessionData);
 
         // 2. stateにトークンを含める（URL-safe base64エンコード）
         const stateObject = {
