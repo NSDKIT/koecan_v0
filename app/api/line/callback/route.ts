@@ -144,8 +144,24 @@ export async function GET(request: NextRequest) {
 
       // 期限チェック
       const expiresAt = new Date(sessionData.expires_at);
-      if (expiresAt < new Date()) {
-        console.error('セッションの期限が切れています');
+      const now = new Date();
+      
+      console.log('期限チェック:', {
+        expiresAt: expiresAt.toISOString(),
+        now: now.toISOString(),
+        expiresAtLocal: expiresAt.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }),
+        nowLocal: now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }),
+        isExpired: expiresAt < now,
+        timeDiff: expiresAt.getTime() - now.getTime(),
+        timeDiffMinutes: Math.floor((expiresAt.getTime() - now.getTime()) / 1000 / 60)
+      });
+      
+      if (expiresAt < now) {
+        console.error('セッションの期限が切れています', {
+          expiresAt: expiresAt.toISOString(),
+          now: now.toISOString(),
+          diff: expiresAt.getTime() - now.getTime()
+        });
         return NextResponse.redirect(
           new URL('/?line_link_status=failure&error=セッションの期限が切れています', request.url)
         );
