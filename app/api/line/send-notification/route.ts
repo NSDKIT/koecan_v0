@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabaseクライアントを作成（サーバーサイド用）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 // LINE Messaging API設定
-const LINE_CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
 const LINE_MESSAGING_API_URL = 'https://api.line.me/v2/bot/message/push';
 
 export async function POST(request: NextRequest) {
   try {
+    // 環境変数のチェック
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const lineChannelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase環境変数が設定されていません');
+      return NextResponse.json(
+        { error: 'サーバー設定エラー: Supabase環境変数が設定されていません' },
+        { status: 500 }
+      );
+    }
+
+    // Supabaseクライアントを作成（サーバーサイド用）
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const body = await request.json();
     const { userId, message } = body;
 
@@ -19,6 +29,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '必要なパラメータが不足しています' },
         { status: 400 }
+      );
+    }
+
+    if (!lineChannelAccessToken) {
+      return NextResponse.json(
+        { error: 'サーバー設定エラー: LINE_CHANNEL_ACCESS_TOKENが設定されていません' },
+        { status: 500 }
       );
     }
 
@@ -40,7 +57,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(LINE_MESSAGING_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${lineChannelAccessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
