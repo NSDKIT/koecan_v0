@@ -111,7 +111,12 @@ export async function GET(request: NextRequest) {
     }
 
     // user_line_linksテーブルに保存または更新
-    const { error: upsertError } = await supabase
+    console.log('LINE連携データを保存中...', {
+      userId,
+      lineUserId: lineUserId?.substring(0, 10) + '...', // セキュリティのため一部のみ表示
+    });
+
+    const { data: upsertData, error: upsertError } = await supabase
       .from('user_line_links')
       .upsert({
         user_id: userId,
@@ -119,14 +124,27 @@ export async function GET(request: NextRequest) {
         access_token: accessToken, // 必要に応じて保存（セキュリティに注意）
       }, {
         onConflict: 'user_id',
-      });
+      })
+      .select();
 
     if (upsertError) {
       console.error('LINE連携データ保存エラー:', upsertError);
+      console.error('エラー詳細:', {
+        message: upsertError.message,
+        details: upsertError.details,
+        hint: upsertError.hint,
+        code: upsertError.code
+      });
       return NextResponse.redirect(
-        new URL('/?line_link_status=failure&error=データ保存に失敗しました', request.url)
+        new URL(`/?line_link_status=failure&error=データ保存に失敗しました: ${encodeURIComponent(upsertError.message || '不明なエラー')}`, request.url)
       );
     }
+
+    console.log('LINE連携データ保存成功:', {
+      userId,
+      lineUserId: lineUserId?.substring(0, 10) + '...',
+      saved: !!upsertData
+    });
 
     // 成功時はリダイレクト
     return NextResponse.redirect(
