@@ -218,25 +218,39 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       }
 
       // 3. 交換リクエストを記録（完了済みとして）
-      const { error: requestError } = await supabase
+      const exchangeRequestData = {
+        monitor_id: user.id,
+        exchange_type: exchangeType,
+        points_amount: pointsAmount,
+        contact_type: 'line_push',
+        exchange_contact: null,
+        contact_info: 'LINE連携済み',
+        status: 'completed',
+        processed_at: new Date().toISOString(),
+        reward_detail: giftCardUrl, // URLを直接保存
+      };
+
+      console.log('交換リクエスト記録開始:', exchangeRequestData);
+
+      const { data: requestData, error: requestError } = await supabase
         .from('point_exchange_requests')
-        .insert([
-          {
-            monitor_id: user.id,
-            exchange_type: exchangeType,
-            points_amount: pointsAmount,
-            contact_type: 'line_push',
-            exchange_contact: null,
-            contact_info: 'LINE連携済み',
-            status: 'completed',
-            processed_at: new Date().toISOString(),
-            reward_detail: giftCardUrl, // URLを直接保存
-          },
-        ]);
+        .insert([exchangeRequestData])
+        .select();
 
       if (requestError) {
-        console.error('Exchange Request Error:', requestError);
+        console.error('Exchange Request Error:', {
+          message: requestError.message,
+          code: requestError.code,
+          details: requestError.details,
+          hint: requestError.hint,
+          requestData: exchangeRequestData,
+        });
+        
         // エラーをログに記録するが、処理は続行（ギフトは既に送信済み）
+        // ただし、ユーザーには警告を表示
+        console.warn('交換リクエストの記録に失敗しましたが、ギフトは送信済みです。エラー:', requestError.message);
+      } else {
+        console.log('交換リクエスト記録成功:', requestData);
       }
 
       // 4. LINE通知を送信（URLを含める）
