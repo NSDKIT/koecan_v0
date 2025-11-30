@@ -108,9 +108,14 @@ export function LineLinkButton() {
           return;
         }
 
-        // セッション作成が完了したことを確認するため、少し待機（オプション）
+        // セッション作成が完了したことを確認するため、500ms待機を5回繰り返す
         // データベースへの書き込みが完全に反映されるのを待つ
-        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('データベースへの書き込み反映を待機中...');
+        for (let i = 0; i < 5; i++) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log(`待機中... (${i + 1}/5)`);
+        }
+        console.log('待機完了、リダイレクト準備完了');
 
         // 2. stateにトークンを含める（URL-safe base64エンコード）
         const stateObject = {
