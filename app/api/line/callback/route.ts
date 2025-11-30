@@ -26,10 +26,19 @@ export async function GET(request: NextRequest) {
 
     // Supabaseクライアントを作成（サーバーサイド用）
     // service_roleキーを使用することで、RLSポリシーをバイパスします
+    console.log('Supabaseクライアント作成開始...', {
+      supabaseUrl: supabaseUrl?.substring(0, 30) + '...',
+      serviceKeyLength: supabaseServiceKey?.length,
+      serviceKeyPrefix: supabaseServiceKey?.substring(0, 20) + '...',
+    });
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
+      },
+      db: {
+        schema: 'public',
       },
     });
     
@@ -139,6 +148,7 @@ export async function GET(request: NextRequest) {
     });
 
     // まず既存レコードを確認
+    console.log('既存レコードを確認中...', { userId });
     const { data: existingData, error: selectError } = await supabase
       .from('user_line_links')
       .select('user_id, line_user_id')
@@ -146,7 +156,14 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (selectError) {
-      console.error('既存レコード確認エラー:', selectError);
+      console.error('既存レコード確認エラー:', {
+        message: selectError.message,
+        code: selectError.code,
+        details: selectError.details,
+        hint: selectError.hint,
+      });
+    } else {
+      console.log('既存レコード確認結果:', existingData ? '存在する' : '存在しない');
     }
 
     let upsertData;
