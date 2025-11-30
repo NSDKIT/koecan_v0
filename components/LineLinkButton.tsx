@@ -32,6 +32,11 @@ export function LineLinkButton() {
       return;
     }
     
+    if (!supabase) {
+      setError('Supabaseクライアントが初期化されていません。');
+      return;
+    }
+    
     // 環境変数チェック
     if (LINE_CLIENT_ID === 'YOUR_LINE_CHANNEL_ID' || LINE_REDIRECT_URI === 'YOUR_REDIRECT_URI') {
          setError('環境変数(NEXT_PUBLIC_LINE_CLIENT_ID, NEXT_PUBLIC_LINE_REDIRECT_URI)を設定してください。');
