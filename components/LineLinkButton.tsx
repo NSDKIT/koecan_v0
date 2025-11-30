@@ -114,6 +114,22 @@ export function LineLinkButton() {
         for (let i = 0; i < 5; i++) {
           await new Promise(resolve => setTimeout(resolve, 500));
           console.log(`待機中... (${i + 1}/5)`);
+          
+          // 各待機後に、セッションが実際にデータベースに保存されているか確認
+          const { data: verifyData, error: verifyError } = await supabase
+            .from('line_link_sessions')
+            .select('token, user_id, expires_at, created_at')
+            .eq('token', tempToken)
+            .maybeSingle();
+          
+          console.log(`待機${i + 1}回目後の検証:`, {
+            found: !!verifyData,
+            token: verifyData?.token,
+            error: verifyError ? {
+              message: verifyError.message,
+              code: verifyError.code
+            } : null
+          });
         }
         console.log('待機完了、リダイレクト準備完了');
 
