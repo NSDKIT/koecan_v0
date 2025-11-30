@@ -109,6 +109,10 @@ export default function MonitorDashboard() {
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
   const [companyDetailView, setCompanyDetailView] = useState<'info' | 'personality'>('info'); // 企業詳細の表示モード
+  const [showQuizAnswersModal, setShowQuizAnswersModal] = useState(false);
+  const [quizForAnswers, setQuizForAnswers] = useState<Quiz | null>(null);
+  const [quizAnswersQuestions, setQuizAnswersQuestions] = useState<QuizQuestion[]>([]);
+  const [showPerfectScoreMessage, setShowPerfectScoreMessage] = useState(false);
   
   // フィルター関連のstate
   const [showIndustryFilter, setShowIndustryFilter] = useState(false);
@@ -913,7 +917,11 @@ export default function MonitorDashboard() {
 
       // メッセージを表示
       if (isPerfect) {
-        alert(`🎉 全問正解です！${selectedQuiz.points_reward}ポイントを獲得しました！`);
+        // 全問正解時は正解を表示するモーダルを開く（モーダル内で成功メッセージを表示）
+        setQuizForAnswers(selectedQuiz);
+        setQuizAnswersQuestions(quizQuestions);
+        setShowPerfectScoreMessage(true);
+        setShowQuizAnswersModal(true);
       } else {
         alert(`正答率: ${score}%\n全問正解でないため、ポイントは付与されませんでした。\nもう一度チャレンジできます！`);
       }
@@ -1746,6 +1754,31 @@ export default function MonitorDashboard() {
                               <Gift className="w-5 h-5 mr-2" />
                               <span>{quiz.points_reward}pt 獲得済み</span>
                             </div>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const { data: questions, error } = await supabase
+                                    .from('quiz_questions')
+                                    .select('*')
+                                    .eq('quiz_id', quiz.id)
+                                    .order('order_index');
+                                  
+                                  if (error) throw error;
+                                  
+                                  setQuizForAnswers(quiz);
+                                  setQuizAnswersQuestions(questions || []);
+                                  setShowPerfectScoreMessage(false); // 回答済みクイズでは成功メッセージを表示しない
+                                  setShowQuizAnswersModal(true);
+                                } catch (error) {
+                                  console.error('クイズ質問の取得エラー:', error);
+                                  alert('正解の読み込みに失敗しました。');
+                                }
+                              }}
+                              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              正解を見る
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -2578,6 +2611,155 @@ export default function MonitorDashboard() {
             setShowPersonalityFilter(false);
           }}
         />
+      )}
+
+      {/* クイズ正解表示モーダル */}
+      {showQuizAnswersModal && quizForAnswers && quizAnswersQuestions.length > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                <Trophy className="w-6 h-6 mr-2 text-purple-600" />
+                {quizForAnswers.title} - 正解一覧
+              </h2>
+              <button
+                onClick={() => {
+                  setShowQuizAnswersModal(false);
+                  setQuizForAnswers(null);
+                  setQuizAnswersQuestions([]);
+                  setShowPerfectScoreMessage(false);
+                }}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* 全問正解時の成功メッセージ */}
+              {showPerfectScoreMessage && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl p-6 mb-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                      <CheckCircle className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-green-800 mb-1">
+                        🎉 全問正解です！
+                      </h3>
+                      <p className="text-green-700">
+                        {quizForAnswers.points_reward}ポイントを獲得しました！
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {quizAnswersQuestions.map((question, index) => (
+                <div key={question.id} className="border border-gray-200 rounded-xl p-6 bg-gray-50">
+                  <div className="flex items-start mb-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-semibold mr-3">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                        {question.question_text}
+                      </h3>
+                      
+                      {/* 正解の表示 */}
+                      {question.correct_answer ? (
+                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                            <span className="font-semibold text-green-800">正解:</span>
+                          </div>
+                          <div className="text-gray-800 ml-7">
+                            {question.question_type === 'multiple_choice' && question.is_multiple_select ? (
+                              // 複数選択の場合
+                              <div className="space-y-1">
+                                {question.correct_answer.split(',').map((answer, idx) => (
+                                  <div key={idx} className="flex items-center">
+                                    <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                                    <span>{answer.trim()}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : question.question_type === 'ranking' ? (
+                              // ランキングの場合
+                              <div className="space-y-2">
+                                {question.correct_answer.split(',').map((answer, idx) => (
+                                  <div key={idx} className="flex items-center">
+                                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-2">
+                                      {idx + 1}
+                                    </span>
+                                    <span>{answer.trim()}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              // その他の場合（単一選択、テキスト、yes_no、rating）
+                              <span className="text-lg">{question.correct_answer}</span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <span className="text-yellow-800">正解が設定されていません</span>
+                        </div>
+                      )}
+
+                      {/* 選択肢の表示（multiple_choiceの場合） */}
+                      {question.question_type === 'multiple_choice' && question.options && question.options.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-sm font-medium text-gray-600 mb-2">選択肢:</p>
+                          <div className="space-y-2">
+                            {question.options.map((option, optionIndex) => {
+                              const isCorrect = question.correct_answer
+                                ? question.is_multiple_select
+                                  ? question.correct_answer.split(',').some(a => a.trim() === option)
+                                  : question.correct_answer.trim() === option
+                                : false;
+                              return (
+                                <div
+                                  key={optionIndex}
+                                  className={`p-3 rounded-lg border-2 ${
+                                    isCorrect
+                                      ? 'bg-green-50 border-green-300'
+                                      : 'bg-white border-gray-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center">
+                                    {isCorrect && (
+                                      <CheckCircle className="w-5 h-5 text-green-600 mr-2 flex-shrink-0" />
+                                    )}
+                                    <span className={isCorrect ? 'font-semibold text-green-800' : 'text-gray-700'}>
+                                      {option}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowQuizAnswersModal(false);
+                  setQuizForAnswers(null);
+                  setQuizAnswersQuestions([]);
+                  setShowPerfectScoreMessage(false);
+                }}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

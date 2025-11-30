@@ -1,27 +1,21 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { X, Gift, Send, Loader2, Mail, MessageSquare } from 'lucide-react'; // アイコン追加
+import { X, Gift, Send, Loader2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/config/supabase';
-import { useAuth } from '@/hooks/useAuth'; // useAuthをインポート
+import { useAuth } from '@/hooks/useAuth';
 
 interface PointExchangeModalProps {
   currentPoints: number;
   onClose: () => void;
-  onExchangeSuccess: () => void; // Callback to refresh points on success
+  onExchangeSuccess: () => void;
 }
-
-// 連絡先情報の型を更新
-type ContactType = 'email' | 'line_push';
 
 export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }: PointExchangeModalProps) {
   const { user } = useAuth();
-  const [exchangeType, setExchangeType] = useState<'' | 'paypay' | 'amazon' | 'starbucks'>('');
+  const [exchangeType, setExchangeType] = useState<'' | 'erabepay' | 'erabegift'>('');
   const [pointsAmount, setPointsAmount] = useState<number>(0);
-  const [contactInfo, setContactInfo] = useState('');
-  const [contactType, setContactType] = useState<ContactType>('email'); // 新しいステート
-  const [isLineLinked, setIsLineLinked] = useState<boolean>(false); // LINE連携状態
-  const [notes, setNotes] = useState('');
+  const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +23,6 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
   useEffect(() => {
     const checkLineLink = async () => {
       if (!user) return;
-      // user_line_links テーブルに user_id があるか確認
       const { data, error } = await supabase
         .from('user_line_links')
         .select('user_id')
@@ -37,28 +30,18 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
         .limit(1)
         .single();
       
-      if (data) {
-        setIsLineLinked(true);
-        // LINE連携済みの場合は、デフォルトの通知方法をLINEにする (UX改善)
-        setContactType('line_push');
-      } else {
-        setIsLineLinked(false);
-        setContactType('email');
-      }
+      setIsLineLinked(!!data);
     };
 
     checkLineLink();
   }, [user]);
 
   const availableExchangeOptions: {
-    type: 'paypay' | 'amazon' | 'starbucks';
+    type: 'erabepay' | 'erabegift';
     name: string;
-    minPoints: number;
-    maxPoints: number;
   }[] = [
-    { type: 'paypay', name: 'PayPayポイント', minPoints: 500, maxPoints: currentPoints },
-    { type: 'amazon', name: 'Amazonギフトカード', minPoints: 1000, maxPoints: currentPoints },
-    { type: 'starbucks', name: 'スターバックス eGift', minPoints: 300, maxPoints: currentPoints },
+    { type: 'erabepay', name: '選べるペイ' },
+    { type: 'erabegift', name: '選べるギフト' },
   ];
 
   const handleExchange = async () => {
@@ -67,14 +50,24 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       return;
     }
 
-    if (!exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || (contactType === 'email' && contactInfo.trim() === '')) {
-      setError('全ての必須項目を入力し、有効なポイント数を指定してください。');
+    // バリデーション
+    if (!exchangeType) {
+      setError('交換先を選択してください。');
       return;
     }
 
-    const selectedOption = availableExchangeOptions.find(opt => opt.type === exchangeType);
-    if (!selectedOption || pointsAmount < selectedOption.minPoints) {
-      setError(`${selectedOption?.name}の交換には最低${selectedOption?.minPoints}ポイントが必要です。`);
+    if (pointsAmount <= 0 || pointsAmount > currentPoints) {
+      setError('有効なポイント数を指定してください。');
+      return;
+    }
+
+    if (pointsAmount % 500 !== 0) {
+      setError('ポイント数は500pt単位で入力してください。');
+      return;
+    }
+
+    if (!isLineLinked) {
+      setError('LINE連携が必要です。まずLINEアカウントと連携してください。');
       return;
     }
 
@@ -82,7 +75,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     setError(null);
 
     try {
-      // 1. Create point transaction (redeemed) - ★★★ .select()を削除 ★★★
+      // 1. ポイントを減算
       const { error: transactionError } = await supabase
         .from('point_transactions')
         .insert([
@@ -90,16 +83,44 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             monitor_id: user.id,
             points: -pointsAmount,
             transaction_type: 'redeemed',
-            notes: `ポイント交換リクエスト: ${exchangeType} ${pointsAmount}pt`
+            notes: `ポイント交換: ${exchangeType === 'erabepay' ? '選べるペイ' : '選べるギフト'} ${pointsAmount}pt`
           },
-        ]); // .select() を削除
+        ]);
 
       if (transactionError) {
-         console.error('Point Transaction Error:', transactionError);
-         throw transactionError;
+        console.error('Point Transaction Error:', transactionError);
+        throw transactionError;
       }
 
-      // 2. Create point exchange request - ★★★ .select()を削除 ★★★
+      // 2. Giftee APIを呼び出してギフトを送信
+      const giftResponse = await fetch('/api/giftee/send-gift', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          exchangeType,
+          pointsAmount,
+          userId: user.id,
+          userEmail: user.email,
+        }),
+      });
+
+      if (!giftResponse.ok) {
+        const errorData = await giftResponse.json();
+        throw new Error(errorData.error || 'ギフト送信に失敗しました');
+      }
+
+      const giftData = await giftResponse.json();
+
+      // ギフトカードURLを取得
+      const giftCardUrl = giftData.giftCardUrl || giftData.giftData?.gift_card?.url;
+
+      if (!giftCardUrl) {
+        throw new Error('ギフトカードURLの取得に失敗しました');
+      }
+
+      // 3. 交換リクエストを記録（完了済みとして）
       const { error: requestError } = await supabase
         .from('point_exchange_requests')
         .insert([
@@ -107,25 +128,44 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             monitor_id: user.id,
             exchange_type: exchangeType,
             points_amount: pointsAmount,
-            // 修正: 連絡先情報のフィールドを contact_type と exchange_contact に分ける
-            contact_type: contactType, 
-            exchange_contact: contactType === 'email' ? contactInfo : null, // LINEの場合はnull
-            contact_info: contactType === 'email' ? contactInfo : 'LINE連携済み', // 互換性のため残す
-            notes: notes.trim() === '' ? null : notes.trim(),
-            status: 'pending',
+            contact_type: 'line_push',
+            exchange_contact: null,
+            contact_info: 'LINE連携済み',
+            status: 'completed',
+            processed_at: new Date().toISOString(),
+            reward_detail: giftCardUrl, // URLを直接保存
           },
-        ]); // .select() を削除
+        ]);
 
       if (requestError) {
-          console.error('Exchange Request Error:', requestError);
-          throw requestError;
+        console.error('Exchange Request Error:', requestError);
+        // エラーをログに記録するが、処理は続行（ギフトは既に送信済み）
       }
 
-      alert('ポイント交換リクエストを送信しました！処理が完了するまでお待ちください。');
+      // 4. LINE通知を送信（URLを含める）
+      const exchangeName = exchangeType === 'erabepay' ? '選べるペイ' : '選べるギフト';
+      const lineMessage = `🎁 ポイント交換が完了しました！\n\n交換内容: ${exchangeName}\nポイント数: ${pointsAmount}pt\n\nギフトカードURL:\n${giftCardUrl}\n\nこちらからギフトをお受け取りください。`;
+
+      const lineResponse = await fetch('/api/line/send-notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          message: lineMessage,
+        }),
+      });
+
+      if (!lineResponse.ok) {
+        console.error('LINE通知の送信に失敗しましたが、ギフトは送信済みです');
+        // LINE通知の失敗は警告のみ（ギフトは既に送信済み）
+      }
+
+      alert(`🎉 ポイント交換が完了しました！\n${exchangeName} ${pointsAmount}pt分のギフトをLINEでお送りしました。`);
       onExchangeSuccess(); 
       onClose();
     } catch (err) {
-      // Supabaseエラーオブジェクト全体をログに出力
       console.error('Error during point exchange:', err); 
       setError(err instanceof Error ? err.message : 'ポイント交換に失敗しました。');
     } finally {
@@ -133,7 +173,11 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     }
   };
 
-  const selectedOption = availableExchangeOptions.find(opt => opt.type === exchangeType);
+  // 500pt単位で選択可能なポイント数のリストを生成
+  const availablePointAmounts = [];
+  for (let i = 500; i <= currentPoints; i += 500) {
+    availablePointAmounts.push(i);
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -146,7 +190,7 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-800">ポイント交換</h2>
-              <p className="text-gray-600">貯まったポイントをギフト券等に交換しましょう</p>
+              <p className="text-gray-600">貯まったポイントをギフト券に交換しましょう</p>
             </div>
           </div>
           <button
@@ -164,28 +208,34 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
             <p className="text-4xl font-bold text-yellow-700">{currentPoints}pt</p>
           </div>
 
+          {!isLineLinked && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800 text-sm">
+                ⚠️ ポイント交換にはLINE連携が必要です。まずLINEアカウントと連携してください。
+              </p>
+            </div>
+          )}
+
           <form onSubmit={(e) => { e.preventDefault(); handleExchange(); }} className="space-y-6">
-            
-            {/* 交換先の選択 (既存) */}
+            {/* 交換先の選択 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 交換先を選択してください *
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availableExchangeOptions.map((option) => (
                   <button
                     key={option.type}
                     type="button"
                     onClick={() => setExchangeType(option.type)}
-                    className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
+                    className={`flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all duration-200 ${
                       exchangeType === option.type
                         ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <Gift className="w-6 h-6 mb-2" />
-                    <span className="font-semibold">{option.name}</span>
-                    <span className="text-xs text-gray-500 mt-1">最低 {option.minPoints}pt</span>
+                    <Gift className="w-8 h-8 mb-2" />
+                    <span className="font-semibold text-lg">{option.name}</span>
                   </button>
                 ))}
               </div>
@@ -193,102 +243,46 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
 
             {exchangeType && (
               <>
-                {/* 報酬ポイント数の入力 (既存) */}
+                {/* 交換ポイント数の入力（500pt単位） */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    交換ポイント数 *
+                    交換ポイント数 * (500pt単位)
                   </label>
-                  <input
-                    type="number"
-                    value={pointsAmount === 0 ? '' : pointsAmount}
-                    onChange={(e) => setPointsAmount(parseInt(e.target.value) || 0)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder={`1pt単位 (例: ${selectedOption?.minPoints})`}
-                    min={selectedOption?.minPoints || 1}
-                    max={selectedOption?.maxPoints || currentPoints}
-                    required
-                  />
-                  {selectedOption && pointsAmount < selectedOption.minPoints && pointsAmount !== 0 && (
-                    <p className="text-red-500 text-xs mt-1">最低交換ポイントは {selectedOption.minPoints}pt です。</p>
+                  {availablePointAmounts.length === 0 ? (
+                    <p className="text-red-500 text-sm">交換可能なポイントがありません（最低500pt必要です）</p>
+                  ) : (
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                      {availablePointAmounts.map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setPointsAmount(amount)}
+                          className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                            pointsAmount === amount
+                              ? 'border-yellow-500 bg-yellow-50 text-yellow-700 font-semibold'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          {amount}pt
+                        </button>
+                      ))}
+                    </div>
                   )}
-                   {pointsAmount > currentPoints && (
-                    <p className="text-red-500 text-xs mt-1">現在のポイント ({currentPoints}pt) を超えることはできません。</p>
+                  {pointsAmount > 0 && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      選択中: <span className="font-semibold">{pointsAmount}pt</span>
+                    </p>
                   )}
                 </div>
 
-                {/* ★★★ 新規: 通知連絡先の選択 ★★★ */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    交換完了通知の受け取り方法 *
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    
-                    {/* メール選択 */}
-                    <button
-                      type="button"
-                      onClick={() => setContactType('email')}
-                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                        contactType === 'email'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Mail className="w-6 h-6 mb-2" />
-                      <span className="font-semibold">メールで通知</span>
-                    </button>
-
-                    {/* LINE選択 */}
-                    <button
-                      type="button"
-                      onClick={() => isLineLinked && setContactType('line_push')}
-                      disabled={!isLineLinked}
-                      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all duration-200 ${
-                        contactType === 'line_push'
-                          ? 'border-green-500 bg-green-50 text-green-700'
-                          : 'border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed'
-                      }`}
-                    >
-                      <MessageSquare className="w-6 h-6 mb-2" />
-                      <span className="font-semibold">LINEで通知</span>
-                      {!isLineLinked && <span className="text-xs text-red-500 mt-1">未連携</span>}
-                    </button>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center mb-2">
+                    <MessageSquare className="w-5 h-5 text-blue-600 mr-2" />
+                    <span className="font-semibold text-blue-800">通知方法</span>
                   </div>
-                </div>
-
-                {/* ★★★ 連絡先情報の入力 (メール選択時のみ表示) ★★★ */}
-                {contactType === 'email' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      連絡先情報 (メールアドレスなど) *
-                    </label>
-                    <input
-                      type="text"
-                      name="contactInfo"
-                      value={contactInfo}
-                      onChange={(e) => setContactInfo(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      placeholder={
-                        exchangeType === 'paypay' ? 'PayPayに登録の電話番号またはメールアドレス' :
-                        exchangeType === 'amazon' ? 'ギフトカード送付先のメールアドレス' :
-                        'スターバックス eGift送付先のメールアドレス'
-                      }
-                      required={contactType === 'email'}
-                    />
-                  </div>
-                )}
-                
-                {/* 備考 (既存) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    備考 (任意)
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder="何かご要望があればご記入ください"
-                  />
+                  <p className="text-sm text-blue-700">
+                    交換完了後、LINEで自動的に通知をお送りします。
+                  </p>
                 </div>
               </>
             )}
@@ -311,14 +305,14 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
               <button
                 type="submit"
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-yellow-600 to-yellow-500 text-white rounded-lg hover:from-yellow-700 hover:to-yellow-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                disabled={loading || !exchangeType || pointsAmount <= 0 || pointsAmount > currentPoints || (contactType === 'email' && contactInfo.trim() === '') || (selectedOption && pointsAmount < selectedOption.minPoints)}
+                disabled={loading || !exchangeType || pointsAmount <= 0 || !isLineLinked}
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 ) : (
                   <Send className="w-5 h-5 mr-2" />
                 )}
-                交換リクエストを送信
+                交換する
               </button>
             </div>
           </form>

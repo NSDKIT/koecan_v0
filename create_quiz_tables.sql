@@ -85,6 +85,7 @@ DROP POLICY IF EXISTS "Clients and admins can manage quiz questions" ON quiz_que
 DROP POLICY IF EXISTS "Monitors can view active quiz questions" ON quiz_questions;
 DROP POLICY IF EXISTS "Monitors can create own quiz responses" ON quiz_responses;
 DROP POLICY IF EXISTS "Monitors can view own quiz responses" ON quiz_responses;
+DROP POLICY IF EXISTS "Monitors can update own quiz responses" ON quiz_responses;
 DROP POLICY IF EXISTS "Clients and admins can view all quiz responses" ON quiz_responses;
 
 -- クライアントは自分のクイズを管理可能
@@ -140,7 +141,7 @@ CREATE POLICY "Monitors can view active quiz questions"
 -- Quiz responses table policies
 ALTER TABLE quiz_responses ENABLE ROW LEVEL SECURITY;
 
--- モニター学生は自分の回答を作成・閲覧可能
+-- モニター学生は自分の回答を作成・閲覧・更新可能
 CREATE POLICY "Monitors can create own quiz responses" 
   ON quiz_responses 
   FOR INSERT 
@@ -152,6 +153,13 @@ CREATE POLICY "Monitors can view own quiz responses"
   FOR SELECT 
   TO authenticated 
   USING (monitor_id = auth.uid());
+
+CREATE POLICY "Monitors can update own quiz responses" 
+  ON quiz_responses 
+  FOR UPDATE 
+  TO authenticated 
+  USING (monitor_id = auth.uid())
+  WITH CHECK (monitor_id = auth.uid());
 
 -- クライアントと管理者は全回答を閲覧可能
 CREATE POLICY "Clients and admins can view all quiz responses" 
