@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabaseクライアントを作成（サーバーサイド用）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// LINE OAuth設定
-const LINE_CLIENT_ID = process.env.NEXT_PUBLIC_LINE_CLIENT_ID || '';
-const LINE_CLIENT_SECRET = process.env.LINE_CLIENT_SECRET || '';
-const LINE_REDIRECT_URI = process.env.NEXT_PUBLIC_LINE_REDIRECT_URI || '';
-
 export async function GET(request: NextRequest) {
   try {
+    // 環境変数のチェック
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const LINE_CLIENT_ID = process.env.NEXT_PUBLIC_LINE_CLIENT_ID;
+    const LINE_CLIENT_SECRET = process.env.LINE_CLIENT_SECRET;
+    const LINE_REDIRECT_URI = process.env.NEXT_PUBLIC_LINE_REDIRECT_URI;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase環境変数が設定されていません');
+      return NextResponse.redirect(
+        new URL('/?line_link_status=failure&error=サーバー設定エラー: Supabase環境変数が設定されていません', request.url)
+      );
+    }
+
+    if (!LINE_CLIENT_ID || !LINE_CLIENT_SECRET || !LINE_REDIRECT_URI) {
+      console.error('LINE OAuth環境変数が設定されていません');
+      return NextResponse.redirect(
+        new URL('/?line_link_status=failure&error=サーバー設定エラー: LINE OAuth環境変数が設定されていません', request.url)
+      );
+    }
+
+    // Supabaseクライアントを作成（サーバーサイド用）
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
