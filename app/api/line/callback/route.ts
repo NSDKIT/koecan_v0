@@ -32,15 +32,9 @@ export async function GET(request: NextRequest) {
       serviceKeyPrefix: supabaseServiceKey?.substring(0, 20) + '...',
     });
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-      db: {
-        schema: 'public',
-      },
-    });
+    // service_roleキーを使用する場合、オプションを指定しない方が確実
+    // 参考: app/api/line/send-notification/route.ts と同じ方法
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     console.log('Supabaseクライアント作成完了（service_role使用）');
     const searchParams = request.nextUrl.searchParams;
