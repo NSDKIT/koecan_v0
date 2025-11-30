@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // stateから一時トークンを復元
-    let tempToken: string;
+    // stateからuser.idを復元
+    let userId: string;
     try {
       // URL-safe base64デコード（- → +, _ → /, パディング追加）
       let stateBase64 = state.replace(/-/g, '+').replace(/_/g, '/');
@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
       }
       const decodedState = Buffer.from(stateBase64, 'base64').toString('utf-8');
       const stateData = JSON.parse(decodedState);
-      tempToken = stateData.token;
-      console.log('State復号化成功。トークン:', tempToken?.substring(0, 8) + '...');
+      userId = stateData.userId;
+      console.log('State復号化成功。ユーザーID:', userId?.substring(0, 8) + '...');
     } catch (err) {
       console.error('State復号化エラー:', err);
       return NextResponse.redirect(
@@ -67,140 +67,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!tempToken) {
-      console.error('トークンが抽出できませんでした');
+    if (!userId) {
+      console.error('ユーザーIDが抽出できませんでした');
       return NextResponse.redirect(
-        new URL('/?line_link_status=failure&error=トークンが抽出できませんでした', request.url)
-      );
-    }
-
-    // 一時トークンからユーザーIDを取得
-    let userId: string;
-    try {
-      console.log('セッション検索開始:', {
-        token: tempToken?.substring(0, 8) + '...',
-        tokenFull: tempToken, // デバッグ用にフルトークンを表示
-        tokenLength: tempToken?.length
-      });
-
-      // トークンで検索（.maybeSingle()を使用して0行でもエラーにしない）
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('line_link_sessions')
-        .select('user_id, expires_at, created_at, token')
-        .eq('token', tempToken)
-        .maybeSingle();
-
-      console.log('セッション検索結果:', {
-        hasData: !!sessionData,
-        hasError: !!sessionError,
-        error: sessionError ? {
-          message: sessionError.message,
-          code: sessionError.code,
-          details: sessionError.details,
-          hint: sessionError.hint
-        } : null,
-        data: sessionData ? {
-          user_id: sessionData.user_id,
-          expires_at: sessionData.expires_at,
-          created_at: sessionData.created_at,
-          token: sessionData.token // デバッグ用にトークンも表示
-        } : null
-      });
-
-      // デバッグ用: テーブル内の最新セッションを確認（トークン比較用）
-      if (!sessionData) {
-        const { data: debugData } = await supabase
-          .from('line_link_sessions')
-          .select('token, user_id, expires_at, created_at')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
-        console.log('デバッグ: テーブル内の最新セッション（最新5件）:', debugData);
-        console.log('デバッグ: 検索したトークンと比較:', {
-          searchedToken: tempToken,
-          tokensInDB: debugData?.map(s => ({
-            token: s.token,
-            matches: s.token === tempToken,
-            first8: s.token?.substring(0, 8)
-          }))
-        });
-      }
-
-      if (sessionError) {
-        console.error('セッション取得エラー詳細:', {
-          message: sessionError.message,
-          code: sessionError.code,
-          details: sessionError.details,
-          hint: sessionError.hint
-        });
-
-        // エラーコードに応じた詳細なメッセージ
-        let errorMessage = 'セッションが見つかりません';
-        if (sessionError.code === 'PGRST116') {
-          errorMessage = 'セッションが見つかりません（テーブルが存在しないか、データがありません）';
-        } else if (sessionError.code === '42501') {
-          errorMessage = 'セッション取得権限がありません（RLSポリシーを確認してください）';
-        }
-
-        return NextResponse.redirect(
-          new URL(`/?line_link_status=failure&error=${encodeURIComponent(errorMessage)}`, request.url)
-        );
-      }
-
-      if (!sessionData) {
-        console.error('セッションデータがnullです');
-        
-        // デバッグ用: テーブル内の最新セッションを確認
-        const { data: debugData } = await supabase
-          .from('line_link_sessions')
-          .select('token, user_id, expires_at, created_at')
-          .order('created_at', { ascending: false })
-          .limit(5);
-        
-        console.log('デバッグ: テーブル内の最新セッション（最新5件）:', debugData);
-        
-        return NextResponse.redirect(
-          new URL('/?line_link_status=failure&error=セッションが見つかりません', request.url)
-        );
-      }
-
-      // 期限チェック
-      const expiresAt = new Date(sessionData.expires_at);
-      const now = new Date();
-      
-      console.log('期限チェック:', {
-        expiresAt: expiresAt.toISOString(),
-        now: now.toISOString(),
-        expiresAtLocal: expiresAt.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }),
-        nowLocal: now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }),
-        isExpired: expiresAt < now,
-        timeDiff: expiresAt.getTime() - now.getTime(),
-        timeDiffMinutes: Math.floor((expiresAt.getTime() - now.getTime()) / 1000 / 60)
-      });
-      
-      if (expiresAt < now) {
-        console.error('セッションの期限が切れています', {
-          expiresAt: expiresAt.toISOString(),
-          now: now.toISOString(),
-          diff: expiresAt.getTime() - now.getTime()
-        });
-        return NextResponse.redirect(
-          new URL('/?line_link_status=failure&error=セッションの期限が切れています', request.url)
-        );
-      }
-
-      userId = sessionData.user_id;
-      console.log('ユーザーID取得成功:', userId);
-
-      // セッションを削除（使い捨て）
-      await supabase
-        .from('line_link_sessions')
-        .delete()
-        .eq('token', tempToken);
-    } catch (err) {
-      console.error('セッション取得中にエラー:', err);
-      return NextResponse.redirect(
-        new URL('/?line_link_status=failure&error=セッション取得に失敗しました', request.url)
+        new URL('/?line_link_status=failure&error=ユーザーIDが抽出できませんでした', request.url)
       );
     }
 

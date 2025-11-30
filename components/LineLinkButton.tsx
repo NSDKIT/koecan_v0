@@ -17,9 +17,6 @@ const SCOPE = 'profile openid';
 // 任意の友だち追加オプション: 公式LINEアカウントの友だち追加を推奨
 const PROMPT = 'consent'; // 再同意を常に求める
 
-// 一時トークンの有効期限（10分）
-const TOKEN_EXPIRY_MINUTES = 10;
-
 export function LineLinkButton() {
   const { user } = useAuth();
   const supabase = useSupabase();
@@ -47,95 +44,9 @@ export function LineLinkButton() {
     setError(null);
 
     try {
-        // 1. 一時トークンを生成してSupabaseに保存
-        const tempToken = crypto.randomUUID();
-        const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000);
-
-        console.log('セッション作成を試行中...', {
-          token: tempToken.substring(0, 8) + '...',
-          userId: user.id,
-          expiresAt: expiresAt.toISOString()
-        });
-
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('line_link_sessions')
-          .insert({
-            token: tempToken,
-            user_id: user.id,
-            expires_at: expiresAt.toISOString(),
-          })
-          .select();
-
-        if (sessionError) {
-          console.error('セッション作成失敗 - 詳細:', {
-            message: sessionError.message,
-            code: sessionError.code,
-            details: sessionError.details,
-            hint: sessionError.hint,
-            status: (sessionError as any)?.status,
-            statusText: (sessionError as any)?.statusText
-          });
-          
-          // より詳細なエラーメッセージを表示
-          let errorMessage = 'セッションの作成に失敗しました。';
-          if (sessionError.message) {
-            errorMessage += `\n\nエラー: ${sessionError.message}`;
-          }
-          if (sessionError.code) {
-            errorMessage += `\nコード: ${sessionError.code}`;
-          }
-          if (sessionError.hint) {
-            errorMessage += `\nヒント: ${sessionError.hint}`;
-          }
-          if (sessionError.code === '42P01') {
-            errorMessage += '\n\nテーブル "line_link_sessions" が存在しません。Supabaseでテーブルを作成してください。';
-          } else if (sessionError.code === '42501') {
-            errorMessage += '\n\nRLSポリシーが正しく設定されていない可能性があります。';
-          }
-          
-          setError(errorMessage);
-          setLoading(false);
-          return;
-        }
-
-        console.log('セッション作成成功:', sessionData);
-
-        // セッションが正しく作成されたことを確認
-        if (!sessionData || sessionData.length === 0) {
-          console.error('セッション作成は成功したが、データが返されませんでした');
-          setError('セッションの作成に失敗しました。再度お試しください。');
-          setLoading(false);
-          return;
-        }
-
-        // セッション作成が完了したことを確認するため、500ms待機を5回繰り返す
-        // データベースへの書き込みが完全に反映されるのを待つ
-        console.log('データベースへの書き込み反映を待機中...');
-        for (let i = 0; i < 5; i++) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log(`待機中... (${i + 1}/5)`);
-          
-          // 各待機後に、セッションが実際にデータベースに保存されているか確認
-          const { data: verifyData, error: verifyError } = await supabase
-            .from('line_link_sessions')
-            .select('token, user_id, expires_at, created_at')
-            .eq('token', tempToken)
-            .maybeSingle();
-          
-          console.log(`待機${i + 1}回目後の検証:`, {
-            found: !!verifyData,
-            token: verifyData?.token,
-            error: verifyError ? {
-              message: verifyError.message,
-              code: verifyError.code
-            } : null
-          });
-        }
-        console.log('待機完了、リダイレクト準備完了');
-
-        // 2. stateにトークンを含める（URL-safe base64エンコード）
+        // stateにuser.idを含める（URL-safe base64エンコード）
         const stateObject = {
-          token: tempToken,
+          userId: user.id,
           timestamp: Date.now()
         };
 
@@ -146,7 +57,7 @@ export function LineLinkButton() {
           .replace(/\//g, '_')
           .replace(/=/g, '');
         
-        // 3. LINE 認証 URL の生成
+        // LINE 認証 URL の生成
         const encodedRedirectUri = encodeURIComponent(LINE_REDIRECT_URI);
 
         // LINE Login v2.1の認証URLを生成
@@ -158,14 +69,9 @@ export function LineLinkButton() {
             `&state=${encodeURIComponent(stateBase64)}` +
             `&prompt=${PROMPT}`;
         
-        // デバッグ用ログ（本番環境では削除推奨）
-        console.log('LINE認証URL:', lineAuthUrl);
-        console.log('Redirect URI:', LINE_REDIRECT_URI);
-        console.log('Client ID:', LINE_CLIENT_ID);
-        console.log('一時トークン:', tempToken);
-        console.log('セッション作成完了、リダイレクトします...');
+        console.log('LINE認証URL生成完了、リダイレクトします...');
         
-        // 4. リダイレクト
+        // リダイレクト
         window.location.href = lineAuthUrl;
 
     } catch (e) {
