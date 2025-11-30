@@ -159,6 +159,13 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       }
 
       // 2. Giftee APIを呼び出してギフトを送信
+      console.log('ギフト送信API呼び出し開始:', {
+        exchangeType,
+        pointsAmount,
+        userId: user.id,
+        userEmail: user.email,
+      });
+      
       const giftResponse = await fetch('/api/giftee/send-gift', {
         method: 'POST',
         headers: {
@@ -172,12 +179,36 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
         }),
       });
 
+      console.log('ギフト送信APIレスポンス:', {
+        status: giftResponse.status,
+        statusText: giftResponse.statusText,
+        ok: giftResponse.ok,
+      });
+
       if (!giftResponse.ok) {
         const errorData = await giftResponse.json();
-        throw new Error(errorData.error || 'ギフト送信に失敗しました');
+        console.error('ギフト送信APIエラーレスポンス:', errorData);
+        
+        // エラーの詳細を全て表示
+        let errorMessage = errorData.error || 'ギフト送信に失敗しました';
+        if (errorData.details) {
+          errorMessage += `\n\n詳細: ${typeof errorData.details === 'string' ? errorData.details : JSON.stringify(errorData.details, null, 2)}`;
+        }
+        if (errorData.status) {
+          errorMessage += `\nステータス: ${errorData.status} ${errorData.statusText || ''}`;
+        }
+        if (errorData.requestBody) {
+          errorMessage += `\nリクエスト内容: ${JSON.stringify(errorData.requestBody, null, 2)}`;
+        }
+        if (errorData.fullResponse) {
+          errorMessage += `\n\n完全なレスポンス: ${JSON.stringify(errorData.fullResponse, null, 2)}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const giftData = await giftResponse.json();
+      console.log('ギフト送信API成功レスポンス:', giftData);
 
       // ギフトカードURLを取得
       const giftCardUrl = giftData.giftCardUrl || giftData.giftData?.gift_card?.url;

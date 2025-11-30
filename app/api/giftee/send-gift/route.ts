@@ -31,39 +31,88 @@ export async function POST(request: NextRequest) {
     // Giftee APIを呼び出し
     const basicAuth = Buffer.from(`${GIFTEE_ACCESS_TOKEN}:`).toString('base64');
     
+    const requestBody = {
+      gift_card_config_code: giftCardConfigCode,
+      issue_identity: userId, // ユーザーIDを識別子として使用
+    };
+    
+    console.log('Giftee API呼び出し開始:', {
+      url: GIFTEE_API_URL,
+      method: 'POST',
+      giftCardConfigCode,
+      userId,
+      userEmail,
+      exchangeType,
+      pointsAmount,
+    });
+    
     const response = await fetch(GIFTEE_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${basicAuth}`,
         'Content-Type': 'application/json; charset=utf-8',
       },
-      body: JSON.stringify({
-        gift_card_config_code: giftCardConfigCode,
-        issue_identity: userId, // ユーザーIDを識別子として使用
-      }),
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('Giftee APIレスポンス:', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries()),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Giftee API Error:', errorText);
+      console.error('Giftee API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+        requestBody,
+      });
+      
+      // JSONとしてパースを試みる
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+      
       return NextResponse.json(
-        { error: 'ギフト送信に失敗しました', details: errorText },
+        { 
+          error: 'ギフト送信に失敗しました', 
+          details: errorDetails,
+          status: response.status,
+          statusText: response.statusText,
+          requestBody,
+        },
         { status: response.status }
       );
     }
 
     const giftData = await response.json();
+    console.log('Giftee API成功レスポンス:', JSON.stringify(giftData, null, 2));
 
     // Rubyコードと同じように、レスポンスからURLを抽出
     const giftCardUrl = giftData?.gift_card?.url || null;
 
     if (!giftCardUrl) {
-      console.error('Giftee APIレスポンスにURLが含まれていません:', giftData);
+      console.error('Giftee APIレスポンスにURLが含まれていません:', {
+        fullResponse: giftData,
+        giftCardPath: giftData?.gift_card,
+        availableKeys: Object.keys(giftData || {}),
+      });
       return NextResponse.json(
-        { error: 'ギフトカードURLの取得に失敗しました', details: giftData },
+        { 
+          error: 'ギフトカードURLの取得に失敗しました', 
+          details: giftData,
+          fullResponse: giftData,
+        },
         { status: 500 }
       );
     }
+    
+    console.log('ギフトカードURL取得成功:', giftCardUrl);
 
     return NextResponse.json({
       success: true,
