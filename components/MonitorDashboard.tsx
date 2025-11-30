@@ -624,6 +624,8 @@ export default function MonitorDashboard() {
     }
 
     try {
+      console.log('LINE連携状態をチェック中...', { userId: user.id });
+      
       const { data, error } = await supabase
         .from('user_line_links')
         .select('line_user_id')
@@ -633,14 +635,31 @@ export default function MonitorDashboard() {
       
       if (error) {
         console.error('LINE連携状態の取得エラー:', error);
+        console.error('エラー詳細:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         setIsLineLinked(false);
         setLineUserId(null);
         return;
       }
       
+      console.log('LINE連携データ取得結果:', {
+        hasData: !!data,
+        lineUserId: data?.line_user_id,
+        fullData: data
+      });
+      
       const linked = !!(data && data.line_user_id && data.line_user_id.trim() !== '');
       setIsLineLinked(linked);
       setLineUserId(linked ? data.line_user_id : null);
+      
+      console.log('LINE連携状態判定結果:', {
+        isLinked: linked,
+        lineUserId: linked ? data.line_user_id : null
+      });
     } catch (err) {
       console.error('LINE連携状態の確認エラー:', err);
       setIsLineLinked(false);
