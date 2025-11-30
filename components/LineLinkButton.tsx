@@ -100,6 +100,18 @@ export function LineLinkButton() {
 
         console.log('セッション作成成功:', sessionData);
 
+        // セッションが正しく作成されたことを確認
+        if (!sessionData || sessionData.length === 0) {
+          console.error('セッション作成は成功したが、データが返されませんでした');
+          setError('セッションの作成に失敗しました。再度お試しください。');
+          setLoading(false);
+          return;
+        }
+
+        // セッション作成が完了したことを確認するため、少し待機（オプション）
+        // データベースへの書き込みが完全に反映されるのを待つ
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // 2. stateにトークンを含める（URL-safe base64エンコード）
         const stateObject = {
           token: tempToken,
@@ -130,6 +142,7 @@ export function LineLinkButton() {
         console.log('Redirect URI:', LINE_REDIRECT_URI);
         console.log('Client ID:', LINE_CLIENT_ID);
         console.log('一時トークン:', tempToken);
+        console.log('セッション作成完了、リダイレクトします...');
         
         // 4. リダイレクト
         window.location.href = lineAuthUrl;
