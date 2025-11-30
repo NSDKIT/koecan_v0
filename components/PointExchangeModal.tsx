@@ -72,34 +72,9 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
     }
   }, [user]);
 
-  // ユーザーが変わった時とモーダルが開かれた時にチェック
+  // モーダルが開かれた時とユーザーが変わった時だけチェック
   useEffect(() => {
     checkLineLink();
-  }, [checkLineLink]);
-
-  // モーダルが開かれた時にも再チェック（LINE連携直後に対応）
-  useEffect(() => {
-    // モーダルが開かれた直後にチェック
-    const timer = setTimeout(() => {
-      checkLineLink();
-    }, 100); // 少し遅延させて確実に実行
-    
-    // ページのフォーカス時にも再チェック（LINE連携後に戻ってきた場合）
-    const handleFocus = () => {
-      checkLineLink();
-    };
-    window.addEventListener('focus', handleFocus);
-    
-    // 定期的に再チェック（LINE連携直後に対応）
-    const interval = setInterval(() => {
-      checkLineLink();
-    }, 3000); // 3秒ごとにチェック
-    
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-    };
   }, [checkLineLink]);
 
   const availableExchangeOptions: {
