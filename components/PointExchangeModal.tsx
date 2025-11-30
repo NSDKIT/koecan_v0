@@ -243,6 +243,12 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
       const exchangeName = exchangeType === 'erabepay' ? '選べるペイ' : '選べるギフト';
       const lineMessage = `🎁 ポイント交換が完了しました！\n\n交換内容: ${exchangeName}\nポイント数: ${pointsAmount}pt\n\nギフトカードURL:\n${giftCardUrl}\n\nこちらからギフトをお受け取りください。`;
 
+      console.log('LINE通知送信開始:', {
+        userId: user.id,
+        messageLength: lineMessage.length,
+        messagePreview: lineMessage.substring(0, 100) + '...',
+      });
+
       const lineResponse = await fetch('/api/line/send-notification', {
         method: 'POST',
         headers: {
@@ -254,9 +260,32 @@ export function PointExchangeModal({ currentPoints, onClose, onExchangeSuccess }
         }),
       });
 
+      console.log('LINE通知送信APIレスポンス:', {
+        status: lineResponse.status,
+        statusText: lineResponse.statusText,
+        ok: lineResponse.ok,
+      });
+
       if (!lineResponse.ok) {
-        console.error('LINE通知の送信に失敗しましたが、ギフトは送信済みです');
-        // LINE通知の失敗は警告のみ（ギフトは既に送信済み）
+        const errorData = await lineResponse.json();
+        console.error('LINE通知送信エラー:', errorData);
+        
+        // エラーの詳細を表示
+        let errorMessage = 'LINE通知の送信に失敗しましたが、ギフトは送信済みです。';
+        if (errorData.error) {
+          errorMessage += `\n\nエラー: ${errorData.error}`;
+        }
+        if (errorData.details) {
+          errorMessage += `\n\n詳細: ${typeof errorData.details === 'string' ? errorData.details : JSON.stringify(errorData.details, null, 2)}`;
+        }
+        if (errorData.status) {
+          errorMessage += `\nステータス: ${errorData.status} ${errorData.statusText || ''}`;
+        }
+        
+        alert(errorMessage);
+      } else {
+        const lineData = await lineResponse.json();
+        console.log('LINE通知送信成功:', lineData);
       }
 
       alert(`🎉 ポイント交換が完了しました！\n${exchangeName} ${pointsAmount}pt分のギフトをLINEでお送りしました。`);

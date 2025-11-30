@@ -25,7 +25,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { userId, message } = body;
 
+    console.log('LINE通知送信API呼び出し開始:', {
+      userId,
+      messageLength: message?.length,
+      messagePreview: message?.substring(0, 100) + '...',
+    });
+
     if (!userId || !message) {
+      console.error('必要なパラメータが不足しています:', { userId: !!userId, message: !!message });
       return NextResponse.json(
         { error: '必要なパラメータが不足しています' },
         { status: 400 }
@@ -33,6 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!lineChannelAccessToken) {
+      console.error('LINE_CHANNEL_ACCESS_TOKENが設定されていません');
       return NextResponse.json(
         { error: 'サーバー設定エラー: LINE_CHANNEL_ACCESS_TOKENが設定されていません' },
         { status: 500 }
@@ -40,47 +48,105 @@ export async function POST(request: NextRequest) {
     }
 
     // user_line_linksテーブルからLINEのユーザーIDを取得
+    console.log('LINE連携情報を取得中...', { userId });
     const { data: lineLink, error: linkError } = await supabase
       .from('user_line_links')
       .select('line_user_id')
       .eq('user_id', userId)
       .single();
 
-    if (linkError || !lineLink?.line_user_id) {
+    if (linkError) {
+      console.error('LINE連携情報取得エラー:', {
+        message: linkError.message,
+        code: linkError.code,
+        details: linkError.details,
+        hint: linkError.hint,
+      });
       return NextResponse.json(
-        { error: 'LINE連携が見つかりませんでした' },
+        { error: 'LINE連携情報の取得に失敗しました', details: linkError },
+        { status: 500 }
+      );
+    }
+
+    if (!lineLink?.line_user_id) {
+      console.error('LINE連携が見つかりませんでした:', { userId, lineLink });
+      return NextResponse.json(
+        { error: 'LINE連携が見つかりませんでした', details: { userId, lineLink } },
         { status: 404 }
       );
     }
 
+    console.log('LINE連携情報取得成功:', {
+      userId,
+      lineUserId: lineLink.line_user_id?.substring(0, 10) + '...',
+    });
+
     // LINE Messaging APIでプッシュ通知を送信
+    const requestBody = {
+      to: lineLink.line_user_id,
+      messages: [
+        {
+          type: 'text',
+          text: message,
+        },
+      ],
+    };
+
+    console.log('LINE Messaging API呼び出し開始:', {
+      url: LINE_MESSAGING_API_URL,
+      to: lineLink.line_user_id?.substring(0, 10) + '...',
+      messageLength: message.length,
+      hasAccessToken: !!lineChannelAccessToken,
+    });
+
     const response = await fetch(LINE_MESSAGING_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lineChannelAccessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        to: lineLink.line_user_id,
-        messages: [
-          {
-            type: 'text',
-            text: message,
-          },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('LINE Messaging APIレスポンス:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('LINE API Error:', errorText);
+      console.error('LINE API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+        requestBody: {
+          ...requestBody,
+          to: requestBody.to?.substring(0, 10) + '...', // セキュリティのため一部のみ表示
+        },
+      });
+      
+      // JSONとしてパースを試みる
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+      
       return NextResponse.json(
-        { error: 'LINE通知の送信に失敗しました', details: errorText },
+        { 
+          error: 'LINE通知の送信に失敗しました', 
+          details: errorDetails,
+          status: response.status,
+          statusText: response.statusText,
+        },
         { status: response.status }
       );
     }
 
     const lineData = await response.json();
+    console.log('LINE通知送信成功:', lineData);
 
     return NextResponse.json({
       success: true,
