@@ -51,6 +51,138 @@ import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
 
+// 各タブごとのキャラクターのセリフ
+const CHARACTER_MESSAGES: Record<ActiveTab, string[]> = {
+  surveys: [
+    'アンケートに答えてポイントをゲットしよう！',
+    '新しいアンケートが追加されたよ！',
+    'クイズに挑戦して知識を深めよう！',
+    '回答するとポイントがもらえるよ♪',
+    '今日もアンケートに答えてみよう！',
+    'クイズで高得点を目指そう！',
+    'アンケートで意見を聞かせてね',
+    'ポイントを貯めて交換しよう！',
+    '新しいクイズに挑戦してみて！',
+    'アンケートに答えるとポイントがもらえるよ',
+    'クイズで全問正解を目指そう！',
+    'たくさんアンケートに答えてみよう',
+    'ポイントを貯めると交換できるよ',
+    'アンケートで社会に貢献しよう！',
+    'クイズで自分の知識を試そう',
+    '新しいアンケートをチェックしてね',
+    '回答済みのアンケートも確認できるよ',
+    'クイズで楽しく学ぼう！',
+    'アンケートに答えてみんなの役に立とう',
+    'ポイントを貯めてギフトと交換しよう',
+    'クイズで高得点を取ろう！',
+    'アンケートで意見を伝えよう',
+    '新しいクイズが追加されたよ',
+    'アンケートに答えるとポイントがもらえる',
+    'クイズで知識を深めよう！',
+    'たくさんのアンケートに答えてみて',
+    'ポイントを貯めて交換できるよ♪',
+    'クイズで全問正解を目指そう！',
+    'アンケートで社会に貢献できるよ',
+    '新しいアンケートをチェックしてみて'
+  ],
+  recruitment: [
+    '気になる企業を探してみよう！',
+    '業界や価値観で絞り込めるよ',
+    'マッチング検索で自分に合う企業を見つけよう',
+    '企業の情報を詳しく見てみてね',
+    '業種で検索すると見つけやすいよ',
+    '目指す未来を確認してみよう',
+    'パーソナリティタイプで検索できるよ',
+    '気になる企業の詳細を見てみて',
+    'フィルターを使って企業を探そう',
+    'マッチング検索で自分に合う企業を発見！',
+    '業界を選んで企業を絞り込もう',
+    '価値観で企業を検索してみて',
+    '企業の情報をチェックしてみよう',
+    '業種で企業を探すと便利だよ',
+    '目指す未来から企業を選ぼう',
+    'パーソナリティタイプでマッチング！',
+    '気になる企業の詳細を確認してね',
+    'フィルターを組み合わせて検索しよう',
+    'マッチング検索で理想の企業を見つけよう',
+    '業界を選択して企業を探してみて',
+    '価値観で企業を絞り込めるよ',
+    '企業の情報を詳しく見てみよう',
+    '業種で検索すると見つけやすい',
+    '目指す未来を確認してみてね',
+    'パーソナリティタイプで検索できる',
+    '気になる企業の詳細を見てみよう',
+    'フィルターを使って企業を探してみて',
+    'マッチング検索で自分に合う企業を発見しよう',
+    '業界を選んで企業を絞り込んでみて',
+    '価値観で企業を検索してみよう'
+  ],
+  career_consultation: [
+    'キャリアの悩みを相談してみよう！',
+    'シーエイトに相談すると解決できるよ',
+    'キャリア支援のプロがサポートしてくれる',
+    '相談してみると道が開けるかも',
+    'キャリアの悩みは一人で抱え込まないで',
+    'シーエイトに相談してみてね',
+    'キャリア支援のプロが助けてくれるよ',
+    '相談すると新しい視点が得られるかも',
+    'キャリアの悩みを一緒に考えよう',
+    'シーエイトに相談してみよう',
+    'キャリア支援のプロがサポートしてくれるよ',
+    '相談してみると解決策が見つかるかも',
+    'キャリアの悩みは相談してみて',
+    'シーエイトに相談するとアドバイスがもらえる',
+    'キャリア支援のプロが手助けしてくれる',
+    '相談してみると道が開けるよ',
+    'キャリアの悩みを一緒に解決しよう',
+    'シーエイトに相談してみてね',
+    'キャリア支援のプロがサポートしてくれる',
+    '相談すると新しい視点が得られる',
+    'キャリアの悩みを相談してみよう',
+    'シーエイトに相談すると解決できる',
+    'キャリア支援のプロが助けてくれる',
+    '相談してみると解決策が見つかる',
+    'キャリアの悩みは一人で抱え込まないでね',
+    'シーエイトに相談してみよう',
+    'キャリア支援のプロが手助けしてくれるよ',
+    '相談してみると道が開けるかも',
+    'キャリアの悩みを一緒に考えてみよう',
+    'シーエイトに相談するとアドバイスがもらえるよ'
+  ],
+  bulletin_board: [
+    '掲示板で最新情報をチェックしよう！',
+    '新しいお知らせがあるか確認してみて',
+    '掲示板で重要な情報を見逃さないでね',
+    'お知らせをチェックしてみよう',
+    '掲示板で最新の情報を確認して',
+    '新しいお知らせが追加されたかも',
+    '掲示板で重要な情報をチェックしよう',
+    'お知らせを見て最新情報をゲット！',
+    '掲示板で情報を確認してみてね',
+    '新しいお知らせがあるか見てみよう',
+    '掲示板で最新情報をチェックしてみて',
+    'お知らせを確認して情報をゲットしよう',
+    '掲示板で重要な情報を見逃さないで',
+    '新しいお知らせが追加されたか確認して',
+    '掲示板で最新の情報をチェックしてみよう',
+    'お知らせを見て最新情報をゲットしてみて',
+    '掲示板で情報を確認しよう',
+    '新しいお知らせがあるかチェックしてね',
+    '掲示板で最新情報を確認してみて',
+    'お知らせをチェックして情報をゲット！',
+    '掲示板で重要な情報を見逃さないでね',
+    '新しいお知らせが追加されたか見てみよう',
+    '掲示板で最新の情報をチェックして',
+    'お知らせを見て最新情報をゲットしてみよう',
+    '掲示板で情報を確認してみて',
+    '新しいお知らせがあるか確認してみよう',
+    '掲示板で最新情報をチェックしてね',
+    'お知らせを確認して情報をゲットしてみて',
+    '掲示板で重要な情報を見逃さないで',
+    '新しいお知らせが追加されたかチェックしよう'
+  ]
+};
+
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
 
@@ -1702,8 +1834,8 @@ export default function MonitorDashboard() {
                     <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
                   </div>
                   
-                  {/* 右半分: 動画 */}
-                  <div className="flex items-center justify-center">
+                  {/* 右半分: 動画と吹き出し */}
+                  <div className="flex items-center justify-center relative">
                     {(() => {
                       let videoType = personalityType;
                       if (personalityType.includes('/')) {
@@ -1715,15 +1847,32 @@ export default function MonitorDashboard() {
                         }
                       }
                       if (videoType.length === 4) {
+                        const messages = CHARACTER_MESSAGES[activeTab] || [];
+                        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
                         return (
-                          <video
-                            src={`/character/${videoType}.mp4`}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
-                          />
+                          <div className="relative">
+                            <video
+                              src={`/character/${videoType}.mp4`}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
+                            />
+                            {/* 吹き出し */}
+                            <div className="absolute -top-2 sm:-top-4 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2">
+                              <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[250px]">
+                                <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
+                                  {randomMessage}
+                                </p>
+                                {/* 吹き出しのしっぽ */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                  <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-orange-300"></div>
+                                  <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-7 border-r-7 border-t-7 border-transparent border-t-white"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         );
                       }
                       return null;
