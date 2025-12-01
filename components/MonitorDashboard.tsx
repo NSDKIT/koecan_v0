@@ -1613,34 +1613,34 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 flex items-center justify-between space-x-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
               {/* 獲得ポイント */}
             <div
-                className="flex items-center space-x-4 cursor-pointer flex-1"
+                className="flex items-center space-x-3 sm:space-x-4 cursor-pointer flex-1 w-full sm:w-auto"
               onClick={() => setShowPointExchangeModal(true)} 
             >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-                <Star className="w-10 h-10 text-white" />
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3 sm:p-4 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
+                <Star className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <div>
-                <p className="text-gray-600 text-lg">獲得ポイント</p>
-                <p className="text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-gray-600 text-sm sm:text-lg">獲得ポイント</p>
+                <p className="text-3xl sm:text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
               </div>
               </div>
               
               {/* パーソナリティタイプ表示とキャラクター動画 */}
               {personalityType && (
-                <div className="flex items-center flex-1">
+                <div className="flex items-center flex-1 w-full sm:w-auto">
                   <div 
-                    className="flex items-center space-x-4 cursor-pointer"
+                    className="flex items-center space-x-3 sm:space-x-4 cursor-pointer flex-1"
                     onClick={() => setShowPersonalityTypeModal(true)}
                   >
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-4 flex items-center justify-center w-20 h-20 shadow-lg">
-                      <Brain className="w-10 h-10 text-white" />
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3 sm:p-4 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
+                      <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
                     </div>
-                    <div>
-                      <p className="text-gray-600 text-lg">パーソナリティタイプ</p>
-                      <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-gray-600 text-sm sm:text-lg">パーソナリティタイプ</p>
+                      <p className="text-3xl sm:text-5xl font-bold text-purple-600">{personalityType}</p>
                     </div>
                   </div>
                   {(() => {
@@ -1659,14 +1659,14 @@ export default function MonitorDashboard() {
                     // 4文字のタイプのみ動画を表示
                     if (videoType.length === 4) {
                       return (
-                        <div className="ml-0">
+                        <div className="ml-2 sm:ml-4 hidden md:block">
                           <video
                             src={`/character/${videoType}.mp4`}
                             autoPlay
                             loop
                             muted
                             playsInline
-                            className="w-32 h-32 object-cover rounded-lg"
+                            className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg"
                           />
                         </div>
                       );
@@ -1909,15 +1909,15 @@ export default function MonitorDashboard() {
                             className="w-full h-auto object-cover"
                         />
                         
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center p-4">
                             <a
                                 href={C8_LINE_ADD_URL}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center"
+                                className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white px-4 py-3 sm:px-8 sm:py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex flex-col items-center text-sm sm:text-base"
                             >
-                                <span className="text-sm mb-1">キャリア支援のプロ</span>
-                                <span className="text-lg">シーエイトに相談</span>
+                                <span className="text-xs sm:text-sm mb-1">キャリア支援のプロ</span>
+                                <span className="text-base sm:text-lg">シーエイトに相談</span>
                             </a>
                         </div>
                     </div>
@@ -2146,42 +2146,46 @@ export default function MonitorDashboard() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="max-w-7xl mx-auto flex justify-around h-20">
+        <div className="max-w-7xl mx-auto flex justify-around h-16 sm:h-20">
           <button
             onClick={() => setActiveTab('bulletin_board')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'bulletin_board' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
-            <MessageCircle className="w-6 h-6 mb-1" />
-            掲示板
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+            <span className="hidden sm:inline">掲示板</span>
+            <span className="sm:hidden">掲示板</span>
           </button>
           <button
             onClick={() => setActiveTab('surveys')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'surveys' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
-            <ClipboardList className="w-6 h-6 mb-1" />
-            アンケート
+            <ClipboardList className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+            <span className="hidden sm:inline">アンケート</span>
+            <span className="sm:hidden">アンケート</span>
           </button>
           <button
             onClick={() => setActiveTab('recruitment')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'recruitment' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
-            <Briefcase className="w-6 h-6 mb-1" />
-            企業情報
+            <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+            <span className="hidden sm:inline">企業情報</span>
+            <span className="sm:hidden">企業</span>
           </button>
           <button
             onClick={() => setActiveTab('career_consultation')}
-            className={`flex flex-col items-center justify-center w-full text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
               activeTab === 'career_consultation' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
             }`}
           >
-            <MessageCircle className="w-6 h-6 mb-1" />
-            キャリア相談
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+            <span className="hidden sm:inline">キャリア相談</span>
+            <span className="sm:hidden">相談</span>
           </button>
         </div>
       </div>
@@ -2210,8 +2214,8 @@ export default function MonitorDashboard() {
       )}
 
       {selectedAdvertisement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             
             <div className="relative">
               <button
@@ -2225,14 +2229,14 @@ export default function MonitorDashboard() {
               </button>
 
               {/* ヘッダー - 白背景にオレンジテキスト */}
-              <div className="bg-white rounded-t-3xl p-8 pb-6">
-                <h2 className="text-4xl font-bold text-orange-600 mb-6">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+              <div className="bg-white rounded-t-3xl p-4 sm:p-8 pb-4 sm:pb-6">
+                <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-4 sm:mb-6">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
                 
                 {/* タブ切り替えボタン */}
-                <div className="flex space-x-4">
+                <div className="flex space-x-2 sm:space-x-4">
                   <button
                     onClick={() => setCompanyDetailView('info')}
-                    className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors ${
+                    className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
                       companyDetailView === 'info'
                         ? 'bg-orange-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -2242,7 +2246,7 @@ export default function MonitorDashboard() {
                   </button>
                   <button
                     onClick={() => setCompanyDetailView('personality')}
-                    className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors ${
+                    className={`flex-1 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
                       companyDetailView === 'personality'
                         ? 'bg-orange-600 text-white'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -2268,7 +2272,7 @@ export default function MonitorDashboard() {
                 </div>
               )}
 
-              <div className="p-8">
+              <div className="p-4 sm:p-8">
                 {/* 企業情報タブの内容 */}
                 {companyDetailView === 'info' && (
                   <>
@@ -2289,12 +2293,12 @@ export default function MonitorDashboard() {
                     <Building className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">企業概要</h3>
                   </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                    <table className="w-full">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <tbody>
                         <tr className="border-b border-gray-200">
-                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">代表者名</td>
-                          <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.representative_name)}</td>
+                          <td className="px-4 sm:px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3 whitespace-nowrap">代表者名</td>
+                          <td className="px-4 sm:px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.representative_name)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
                           <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700">設立年</td>
@@ -2344,11 +2348,11 @@ export default function MonitorDashboard() {
                     <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">募集・待遇情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                    <table className="w-full">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <tbody>
                         <tr className="border-b border-gray-200">
-                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">初任給</td>
+                          <td className="px-4 sm:px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3 whitespace-nowrap">初任給</td>
                           <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.starting_salary)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
@@ -2393,11 +2397,11 @@ export default function MonitorDashboard() {
                     <Sparkles className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">働き方・福利厚生</h3>
                   </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                    <table className="w-full">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <tbody>
                         <tr className="border-b border-gray-200">
-                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">勤務時間</td>
+                          <td className="px-4 sm:px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3 whitespace-nowrap">勤務時間</td>
                           <td className="px-6 py-4 text-gray-700">{displayValue(selectedAdvertisement.working_hours)}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
@@ -2457,11 +2461,11 @@ export default function MonitorDashboard() {
                     <Users className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">採用情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                    <table className="w-full">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <tbody>
                         <tr className="border-b border-gray-200">
-                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">採用担当部署（担当者）</td>
+                          <td className="px-4 sm:px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3 whitespace-nowrap">採用担当部署（担当者）</td>
                           <td className="px-6 py-4 text-gray-700 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_department)}</td>
                         </tr>
                         <tr className={selectedAdvertisement.recruitment_info_page_url ? "border-b border-gray-200" : ""}>
@@ -2494,11 +2498,11 @@ export default function MonitorDashboard() {
                     <Target className="w-6 h-6 text-orange-600 mr-2" />
                     <h3 className="text-2xl font-bold text-gray-800">インターンシップ情報</h3>
                   </div>
-                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
-                    <table className="w-full">
+                  <div className="bg-white rounded-2xl overflow-hidden border border-gray-200 overflow-x-auto">
+                    <table className="w-full min-w-[600px]">
                       <tbody>
                         <tr className="border-b border-gray-200">
-                          <td className="px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3">実施予定</td>
+                          <td className="px-4 sm:px-6 py-4 bg-gray-50 font-semibold text-gray-700 w-1/3 whitespace-nowrap">実施予定</td>
                           <td className="px-6 py-4 text-gray-700">{formatBoolean(selectedAdvertisement.internship_scheduled, '実施予定あり', '実施予定なし')}</td>
                         </tr>
                         <tr className="border-b border-gray-200">
