@@ -2027,11 +2027,11 @@ export default function MonitorDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <div className="p-4 sm:p-6">
-                    <p className="text-sm text-gray-600 mb-4 px-0 sm:px-0">
+                  <div className="p-0 sm:p-6">
+                    <p className="text-sm text-gray-600 mb-4 px-4 sm:px-0">
                       {filteredAdvertisements.length}件の企業が見つかりました
                     </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
                       {filteredAdvertisements.map((ad) => (
                       <div
                         key={ad.id}
@@ -2064,12 +2064,12 @@ export default function MonitorDashboard() {
                               }}
                             />
                             {displayValue(ad.company_vision) && (
-                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
-                                  <h4 className="text-xs sm:text-sm font-bold text-white">目指す未来</h4>
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                <div className="flex items-center gap-1 mb-0.5">
+                                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                  <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
                                 </div>
-                                <p className="text-white text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
                                   {displayValue(ad.company_vision)}
                                 </p>
                               </div>
@@ -2077,14 +2077,14 @@ export default function MonitorDashboard() {
                           </div>
                         ) : (
                           <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
-                            <Briefcase className="w-12 h-12 text-gray-500" />
+                            <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
                             {displayValue(ad.company_vision) && (
-                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-3">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
-                                  <h4 className="text-xs sm:text-sm font-bold text-white">目指す未来</h4>
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
+                                <div className="flex items-center gap-1 mb-0.5">
+                                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                  <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
                                 </div>
-                                <p className="text-white text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
                                   {displayValue(ad.company_vision)}
                                 </p>
                               </div>
@@ -2092,13 +2092,13 @@ export default function MonitorDashboard() {
                           </div>
                         )}
                         
-                        <div className="p-4">
-                          <div className="flex items-center justify-between gap-2">
-                            <h3 className="font-semibold text-gray-800 text-base flex-1 line-clamp-1">
+                        <div className="p-3 sm:p-4">
+                          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                            <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
                               {displayValue(ad.company_name) || '企業名未設定'}
                             </h3>
                             {ad.personality_type && (
-                              <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold flex-shrink-0">
+                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
                                 {ad.personality_type}
                               </div>
                             )}
