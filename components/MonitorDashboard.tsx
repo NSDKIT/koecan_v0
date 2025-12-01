@@ -2049,7 +2049,7 @@ export default function MonitorDashboard() {
                           }
                           return (imageUrl && imageUrl.length > 0);
                         })() ? (
-                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
+                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
                             <img
                               src={getSecureImageUrl(ad.image_url) || ''}
                               alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
@@ -2063,10 +2063,32 @@ export default function MonitorDashboard() {
                                 target.style.display = 'none';
                               }}
                             />
+                            {displayValue(ad.company_vision) && (
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
+                                  <h4 className="text-xs sm:text-sm font-bold text-white">目指す未来</h4>
+                                </div>
+                                <p className="text-white text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                  {displayValue(ad.company_vision)}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         ) : (
-                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center">
+                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
                             <Briefcase className="w-12 h-12 text-gray-500" />
+                            {displayValue(ad.company_vision) && (
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-3">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-orange-400 flex-shrink-0" />
+                                  <h4 className="text-xs sm:text-sm font-bold text-white">目指す未来</h4>
+                                </div>
+                                <p className="text-white text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                                  {displayValue(ad.company_vision)}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                         
