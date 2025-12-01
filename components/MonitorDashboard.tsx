@@ -229,7 +229,8 @@ export default function MonitorDashboard() {
   const [quizAnswers, setQuizAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('bulletin_board');
-  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [characterMessage, setCharacterMessage] = useState<string>(''); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
@@ -1847,8 +1848,6 @@ export default function MonitorDashboard() {
                         }
                       }
                       if (videoType.length === 4) {
-                        const messages = CHARACTER_MESSAGES[activeTab] || [];
-                        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
                         return (
                           <div className="relative">
                             <video
@@ -1860,18 +1859,20 @@ export default function MonitorDashboard() {
                               className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
                             />
                             {/* 吹き出し */}
-                            <div className="absolute -top-2 sm:-top-4 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2">
-                              <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[250px]">
-                                <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
-                                  {randomMessage}
-                                </p>
-                                {/* 吹き出しのしっぽ */}
-                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                  <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-orange-300"></div>
-                                  <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-7 border-r-7 border-t-7 border-transparent border-t-white"></div>
+                            {characterMessage && (
+                              <div className="absolute -top-2 sm:-top-4 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2">
+                                <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[250px]">
+                                  <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
+                                    {characterMessage}
+                                  </p>
+                                  {/* 吹き出しのしっぽ */}
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                    <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-orange-300"></div>
+                                    <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-7 border-r-7 border-t-7 border-transparent border-t-white"></div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         );
                       }
