@@ -1871,7 +1871,7 @@ export default function MonitorDashboard() {
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 border-r border-gray-300 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
                         selectedIndustries.length > 0
                           ? 'bg-blue-50 text-blue-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1880,7 +1880,7 @@ export default function MonitorDashboard() {
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Building className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[10px] sm:text-xs whitespace-nowrap">業界を選択</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">業界を選択</span>
                       {selectedIndustries.length > 0 && (
                         <span className="bg-blue-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
                           {selectedIndustries.length}
@@ -1892,7 +1892,7 @@ export default function MonitorDashboard() {
                     {/* 価値観選択ボタン */}
                     <button
                       onClick={() => setShowPersonalityFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 border-r border-gray-300 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
                         selectedPersonalityTypes.length > 0
                           ? 'bg-purple-50 text-purple-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1901,7 +1901,7 @@ export default function MonitorDashboard() {
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Brain className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[10px] sm:text-xs whitespace-nowrap">価値観を選択</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">価値観を選択</span>
                       {selectedPersonalityTypes.length > 0 && (
                         <span className="bg-purple-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
                           {selectedPersonalityTypes.length}
@@ -1913,7 +1913,7 @@ export default function MonitorDashboard() {
                     {/* マッチング検索ボタン */}
                     <button
                       onClick={() => setIsMatchingSearch(!isMatchingSearch)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
                         isMatchingSearch
                           ? 'bg-orange-50 text-orange-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1923,7 +1923,7 @@ export default function MonitorDashboard() {
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[10px] sm:text-xs whitespace-nowrap">マッチング検索</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">マッチング検索</span>
                       <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
                     </button>
 
