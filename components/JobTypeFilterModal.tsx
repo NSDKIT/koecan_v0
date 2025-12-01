@@ -34,7 +34,7 @@ export function JobTypeFilterModal({ selectedJobTypes, onClose, onApply }: JobTy
           new Set(
             data
               .map((item: { job_type: string | null }) => item.job_type)
-              .filter((jobType): jobType is string => jobType !== null && jobType !== '')
+              .filter((jobType: string | null): jobType is string => jobType !== null && jobType !== '')
           )
         ).sort();
 
