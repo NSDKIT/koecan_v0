@@ -366,7 +366,7 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">パーソナリティ診断</h2>
+              <h2 className="text-2xl font-bold text-gray-800">価値観診断</h2>
               <p className="text-gray-600 mt-1">あなたの考え方の傾向を診断します</p>
             </div>
             <button

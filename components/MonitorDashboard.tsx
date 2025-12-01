@@ -103,7 +103,6 @@ export default function MonitorDashboard() {
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
   const [showPointExchangeModal, setShowPointExchangeModal] = useState(false);
-  const [showProfileSurveyModal, setShowProfileSurveyModal] = useState(false); 
   const [showPersonalityAssessmentModal, setShowPersonalityAssessmentModal] = useState(false);
   const [showPersonalityTypeModal, setShowPersonalityTypeModal] = useState(false);
   const [personalityType, setPersonalityType] = useState<string | null>(null);
@@ -1624,23 +1623,13 @@ export default function MonitorDashboard() {
             </button>
             <button
               onClick={() => {
-                setShowProfileSurveyModal(true); 
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <FileText className="w-5 h-5 mr-2" /> 
-              プロフィールアンケート
-            </button>
-            <button
-              onClick={() => {
                 setShowPersonalityAssessmentModal(true); 
                 setIsMenuOpen(false);
               }}
               className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
             >
               <BarChart3 className="w-5 h-5 mr-2" /> 
-              パーソナリティ診断
+              価値観診断
             </button>
             <button
               onClick={() => {
@@ -2666,12 +2655,6 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {showProfileSurveyModal && (
-        <MonitorProfileSurveyModal
-          onClose={() => setShowProfileSurveyModal(false)}
-          onSaveSuccess={() => { /* ... */ }}
-        />
-      )}
 
       {showPersonalityAssessmentModal && (
         <PersonalityAssessmentModal

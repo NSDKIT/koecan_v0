@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, Save, Edit } from 'lucide-react';
 import { supabase } from '@/config/supabase';
+import { MonitorProfileSurveyModal } from './MonitorProfileSurveyModal';
 
 interface ProfileModalProps {
   user: any;
@@ -11,7 +12,10 @@ interface ProfileModalProps {
   onUpdate: () => void;
 }
 
+type ActiveTab = 'profile' | 'survey';
+
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -76,6 +80,21 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     }
   };
 
+  // プロフィールアンケートタブの場合は、MonitorProfileSurveyModalを表示
+  if (activeTab === 'survey') {
+    return (
+      <MonitorProfileSurveyModal
+        onClose={() => {
+          setActiveTab('profile');
+          onClose();
+        }}
+        onSaveSuccess={() => {
+          onUpdate();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
@@ -86,7 +105,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               <User className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">プロフィール</h2>
+              <h2 className="text-xl font-bold text-gray-800">プロフィール設定</h2>
               <p className="text-gray-600">アカウント情報の確認・編集</p>
             </div>
           </div>
@@ -96,6 +115,32 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           >
             <X className="w-6 h-6" />
           </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 px-6">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'profile'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              基本情報
+            </button>
+            <button
+              onClick={() => setActiveTab('survey')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'survey'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              プロフィールアンケート
+            </button>
+          </div>
         </div>
 
         {/* Content */}
