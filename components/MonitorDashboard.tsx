@@ -1834,18 +1834,18 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
-            <div className="bg-white p-4 sm:p-6 mb-4 sm:mb-8">
+            <div className="bg-white p-0 sm:p-6 mb-0 sm:mb-8">
               {personalityType && (
-                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-2 gap-0 sm:gap-6">
                   {/* 左側: タイプ（上）と動画（下） */}
-                  <div className="flex flex-col items-center justify-center gap-2 sm:gap-6">
+                  <div className="flex flex-col items-center justify-center gap-0 sm:gap-6">
                     {/* タイプ */}
                     <div 
                       className="flex flex-col items-center justify-center cursor-pointer"
                       onClick={() => setShowPersonalityTypeModal(true)}
                     >
-                      <p className="text-xs sm:text-base text-gray-600 mb-1 sm:mb-2">あなたのタイプ</p>
-                      <p className="text-2xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
+                      <p className="text-sm sm:text-base text-gray-600 mb-0 sm:mb-2">あなたのタイプ</p>
+                      <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
                     </div>
                     
                     {/* 動画 */}
@@ -1867,7 +1867,7 @@ export default function MonitorDashboard() {
                             loop
                             muted
                             playsInline
-                            className="w-16 h-16 sm:w-48 sm:h-48 object-cover rounded-lg"
+                            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
                           />
                         );
                       }
@@ -1878,7 +1878,7 @@ export default function MonitorDashboard() {
                   {/* 右側: 吹き出し */}
                   <div className="flex items-center justify-center">
                     {characterMessage && (
-                      <div className="bg-white rounded-lg shadow-lg px-4 py-3 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
+                      <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
                         <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
                           {characterMessage}
                         </p>
