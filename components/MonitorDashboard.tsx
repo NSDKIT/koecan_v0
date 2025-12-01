@@ -375,7 +375,7 @@ export default function MonitorDashboard() {
         }
 
         const companyIds = new Set(
-          data?.map((item: { company_id: string | null }) => item.company_id).filter((id): id is string => id !== null) || []
+          data?.map((item: { company_id: string | null }) => item.company_id).filter((id: string | null): id is string => id !== null) || []
         );
         setCompanyIdsWithJobTypes(companyIds);
       } catch (error) {
