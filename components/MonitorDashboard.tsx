@@ -1837,18 +1837,8 @@ export default function MonitorDashboard() {
             <div className="bg-white p-0 sm:p-6 mb-0 sm:mb-8">
               {personalityType && (
                 <div className="grid grid-cols-2 gap-0 sm:gap-6">
-                  {/* 左側: タイプ（上）と動画（下） */}
-                  <div className="flex flex-col items-center justify-center gap-0 sm:gap-6">
-                    {/* タイプ */}
-                    <div 
-                      className="flex flex-col items-center justify-center cursor-pointer"
-                      onClick={() => setShowPersonalityTypeModal(true)}
-                    >
-                      <p className="text-sm sm:text-base text-gray-600 mb-0 sm:mb-2">あなたのタイプ</p>
-                      <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
-                    </div>
-                    
-                    {/* 動画 */}
+                  {/* 左側: 動画 */}
+                  <div className="flex items-center justify-center">
                     {(() => {
                       let videoType = personalityType;
                       if (personalityType.includes('/')) {
@@ -1875,8 +1865,18 @@ export default function MonitorDashboard() {
                     })()}
                   </div>
                   
-                  {/* 右側: 吹き出し */}
-                  <div className="flex items-center justify-center">
+                  {/* 右側: タイプ（上）と吹き出し（下） */}
+                  <div className="flex flex-col items-center justify-center gap-0 sm:gap-6">
+                    {/* タイプ */}
+                    <div 
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                      onClick={() => setShowPersonalityTypeModal(true)}
+                    >
+                      <p className="text-sm sm:text-base text-gray-600 mb-0 sm:mb-2">あなたのタイプ</p>
+                      <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
+                    </div>
+                    
+                    {/* 吹き出し */}
                     {characterMessage && (
                       <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
                         <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
