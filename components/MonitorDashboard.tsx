@@ -127,6 +127,7 @@ export default function MonitorDashboard() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
+  const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -353,6 +354,37 @@ export default function MonitorDashboard() {
 
     setFilteredAdvertisements(filtered);
   }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes]);
+
+  // 職種を持つ企業IDを取得
+  useEffect(() => {
+    const fetchCompanyIdsWithJobTypes = async () => {
+      if (selectedJobTypes.length === 0) {
+        setCompanyIdsWithJobTypes(new Set());
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('company_personality_individual_responses')
+          .select('company_id, job_type')
+          .in('job_type', selectedJobTypes);
+
+        if (error) {
+          console.error('職種フィルター取得エラー:', error);
+          return;
+        }
+
+        const companyIds = new Set(
+          data?.map((item: { company_id: string | null }) => item.company_id).filter((id): id is string => id !== null) || []
+        );
+        setCompanyIdsWithJobTypes(companyIds);
+      } catch (error) {
+        console.error('職種フィルター取得エラー:', error);
+      }
+    };
+
+    fetchCompanyIdsWithJobTypes();
+  }, [selectedJobTypes]);
 
   // フィルターが変更されたときに適用
   useEffect(() => {
