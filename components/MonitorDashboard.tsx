@@ -1686,7 +1686,7 @@ export default function MonitorDashboard() {
                 {isLineLinked ? (
                   <div className="flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
                     <CheckCircle className="w-3 h-3 mr-1" />
-                    LINE連携済み
+                    連携済み
                   </div>
                 ) : (
                   <button 
@@ -1718,7 +1718,7 @@ export default function MonitorDashboard() {
                 {isLineLinked ? (
                   <div className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    LINE連携済み
+                    連携済み
                   </div>
                 ) : (
                   <button 
