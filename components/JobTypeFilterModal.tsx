@@ -30,7 +30,7 @@ export function JobTypeFilterModal({ selectedJobTypes, onClose, onApply }: JobTy
         }
 
         // 一意の職種を取得
-        const uniqueJobTypes = Array.from(
+        const uniqueJobTypes: string[] = Array.from(
           new Set(
             data
               .map((item: { job_type: string | null }) => item.job_type)
