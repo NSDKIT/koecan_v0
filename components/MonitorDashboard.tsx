@@ -2210,12 +2210,12 @@ export default function MonitorDashboard() {
               </div>
 
               {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                <div className="px-8 pt-6 relative z-10">
-                  <div className="bg-white rounded-2xl overflow-hidden h-96 border-4 border-white">
+                <div className="px-4 sm:px-8 pt-4 sm:pt-6 relative z-10">
+                  <div className="bg-white rounded-2xl overflow-hidden border-4 border-white">
                     <img
                       src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
                       alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
-                      className="w-auto h-full object-cover mx-auto"
+                      className="w-full h-auto object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
                       }}
