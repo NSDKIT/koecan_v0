@@ -1670,7 +1670,7 @@ export default function MonitorDashboard() {
       <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
       <div className="relative z-20">
-        <header className="bg-orange-500 sm:bg-white/80 sm:backdrop-blur-sm border-b border-orange-100">
+        <header className="sticky top-0 bg-orange-500 sm:bg-white/80 sm:backdrop-blur-sm border-b border-orange-100 z-30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-14 sm:h-16">
               {/* スマホ: オレンジバーにコイン、ポイント、交換ボタン、人型アイコン */}
@@ -1831,8 +1831,8 @@ export default function MonitorDashboard() {
           </div>
         )}
 
-        <main className={`mx-auto pb-20 ${
-          activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
+        <main className={`mx-auto ${
+          activeTab === 'career_consultation' ? 'pb-20' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8 pb-20'
         }`}> 
           {activeTab !== 'career_consultation' && (
             <div className="bg-white p-0 sm:p-6 mb-0 sm:mb-8">
