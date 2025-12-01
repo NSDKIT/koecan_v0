@@ -1871,7 +1871,7 @@ export default function MonitorDashboard() {
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-1 sm:px-2 border-r border-gray-300 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 border-r border-gray-300 transition-all ${
                         selectedIndustries.length > 0
                           ? 'bg-blue-50 text-blue-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1892,7 +1892,7 @@ export default function MonitorDashboard() {
                     {/* 価値観選択ボタン */}
                     <button
                       onClick={() => setShowPersonalityFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-1 sm:px-2 border-r border-gray-300 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 border-r border-gray-300 transition-all ${
                         selectedPersonalityTypes.length > 0
                           ? 'bg-purple-50 text-purple-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1913,7 +1913,7 @@ export default function MonitorDashboard() {
                     {/* マッチング検索ボタン */}
                     <button
                       onClick={() => setIsMatchingSearch(!isMatchingSearch)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-1 sm:px-2 transition-all ${
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 p-0 transition-all ${
                         isMatchingSearch
                           ? 'bg-orange-50 text-orange-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
