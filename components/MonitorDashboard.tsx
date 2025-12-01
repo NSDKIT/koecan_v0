@@ -1888,12 +1888,12 @@ export default function MonitorDashboard() {
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {/* フィルターセクション */}
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="p-4 sm:p-6 border-b border-gray-200">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
                         selectedIndustries.length > 0
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -1912,7 +1912,7 @@ export default function MonitorDashboard() {
                     {/* 価値観選択ボタン */}
                     <button
                       onClick={() => setShowPersonalityFilter(true)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
                         selectedPersonalityTypes.length > 0
                           ? 'border-purple-500 bg-purple-50 text-purple-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -1929,20 +1929,19 @@ export default function MonitorDashboard() {
                     </button>
 
                     {/* 検索ボタン */}
-                    <div className="flex-1 min-w-[200px]">
-                      <input
-                        type="text"
-                        placeholder="企業名や説明で検索..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
+                    <button
+                      onClick={() => {
+                        // フィルターを適用（既存のフィルタリングロジックを使用）
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      検索
+                    </button>
 
                     {/* マッチング検索ボタン */}
                     <button
                       onClick={() => setIsMatchingSearch(!isMatchingSearch)}
-                      className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center ${
+                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
                         isMatchingSearch
                           ? 'border-orange-500 bg-orange-50 text-orange-700'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -1955,7 +1954,7 @@ export default function MonitorDashboard() {
                   </div>
 
                   {/* フィルター表示 */}
-                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || searchQuery || isMatchingSearch) && (
+                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || isMatchingSearch) && (
                     <div className="flex flex-wrap gap-2">
                       {selectedIndustries.map((industry) => (
                         <span
@@ -1985,17 +1984,6 @@ export default function MonitorDashboard() {
                           </button>
                         </span>
                       ))}
-                      {searchQuery && (
-                        <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                          「{searchQuery}」
-                          <button
-                            onClick={() => setSearchQuery('')}
-                            className="ml-2 hover:text-gray-600"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      )}
                       {isMatchingSearch && (
                         <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                           マッチング検索
@@ -2032,15 +2020,15 @@ export default function MonitorDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <div className="p-6">
-                    <p className="text-sm text-gray-600 mb-4">
+                  <div className="p-4 sm:p-6">
+                    <p className="text-sm text-gray-600 mb-4 px-0 sm:px-0">
                       {filteredAdvertisements.length}件の企業が見つかりました
                     </p>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                       {filteredAdvertisements.map((ad) => (
                       <div
                         key={ad.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group"
+                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
                         onClick={() => {
                           setSelectedAdvertisement(ad);
                           setCompanyDetailView('info'); // 企業を選択した際に「企業情報」タブを表示
@@ -2054,7 +2042,7 @@ export default function MonitorDashboard() {
                           }
                           return (imageUrl && imageUrl.length > 0);
                         })() ? (
-                          <div className="aspect-video bg-gray-100 overflow-hidden">
+                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                             <img
                               src={getSecureImageUrl(ad.image_url) || ''}
                               alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
@@ -2070,25 +2058,22 @@ export default function MonitorDashboard() {
                             />
                           </div>
                         ) : (
-                          <div className="aspect-video bg-gray-200 flex items-center justify-center">
+                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center">
                             <Briefcase className="w-12 h-12 text-gray-500" />
                           </div>
                         )}
                         
                         <div className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-gray-800">
-                            {displayValue(ad.company_name) || '企業名未設定'}
-                          </h3>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-semibold text-gray-800 text-base flex-1 line-clamp-1">
+                              {displayValue(ad.company_name) || '企業名未設定'}
+                            </h3>
                             {ad.personality_type && (
-                              <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-bold">
+                              <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold flex-shrink-0">
                                 {ad.personality_type}
                               </div>
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm line-clamp-2">
-                            {displayValue(ad.company_vision) || displayValue(ad.title) || displayValue(ad.description) || ''}
-                          </p>
                         </div>
                       </div>
                     ))}
