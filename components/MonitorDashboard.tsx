@@ -1837,9 +1837,9 @@ export default function MonitorDashboard() {
           {activeTab !== 'career_consultation' && (
             <div className="bg-white p-0 sm:p-6 mb-0 sm:mb-8">
               {personalityType && (
-                <div className="grid grid-cols-3 gap-0 sm:gap-6">
-                  {/* 左側1/3: 動画 */}
-                  <div className="flex items-center justify-center">
+                <div className="grid grid-cols-5 gap-0 sm:gap-6">
+                  {/* 左側2/5: 動画 */}
+                  <div className="col-span-2 flex items-center justify-center">
                     {(() => {
                       let videoType = personalityType;
                       if (personalityType.includes('/')) {
@@ -1866,8 +1866,8 @@ export default function MonitorDashboard() {
                     })()}
                   </div>
                   
-                  {/* 右側2/3: 吹き出し（タイプを含む） */}
-                  <div className="col-span-2 flex items-center justify-center">
+                  {/* 右側3/5: 吹き出し（タイプを含む） */}
+                  <div className="col-span-3 flex items-center justify-center">
                     {characterMessage && personalityType && (
                       <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
                         <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-relaxed">
