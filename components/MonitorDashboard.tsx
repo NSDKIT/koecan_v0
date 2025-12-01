@@ -394,7 +394,8 @@ export default function MonitorDashboard() {
       const messages = CHARACTER_MESSAGES[activeTab] || [];
       if (messages.length > 0) {
         const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-        setCharacterMessage(randomMessage);
+        // 2行のメッセージを結合
+        setCharacterMessage(randomMessage.join('\n'));
       }
     }
   }, [activeTab]);
