@@ -1530,11 +1530,11 @@ export default function MonitorDashboard() {
             <div className="flex justify-between items-center h-14 sm:h-16">
               {/* スマホ: オレンジバーにコイン、ポイント、交換ボタン、人型アイコン */}
               <div className="flex items-center gap-2 sm:hidden w-full">
-                <Star className="w-5 h-5 text-white" />
-                <span className="text-white font-semibold">{profile?.points || 0} ポイント</span>
+                <Star className="w-6 h-6 text-white" />
+                <span className="text-white font-bold text-lg">{profile?.points || 0} ポイント</span>
                 <button
                   onClick={() => setShowPointExchangeModal(true)}
-                  className="ml-auto px-3 py-1 bg-white text-orange-600 rounded font-semibold text-sm"
+                  className="ml-auto px-4 py-1.5 bg-white text-orange-600 rounded font-semibold text-sm"
                 >
                   交換
                 </button>
@@ -1542,7 +1542,25 @@ export default function MonitorDashboard() {
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   className="p-1"
                 >
-                  <UserIcon className="w-6 h-6 text-white" />
+                  <UserIcon className="w-7 h-7 text-white" />
+                </button>
+              </div>
+              
+              {/* デスクトップ: オレンジバーにコイン、ポイント、交換ボタン、人型アイコン */}
+              <div className="hidden sm:flex items-center gap-3 w-full">
+                <Star className="w-6 h-6 text-orange-600" />
+                <span className="text-orange-600 font-bold text-xl">{profile?.points || 0} ポイント</span>
+                <button
+                  onClick={() => setShowPointExchangeModal(true)}
+                  className="ml-auto px-4 py-1.5 bg-orange-600 text-white rounded font-semibold text-sm hover:bg-orange-700 transition-colors"
+                >
+                  交換
+                </button>
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-1 text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  <UserIcon className="w-7 h-7" />
                 </button>
               </div>
               
@@ -1673,11 +1691,19 @@ export default function MonitorDashboard() {
         }`}> 
           {activeTab !== 'career_consultation' && (
             <div className="bg-white p-4 sm:p-6 mb-4 sm:mb-8">
-              {/* スマホ: タイプと動画のみ */}
               {personalityType && (
-                <div className="flex items-center justify-between sm:hidden">
-                  <div className="flex items-center gap-3">
-                    <p className="text-2xl font-bold text-purple-600">{personalityType}</p>
+                <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                  {/* 左半分: タイプ */}
+                  <div 
+                    className="flex flex-col items-center justify-center cursor-pointer"
+                    onClick={() => setShowPersonalityTypeModal(true)}
+                  >
+                    <p className="text-sm sm:text-base text-gray-600 mb-2">あなたのタイプ</p>
+                    <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
+                  </div>
+                  
+                  {/* 右半分: 動画 */}
+                  <div className="flex items-center justify-center">
                     {(() => {
                       let videoType = personalityType;
                       if (personalityType.includes('/')) {
@@ -1696,7 +1722,7 @@ export default function MonitorDashboard() {
                             loop
                             muted
                             playsInline
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
                           />
                         );
                       }
@@ -1705,39 +1731,6 @@ export default function MonitorDashboard() {
                   </div>
                 </div>
               )}
-              
-              {/* デスクトップ: 元のデザイン（タイプと動画のみ） */}
-              <div className="hidden sm:flex items-center justify-center gap-6">
-                {personalityType && (
-                  <div className="flex items-center gap-4">
-                    <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
-                    {(() => {
-                      let videoType = personalityType;
-                      if (personalityType.includes('/')) {
-                        const parts = personalityType.replace(/\//g, '').substring(0, 4);
-                        if (parts.length === 4) {
-                          videoType = parts;
-                        } else {
-                          return null;
-                        }
-                      }
-                      if (videoType.length === 4) {
-                        return (
-                          <video
-                            src={`/character/${videoType}.mp4`}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-32 h-32 object-cover rounded-lg"
-                          />
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                )}
-              </div>
             </div>
           )} 
 
