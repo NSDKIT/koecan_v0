@@ -1610,7 +1610,7 @@ export default function MonitorDashboard() {
         )}
 
         <main className={`mx-auto pb-20 ${
-          activeTab === 'career_consultation' ? '' : 'max-w-7xl px-4 sm:px-6 lg:px-8 pt-8'
+          activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
@@ -1681,7 +1681,7 @@ export default function MonitorDashboard() {
           <div 
             className={`
               transition-colors duration-300
-              ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-8'}
+              ${activeTab === 'career_consultation' ? 'bg-transparent p-0' : 'backdrop-blur-sm rounded-2xl bg-white/80 p-0 sm:p-8'}
             `}
           > 
             {activeTab === 'surveys' && (
@@ -1696,7 +1696,7 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答して<br></br>ポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3 mb-8">
+                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3 mb-8">
                     {/* アンケート */}
                     {availableSurveys.map((survey) => (
                       <div
@@ -1772,7 +1772,7 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答してポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
                     {/* 回答済みアンケート */}
                     {answeredSurveys.map((survey) => (
                       <div
