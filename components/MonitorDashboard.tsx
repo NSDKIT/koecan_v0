@@ -1525,16 +1525,35 @@ export default function MonitorDashboard() {
       <div className="absolute inset-0 bg-gradient-to-t from-white/80 via-transparent to-white/80"></div>
 
       <div className="relative z-20">
-        <header className="bg-white/80 backdrop-blur-sm border-b border-orange-100">
+        <header className="bg-orange-500 sm:bg-white/80 sm:backdrop-blur-sm border-b border-orange-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
+            <div className="flex justify-between items-center h-14 sm:h-16">
+              {/* スマホ: オレンジバーにコイン、ポイント、交換ボタン、人型アイコン */}
+              <div className="flex items-center gap-2 sm:hidden w-full">
+                <Star className="w-5 h-5 text-white" />
+                <span className="text-white font-semibold">{profile?.points || 0} ポイント</span>
+                <button
+                  onClick={() => setShowPointExchangeModal(true)}
+                  className="ml-auto px-3 py-1 bg-white text-orange-600 rounded font-semibold text-sm"
+                >
+                  交換
+                </button>
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-1"
+                >
+                  <UserIcon className="w-6 h-6 text-white" />
+                </button>
+              </div>
+              
+              {/* デスクトップ: 元のデザイン */}
+              <div className="hidden sm:flex items-center w-full">
                 <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-500">
                   声キャン！
                 </h1>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
                 {/* ユーザーID表示 */}
                 {user?.id && (
                   <div className="hidden md:flex flex-col items-end mr-2">
@@ -1653,66 +1672,72 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 sm:p-6 mb-8 flex flex-row items-center justify-between gap-2 sm:gap-6">
-              {/* 獲得ポイント */}
-            <div
-                className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1 min-w-0"
-              onClick={() => setShowPointExchangeModal(true)} 
-            >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                <Star className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xl sm:text-5xl font-bold text-orange-600 truncate">{profile?.points || 0}</p>
-              </div>
-              </div>
-              
-              {/* パーソナリティタイプ表示とキャラクター動画 */}
+            <div className="bg-white p-4 sm:p-6 mb-4 sm:mb-8">
+              {/* スマホ: タイプと動画のみ */}
               {personalityType && (
-                <div className="flex items-center flex-1 min-w-0">
-                  <div 
-                    className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1"
-                    onClick={() => setShowPersonalityTypeModal(true)}
-                  >
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                      <Brain className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xl sm:text-5xl font-bold text-purple-600 truncate">{personalityType}</p>
-                    </div>
-                  </div>
-                  {(() => {
-                    // "/"を含む場合は最初の4文字のタイプを使用
-                    let videoType = personalityType;
-                    if (personalityType.includes('/')) {
-                      // "/"を含む場合は、最初の4文字のタイプを生成
-                      // 例: "E/ISRO" -> "E" + "I" + "S" + "R" = "EISR" (最初の4文字)
-                      const parts = personalityType.replace(/\//g, '').substring(0, 4);
-                      if (parts.length === 4) {
-                        videoType = parts;
-                      } else {
-                        return null; // 4文字未満の場合は表示しない
+                <div className="flex items-center justify-between sm:hidden">
+                  <div className="flex items-center gap-3">
+                    <p className="text-2xl font-bold text-purple-600">{personalityType}</p>
+                    {(() => {
+                      let videoType = personalityType;
+                      if (personalityType.includes('/')) {
+                        const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                        if (parts.length === 4) {
+                          videoType = parts;
+                        } else {
+                          return null;
+                        }
                       }
-                    }
-                    // 4文字のタイプのみ動画を表示
-                    if (videoType.length === 4) {
-                      return (
-                        <div className="ml-2 sm:ml-4">
+                      if (videoType.length === 4) {
+                        return (
                           <video
                             src={`/character/${videoType}.mp4`}
                             autoPlay
                             loop
                             muted
                             playsInline
-                            className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-lg"
+                            className="w-16 h-16 object-cover rounded-lg"
                           />
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                 </div>
               )}
+              
+              {/* デスクトップ: 元のデザイン（タイプと動画のみ） */}
+              <div className="hidden sm:flex items-center justify-center gap-6">
+                {personalityType && (
+                  <div className="flex items-center gap-4">
+                    <p className="text-5xl font-bold text-purple-600">{personalityType}</p>
+                    {(() => {
+                      let videoType = personalityType;
+                      if (personalityType.includes('/')) {
+                        const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                        if (parts.length === 4) {
+                          videoType = parts;
+                        } else {
+                          return null;
+                        }
+                      }
+                      if (videoType.length === 4) {
+                        return (
+                          <video
+                            src={`/character/${videoType}.mp4`}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-32 h-32 object-cover rounded-lg"
+                          />
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
+              </div>
             </div>
           )} 
 
