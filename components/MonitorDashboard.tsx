@@ -261,6 +261,7 @@ export default function MonitorDashboard() {
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
   const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
+  const [characterMessage, setCharacterMessage] = useState<string>('');
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
