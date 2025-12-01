@@ -1762,7 +1762,7 @@ export default function MonitorDashboard() {
                   </div>
                 )}
 
-                <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8">回答済みアンケート・クイズ</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 border-t pt-8 px-4 sm:px-0">回答済みアンケート・クイズ</h2>
                 {(answeredSurveys.length === 0 && answeredQuizzes.length === 0) ? (
                   <div className="text-center py-12">
                     <div className="bg-gray-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
