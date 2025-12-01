@@ -48,42 +48,9 @@ import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
-import { getRandomQuote } from '@/lib/quotes';
+import { getRandomQuote, Quote } from '@/lib/quotes';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
-
-// 名言を2行に分割する関数
-const splitQuoteIntoTwoLines = (quote: string): string => {
-  // 句読点で分割を試みる
-  const punctuationMarks = ['。', '、', '，', '.', ','];
-  
-  // まず、中点（・）や句点（。）で分割を試みる
-  const midPoint = Math.floor(quote.length / 2);
-  
-  // 中点付近で句読点を探す
-  let bestSplitIndex = midPoint;
-  let minDistance = Infinity;
-  
-  for (let i = 0; i < quote.length; i++) {
-    if (punctuationMarks.includes(quote[i])) {
-      const distance = Math.abs(i - midPoint);
-      if (distance < minDistance && i > quote.length * 0.3 && i < quote.length * 0.7) {
-        minDistance = distance;
-        bestSplitIndex = i + 1; // 句読点の後で分割
-      }
-    }
-  }
-  
-  // 句読点が見つからない場合は、中点で分割
-  if (minDistance === Infinity) {
-    bestSplitIndex = midPoint;
-  }
-  
-  const firstLine = quote.substring(0, bestSplitIndex).trim();
-  const secondLine = quote.substring(bestSplitIndex).trim();
-  
-  return `${firstLine}\n${secondLine}`;
-};
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -162,7 +129,7 @@ export default function MonitorDashboard() {
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
   const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
-  const [characterMessage, setCharacterMessage] = useState<string>('');
+  const [characterQuote, setCharacterQuote] = useState<Quote | null>(null);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -294,9 +261,7 @@ export default function MonitorDashboard() {
   useEffect(() => {
     if (activeTab !== 'career_consultation') {
       const quote = getRandomQuote();
-      // 名言を2行に分割
-      const twoLineQuote = splitQuoteIntoTwoLines(quote);
-      setCharacterMessage(twoLineQuote);
+      setCharacterQuote(quote);
     }
   }, [activeTab]);
 
@@ -1727,13 +1692,14 @@ export default function MonitorDashboard() {
                   
                   {/* 右側3/5: 吹き出し（タイプを含む） */}
                   <div className="col-span-3 flex items-center justify-center">
-                    {characterMessage && personalityType && (
-                      <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
-                        <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-relaxed">
-                          <p className="mb-1">
+                    {characterQuote && personalityType && (
+                      <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px] h-[140px] sm:h-[160px] flex flex-col justify-center">
+                        <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-tight overflow-hidden flex flex-col justify-center h-full">
+                          <p className="mb-1 flex-shrink-0">
                             あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
                           </p>
-                          <p className="whitespace-pre-line">{characterMessage}</p>
+                          <p className="whitespace-pre-line text-[10px] sm:text-xs leading-tight flex-1 overflow-y-auto">{characterQuote.quote}</p>
+                          <p className="mt-1 text-[9px] sm:text-[10px] text-gray-500 font-normal flex-shrink-0">— {characterQuote.person}</p>
                         </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
                         <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
