@@ -4,25 +4,25 @@ export type TipCategory = 'job_hunting' | 'trivia' | 'knowledge';
 
 export interface Tip {
   category: TipCategory;
-  content: string; // 2〜3行で表示できる内容
+  content: string; // 2行で完結する内容
 }
 
 // ①就活で気をつけるべきポイント（50個）
 const jobHuntingTips: Tip[] = [
-  { category: 'job_hunting', content: '面接では第一印象が重要。清潔感のある服装と明るい表情を心がけましょう。\n面接官の目を見て話すことで、自信と誠実さが伝わります。' },
-  { category: 'job_hunting', content: 'エントリーシートは簡潔に、でも具体的に書くことが大切です。\n数字や具体例を入れることで、説得力が増します。' },
-  { category: 'job_hunting', content: '企業研究は深く、広く行いましょう。\n会社の理念や事業内容だけでなく、最近のニュースもチェックしておくと良いです。' },
-  { category: 'job_hunting', content: '自己分析は就活の基礎。自分の強みや弱みを理解しておくことが重要です。\n面接で「あなたの強みは？」と聞かれた時に、具体例とともに答えられるようにしましょう。' },
+  { category: 'job_hunting', content: '面接では第一印象が重要。\n清潔感のある服装と明るい表情を心がけましょう。' },
+  { category: 'job_hunting', content: 'エントリーシートは簡潔に、でも具体的に。\n数字や具体例を入れることで、説得力が増します。' },
+  { category: 'job_hunting', content: '企業研究は深く、広く行いましょう。\n会社の理念や最近のニュースもチェックしておくと良いです。' },
+  { category: 'job_hunting', content: '自己分析は就活の基礎。\n自分の強みや弱みを理解しておくことが重要です。' },
   { category: 'job_hunting', content: 'OB・OG訪問は貴重な情報源。\n実際に働いている人の生の声を聞くことで、企業の雰囲気が分かります。' },
-  { category: 'job_hunting', content: '複数の企業に応募するのは当然ですが、\nそれぞれの企業に合わせて志望動機をカスタマイズすることが大切です。' },
+  { category: 'job_hunting', content: '複数の企業に応募するのは当然ですが、\nそれぞれの企業に合わせて志望動機をカスタマイズしましょう。' },
   { category: 'job_hunting', content: '面接の練習は必ず行いましょう。\n鏡の前で練習したり、友人や家族に協力してもらうと効果的です。' },
   { category: 'job_hunting', content: '時間管理は就活成功の鍵。\n説明会や面接のスケジュールをしっかり管理して、遅刻は絶対に避けましょう。' },
   { category: 'job_hunting', content: '質問は積極的にしましょう。\n面接の最後に「何か質問はありますか？」と聞かれた時、何も聞かないのはNGです。' },
   { category: 'job_hunting', content: 'メールのマナーも重要。\n件名は分かりやすく、本文は簡潔に、そして必ず署名を入れましょう。' },
   { category: 'job_hunting', content: 'グループディスカッションでは、\n自分の意見を押し通すのではなく、チーム全体の意見をまとめる姿勢が評価されます。' },
   { category: 'job_hunting', content: '失敗を恐れずにチャレンジすることが大切です。\n面接で落ちても、それは経験として次に活かせます。' },
-  { category: 'job_hunting', content: '志望動機は「なぜその企業なのか」を明確に。\n「なぜその業界なのか」だけでなく、「なぜその企業なのか」を説明できるようにしましょう。' },
-  { category: 'job_hunting', content: '服装は業界によって適切なものが異なります。\n金融やコンサルはスーツ、ITやクリエイティブはカジュアルな場合も。事前に調べておきましょう。' },
+  { category: 'job_hunting', content: '志望動機は「なぜその企業なのか」を明確に。\n「なぜその業界なのか」だけでなく、「なぜその企業なのか」を説明できるように。' },
+  { category: 'job_hunting', content: '服装は業界によって適切なものが異なります。\n金融やコンサルはスーツ、ITやクリエイティブはカジュアルな場合も。' },
   { category: 'job_hunting', content: 'ポートフォリオや作品集がある場合は、\n面接で見せられるように準備しておくと良いです。' },
   { category: 'job_hunting', content: '面接では「ありがとうございます」を忘れずに。\n入室時、退室時、そして質問への回答の後にも感謝の気持ちを伝えましょう。' },
   { category: 'job_hunting', content: 'ストレス管理も重要。\n就活は長丁場なので、適度に息抜きをして、心身の健康を保ちましょう。' },
@@ -186,4 +186,3 @@ export const getRandomTip = (category?: TipCategory): Tip => {
   }
   return ALL_TIPS[Math.floor(Math.random() * ALL_TIPS.length)];
 };
-
