@@ -230,7 +230,6 @@ export default function MonitorDashboard() {
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('bulletin_board');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [characterMessage, setCharacterMessage] = useState<string>(''); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
