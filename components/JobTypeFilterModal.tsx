@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { supabase } from '@/config/supabase';
 
 interface JobTypeFilterModalProps {
   selectedJobTypes: string[];
@@ -19,7 +19,6 @@ export function JobTypeFilterModal({ selectedJobTypes, onClose, onApply }: JobTy
     // 職種一覧を取得
     const fetchJobTypes = async () => {
       try {
-        const supabase = createClient();
         const { data, error } = await supabase
           .from('company_personality_individual_responses')
           .select('job_type')
