@@ -1888,44 +1888,65 @@ export default function MonitorDashboard() {
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {/* フィルターセクション */}
-                <div className="p-4 sm:p-6 border-b border-gray-200">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-4">
+                <div className="p-0 border-b border-gray-200">
+                  <div className="flex items-center bg-white">
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 sm:px-4 border-r border-gray-300 transition-all ${
                         selectedIndustries.length > 0
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <Building className="w-4 h-4 mr-2" />
-                      業界を選択する
+                      <div className="w-8 h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
+                        <Building className="w-4 h-4 text-orange-500" />
+                      </div>
+                      <span className="text-xs sm:text-sm whitespace-nowrap">業界を選択する</span>
                       {selectedIndustries.length > 0 && (
-                        <span className="ml-2 bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">
+                        <span className="bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs flex-shrink-0">
                           {selectedIndustries.length}
                         </span>
                       )}
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                     </button>
 
                     {/* 価値観選択ボタン */}
                     <button
                       onClick={() => setShowPersonalityFilter(true)}
-                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 sm:px-4 border-r border-gray-300 transition-all ${
                         selectedPersonalityTypes.length > 0
-                          ? 'border-purple-500 bg-purple-50 text-purple-700'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          ? 'bg-purple-50 text-purple-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <Brain className="w-4 h-4 mr-2" />
-                      価値観を選択する
+                      <div className="w-8 h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
+                        <Brain className="w-4 h-4 text-orange-500" />
+                      </div>
+                      <span className="text-xs sm:text-sm whitespace-nowrap">価値観を選択する</span>
                       {selectedPersonalityTypes.length > 0 && (
-                        <span className="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs">
+                        <span className="bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs flex-shrink-0">
                           {selectedPersonalityTypes.length}
                         </span>
                       )}
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                    </button>
+
+                    {/* マッチング検索ボタン */}
+                    <button
+                      onClick={() => setIsMatchingSearch(!isMatchingSearch)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 sm:px-4 border-r border-gray-300 transition-all ${
+                        isMatchingSearch
+                          ? 'bg-orange-50 text-orange-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                      disabled={!personalityType}
+                    >
+                      <div className="w-8 h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-orange-500" />
+                      </div>
+                      <span className="text-xs sm:text-sm whitespace-nowrap">マッチング検索</span>
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                     </button>
 
                     {/* 検索ボタン */}
@@ -1933,23 +1954,9 @@ export default function MonitorDashboard() {
                       onClick={() => {
                         // フィルターを適用（既存のフィルタリングロジックを使用）
                       }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                      className="flex-1 py-3 px-2 sm:px-4 bg-orange-600 text-white hover:bg-orange-700 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
                     >
                       検索
-                    </button>
-
-                    {/* マッチング検索ボタン */}
-                    <button
-                      onClick={() => setIsMatchingSearch(!isMatchingSearch)}
-                      className={`px-3 sm:px-4 py-2 rounded-lg border-2 transition-all flex items-center text-sm ${
-                        isMatchingSearch
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                      }`}
-                      disabled={!personalityType}
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      マッチング検索
                     </button>
                   </div>
 
