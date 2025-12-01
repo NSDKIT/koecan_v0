@@ -1687,7 +1687,7 @@ export default function MonitorDashboard() {
                           <p className="mb-1 flex-shrink-0">
                             あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
                           </p>
-                          <p className="text-[15px] sm:text-[18px] leading-tight flex-1 overflow-hidden whitespace-pre-line">{characterTip.content}</p>
+                          <p className="text-[12pt] leading-tight flex-1 overflow-hidden whitespace-pre-line">{characterTip.content}</p>
                         </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
                         <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
