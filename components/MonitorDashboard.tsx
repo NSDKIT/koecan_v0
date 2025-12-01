@@ -1838,17 +1838,18 @@ export default function MonitorDashboard() {
             <div className="bg-white p-4 sm:p-6 mb-4 sm:mb-8">
               {personalityType && (
                 <div className="grid grid-cols-2 gap-4 sm:gap-6">
-                  {/* 左半分: タイプ */}
-                  <div 
-                    className="flex flex-col items-center justify-center cursor-pointer"
-                    onClick={() => setShowPersonalityTypeModal(true)}
-                  >
-                    <p className="text-sm sm:text-base text-gray-600 mb-2">あなたのタイプ</p>
-                    <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
-                  </div>
-                  
-                  {/* 右半分: 動画と吹き出し */}
-                  <div className="flex items-center justify-center relative">
+                  {/* 左側: タイプ（上）と動画（下） */}
+                  <div className="flex flex-col items-center justify-center gap-4 sm:gap-6">
+                    {/* タイプ */}
+                    <div 
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                      onClick={() => setShowPersonalityTypeModal(true)}
+                    >
+                      <p className="text-sm sm:text-base text-gray-600 mb-2">あなたのタイプ</p>
+                      <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
+                    </div>
+                    
+                    {/* 動画 */}
                     {(() => {
                       let videoType = personalityType;
                       if (personalityType.includes('/')) {
@@ -1861,35 +1862,34 @@ export default function MonitorDashboard() {
                       }
                       if (videoType.length === 4) {
                         return (
-                          <div className="relative">
-                            <video
-                              src={`/character/${videoType}.mp4`}
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                              className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
-                            />
-                            {/* 吹き出し */}
-                            {characterMessage && (
-                              <div className="absolute -top-2 sm:-top-4 left-1/2 transform -translate-x-1/2 -translate-y-full mb-2">
-                                <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[250px]">
-                                  <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
-                                    {characterMessage}
-                                  </p>
-                                  {/* 吹き出しのしっぽ */}
-                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                    <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-orange-300"></div>
-                                    <div className="absolute top-0.5 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-7 border-r-7 border-t-7 border-transparent border-t-white"></div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                          <video
+                            src={`/character/${videoType}.mp4`}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
+                          />
                         );
                       }
                       return null;
                     })()}
+                  </div>
+                  
+                  {/* 右側: 吹き出し */}
+                  <div className="flex items-center justify-center">
+                    {characterMessage && (
+                      <div className="bg-white rounded-lg shadow-lg px-4 py-3 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
+                        <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-normal">
+                          {characterMessage}
+                        </p>
+                        {/* 吹き出しのしっぽ（左側に向かって） */}
+                        <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
+                          <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-orange-300"></div>
+                          <div className="absolute top-1/2 left-0.5 transform -translate-y-1/2 w-0 h-0 border-t-7 border-b-7 border-r-7 border-transparent border-r-white"></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
