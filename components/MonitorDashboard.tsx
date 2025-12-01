@@ -1652,71 +1652,6 @@ export default function MonitorDashboard() {
         <main className={`mx-auto pb-20 ${
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
         }`}> 
-          {activeTab !== 'career_consultation' && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 sm:p-6 mb-8 flex flex-row items-center justify-between gap-2 sm:gap-6">
-              {/* 獲得ポイント */}
-            <div
-                className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1 min-w-0"
-              onClick={() => setShowPointExchangeModal(true)} 
-            >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                <Star className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-gray-600 text-xs sm:text-lg">獲得ポイント</p>
-                <p className="text-xl sm:text-5xl font-bold text-orange-600 truncate">{profile?.points || 0}</p>
-              </div>
-              </div>
-              
-              {/* パーソナリティタイプ表示とキャラクター動画 */}
-              {personalityType && (
-                <div className="flex items-center flex-1 min-w-0">
-                  <div 
-                    className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1"
-                    onClick={() => setShowPersonalityTypeModal(true)}
-                  >
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                      <Brain className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-gray-600 text-xs sm:text-lg">あなたのタイプ</p>
-                      <p className="text-xl sm:text-5xl font-bold text-purple-600 truncate">{personalityType}</p>
-                    </div>
-                  </div>
-                  {(() => {
-                    // "/"を含む場合は最初の4文字のタイプを使用
-                    let videoType = personalityType;
-                    if (personalityType.includes('/')) {
-                      // "/"を含む場合は、最初の4文字のタイプを生成
-                      // 例: "E/ISRO" -> "E" + "I" + "S" + "R" = "EISR" (最初の4文字)
-                      const parts = personalityType.replace(/\//g, '').substring(0, 4);
-                      if (parts.length === 4) {
-                        videoType = parts;
-                      } else {
-                        return null; // 4文字未満の場合は表示しない
-                      }
-                    }
-                    // 4文字のタイプのみ動画を表示
-                    if (videoType.length === 4) {
-                      return (
-                        <div className="ml-2 sm:ml-4">
-                          <video
-                            src={`/character/${videoType}.mp4`}
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-16 h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 object-cover rounded-lg"
-                          />
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-              )}
-            </div>
-          )}
 
           <div 
             className={`
@@ -1907,11 +1842,11 @@ export default function MonitorDashboard() {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {/* フィルターセクション */}
                 <div className="p-0 border-b border-gray-200">
-                  <div className="flex items-center bg-white">
+                  <div className="grid grid-cols-2 gap-0 bg-white">
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
+                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-b border-gray-300 transition-all ${
                         selectedIndustries.length > 0
                           ? 'bg-blue-50 text-blue-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1926,13 +1861,12 @@ export default function MonitorDashboard() {
                           {selectedIndustries.length}
                         </span>
                       )}
-                      <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
                     </button>
 
                     {/* 価値観選択ボタン */}
                     <button
                       onClick={() => setShowPersonalityFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
+                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-b border-gray-300 transition-all ${
                         selectedPersonalityTypes.length > 0
                           ? 'bg-purple-50 text-purple-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1947,13 +1881,12 @@ export default function MonitorDashboard() {
                           {selectedPersonalityTypes.length}
                         </span>
                       )}
-                      <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
                     </button>
 
                     {/* 業種選択ボタン */}
                     <button
                       onClick={() => setShowJobTypeFilter(true)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
+                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
                         selectedJobTypes.length > 0
                           ? 'bg-green-50 text-green-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1968,13 +1901,12 @@ export default function MonitorDashboard() {
                           {selectedJobTypes.length}
                         </span>
                       )}
-                      <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
                     </button>
 
                     {/* マッチング検索ボタン */}
                     <button
                       onClick={() => setIsMatchingSearch(!isMatchingSearch)}
-                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
+                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
                         isMatchingSearch
                           ? 'bg-orange-50 text-orange-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -1985,17 +1917,6 @@ export default function MonitorDashboard() {
                         <Sparkles className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
                       <span className="text-[15px] sm:text-xs whitespace-nowrap">マッチング検索</span>
-                      <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
-                    </button>
-
-                    {/* 検索ボタン（タブレット以上のみ表示） */}
-                    <button
-                      onClick={() => {
-                        // フィルターを適用（既存のフィルタリングロジックを使用）
-                      }}
-                      className="hidden sm:flex flex-1 items-center justify-center py-3 px-4 bg-orange-600 text-white hover:bg-orange-700 transition-colors text-sm font-medium whitespace-nowrap"
-                    >
-                      検索
                     </button>
                   </div>
 
