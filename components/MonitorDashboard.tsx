@@ -1998,6 +1998,20 @@ export default function MonitorDashboard() {
                           </button>
                         </span>
                       ))}
+                      {selectedJobTypes.map((jobType) => (
+                        <span
+                          key={jobType}
+                          className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                        >
+                          {jobType}
+                          <button
+                            onClick={() => setSelectedJobTypes(prev => prev.filter(j => j !== jobType))}
+                            className="ml-2 hover:text-green-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
                       {isMatchingSearch && (
                         <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                           マッチング検索
@@ -2013,6 +2027,7 @@ export default function MonitorDashboard() {
                         onClick={() => {
                           setSelectedIndustries([]);
                           setSelectedPersonalityTypes([]);
+                          setSelectedJobTypes([]);
                           setSearchQuery('');
                           setIsMatchingSearch(false);
                         }}
