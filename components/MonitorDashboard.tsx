@@ -1613,34 +1613,34 @@ export default function MonitorDashboard() {
           activeTab === 'career_consultation' ? '' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8'
         }`}> 
           {activeTab !== 'career_consultation' && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-3 sm:p-6 mb-8 flex flex-row items-center justify-between gap-2 sm:gap-6">
               {/* 獲得ポイント */}
             <div
-                className="flex items-center space-x-3 sm:space-x-4 cursor-pointer flex-1 w-full sm:w-auto"
+                className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1 min-w-0"
               onClick={() => setShowPointExchangeModal(true)} 
             >
-              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-3 sm:p-4 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                <Star className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
+                <Star className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-gray-600 text-sm sm:text-lg">獲得ポイント</p>
-                <p className="text-3xl sm:text-5xl font-bold text-orange-600">{profile?.points || 0}</p>
+                <p className="text-gray-600 text-xs sm:text-lg">獲得ポイント</p>
+                <p className="text-xl sm:text-5xl font-bold text-orange-600 truncate">{profile?.points || 0}</p>
               </div>
               </div>
               
               {/* パーソナリティタイプ表示とキャラクター動画 */}
               {personalityType && (
-                <div className="flex items-center flex-1 w-full sm:w-auto">
+                <div className="flex items-center flex-1 min-w-0">
                   <div 
-                    className="flex items-center space-x-3 sm:space-x-4 cursor-pointer flex-1"
+                    className="flex items-center space-x-2 sm:space-x-4 cursor-pointer flex-1"
                     onClick={() => setShowPersonalityTypeModal(true)}
                   >
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-3 sm:p-4 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
-                      <Brain className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-2 sm:p-4 flex items-center justify-center w-10 h-10 sm:w-20 sm:h-20 shadow-lg flex-shrink-0">
+                      <Brain className="w-5 h-5 sm:w-10 sm:h-10 text-white" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-gray-600 text-sm sm:text-lg">パーソナリティタイプ</p>
-                      <p className="text-3xl sm:text-5xl font-bold text-purple-600">{personalityType}</p>
+                      <p className="text-gray-600 text-xs sm:text-lg">あなたのタイプ</p>
+                      <p className="text-xl sm:text-5xl font-bold text-purple-600 truncate">{personalityType}</p>
                     </div>
                   </div>
                   {(() => {
