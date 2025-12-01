@@ -1870,9 +1870,12 @@ export default function MonitorDashboard() {
                   <div className="flex items-center justify-center">
                     {characterMessage && personalityType && (
                       <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px]">
-                        <p className="text-xs sm:text-sm text-gray-800 font-medium text-center whitespace-pre-line leading-relaxed">
-                          {`あなたは、${personalityType}タイプ！\n${characterMessage}`}
-                        </p>
+                        <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-relaxed">
+                          <p className="mb-1">
+                            あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
+                          </p>
+                          <p className="whitespace-pre-line">{characterMessage}</p>
+                        </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
                         <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
                           <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-orange-300"></div>
