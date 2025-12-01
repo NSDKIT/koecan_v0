@@ -374,7 +374,7 @@ export default function MonitorDashboard() {
           return;
         }
 
-        const companyIds = new Set(
+        const companyIds = new Set<string>(
           data?.map((item: { company_id: string | null }) => item.company_id).filter((id: string | null): id is string => id !== null) || []
         );
         setCompanyIdsWithJobTypes(companyIds);
