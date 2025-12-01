@@ -1696,7 +1696,7 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答して<br></br>ポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  <div className="grid grid-cols-2 gap-3 mb-8">
                     {/* アンケート */}
                     {availableSurveys.map((survey) => (
                       <div
@@ -1772,7 +1772,7 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答してポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {/* 回答済みアンケート */}
                     {answeredSurveys.map((survey) => (
                       <div
