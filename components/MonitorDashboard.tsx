@@ -1968,7 +1968,7 @@ export default function MonitorDashboard() {
                   </div>
 
                   {/* フィルター表示 */}
-                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || isMatchingSearch) && (
+                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || selectedJobTypes.length > 0 || isMatchingSearch) && (
                     <div className="flex flex-wrap gap-2">
                       {selectedIndustries.map((industry) => (
                         <span
@@ -2707,6 +2707,17 @@ export default function MonitorDashboard() {
           onApply={(types) => {
             setSelectedPersonalityTypes(types);
             setShowPersonalityFilter(false);
+          }}
+        />
+      )}
+
+      {showJobTypeFilter && (
+        <JobTypeFilterModal
+          selectedJobTypes={selectedJobTypes}
+          onClose={() => setShowJobTypeFilter(false)}
+          onApply={(jobTypes) => {
+            setSelectedJobTypes(jobTypes);
+            setShowJobTypeFilter(false);
           }}
         />
       )}
