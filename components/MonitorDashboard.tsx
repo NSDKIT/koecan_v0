@@ -1838,14 +1838,14 @@ export default function MonitorDashboard() {
               {personalityType && (
                 <div className="grid grid-cols-2 gap-4 sm:gap-6">
                   {/* 左側: タイプ（上）と動画（下） */}
-                  <div className="flex flex-col items-center justify-center gap-4 sm:gap-6">
+                  <div className="flex flex-col items-center justify-center gap-2 sm:gap-6">
                     {/* タイプ */}
                     <div 
                       className="flex flex-col items-center justify-center cursor-pointer"
                       onClick={() => setShowPersonalityTypeModal(true)}
                     >
-                      <p className="text-sm sm:text-base text-gray-600 mb-2">あなたのタイプ</p>
-                      <p className="text-4xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
+                      <p className="text-xs sm:text-base text-gray-600 mb-1 sm:mb-2">あなたのタイプ</p>
+                      <p className="text-2xl sm:text-6xl font-bold text-purple-600">{personalityType}</p>
                     </div>
                     
                     {/* 動画 */}
@@ -1867,7 +1867,7 @@ export default function MonitorDashboard() {
                             loop
                             muted
                             playsInline
-                            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg"
+                            className="w-16 h-16 sm:w-48 sm:h-48 object-cover rounded-lg"
                           />
                         );
                       }
