@@ -48,7 +48,7 @@ import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
-import { getRandomQuote, Quote } from '@/lib/quotes';
+import { getRandomTip, Tip } from '@/lib/tips';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
 
@@ -128,7 +128,7 @@ export default function MonitorDashboard() {
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
   const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
-  const [characterQuote, setCharacterQuote] = useState<Quote | null>(null);
+  const [characterTip, setCharacterTip] = useState<Tip | null>(null);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -256,11 +256,11 @@ export default function MonitorDashboard() {
     }
   }, [user, fetchProfile, calculatePersonalityType]);
 
-  // タブが変更されたときにキャラクターのメッセージを更新（名言を使用）
+  // タブが変更されたときにキャラクターのメッセージを更新（就活のポイント・豆知識・雑学を使用）
   useEffect(() => {
     if (activeTab !== 'career_consultation') {
-      const quote = getRandomQuote();
-      setCharacterQuote(quote);
+      const tip = getRandomTip();
+      setCharacterTip(tip);
     }
   }, [activeTab]);
 
@@ -1681,14 +1681,13 @@ export default function MonitorDashboard() {
                   
                   {/* 右側3/5: 吹き出し（タイプを含む） */}
                   <div className="col-span-3 flex items-center justify-center">
-                    {characterQuote && personalityType && (
+                    {characterTip && personalityType && (
                       <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative w-full max-w-[216px] sm:max-w-[288px] h-[105px] sm:h-[120px] flex flex-col justify-center">
                         <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-tight overflow-hidden flex flex-col justify-center h-full">
                           <p className="mb-1 flex-shrink-0">
                             あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
                           </p>
-                          <p className="text-[15px] sm:text-[18px] leading-tight flex-1 overflow-hidden line-clamp-3">{characterQuote.quote}</p>
-                          <p className="text-[13.5px] sm:text-[15px] text-gray-500 font-normal flex-shrink-0">— {characterQuote.person}</p>
+                          <p className="text-[15px] sm:text-[18px] leading-tight flex-1 overflow-hidden line-clamp-3 whitespace-pre-line">{characterTip.content}</p>
                         </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
                         <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
