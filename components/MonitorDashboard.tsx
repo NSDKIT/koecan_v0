@@ -1682,12 +1682,12 @@ export default function MonitorDashboard() {
                   {/* 右側3/5: 吹き出し（タイプを含む） */}
                   <div className="col-span-3 flex items-center justify-center">
                     {characterQuote && personalityType && (
-                      <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-6 sm:py-4 border-2 border-orange-300 relative max-w-[200px] sm:max-w-[280px] h-[140px] sm:h-[160px] flex flex-col justify-center">
+                      <div className="bg-white rounded-lg shadow-lg px-3 py-2 sm:px-4 sm:py-3 border-2 border-orange-300 relative w-full max-w-[240px] sm:max-w-[320px] h-[105px] sm:h-[120px] flex flex-col justify-center">
                         <div className="text-xs sm:text-sm text-gray-800 font-medium text-center leading-tight overflow-hidden flex flex-col justify-center h-full">
                           <p className="mb-1 flex-shrink-0">
                             あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
                           </p>
-                          <p className="whitespace-pre-line text-[10px] sm:text-xs leading-tight flex-1 overflow-y-auto">{characterQuote.quote}</p>
+                          <p className="text-[10px] sm:text-xs leading-tight flex-1 overflow-hidden line-clamp-3">{characterQuote.quote}</p>
                           <p className="mt-1 text-[9px] sm:text-[10px] text-gray-500 font-normal flex-shrink-0">— {characterQuote.person}</p>
                         </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
