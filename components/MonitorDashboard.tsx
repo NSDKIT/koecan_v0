@@ -388,6 +388,17 @@ export default function MonitorDashboard() {
     }
   }, [user, fetchProfile, calculatePersonalityType]);
 
+  // タブが変更されたときにキャラクターのメッセージを更新
+  useEffect(() => {
+    if (activeTab !== 'career_consultation') {
+      const messages = CHARACTER_MESSAGES[activeTab] || [];
+      if (messages.length > 0) {
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        setCharacterMessage(randomMessage);
+      }
+    }
+  }, [activeTab]);
+
   // フィルター適用関数
   const applyFilters = useCallback(() => {
     let filtered = [...advertisements];
