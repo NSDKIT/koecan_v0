@@ -1696,67 +1696,57 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答して<br></br>ポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3 mb-8">
+                  <div className="grid grid-cols-1 gap-1.5 px-2 sm:px-0 sm:gap-2 mb-8">
                     {/* アンケート */}
                     {availableSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-4 flex flex-col"
+                        className="border border-gray-200 rounded-lg p-1.5 sm:p-2 flex flex-row items-center gap-2"
                       >
-                        <div className="flex items-center mb-2">
-                          <FileText className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0" />
-                          <h3 className="text-base font-semibold text-gray-800 line-clamp-2">
+                        <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">
                             {survey.title}
                           </h3>
                         </div>
-                        <p className="text-gray-600 mb-3 text-sm line-clamp-2 flex-1">{survey.description}</p>
-                        <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
-                          </div>
-                          <div className="flex items-center bg-orange-50 rounded-full px-3 py-1 text-orange-700 font-semibold text-sm">
-                            <Gift className="w-4 h-4 mr-1" />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center bg-orange-50 rounded-full px-2 py-0.5 text-orange-700 font-semibold text-[10px] sm:text-xs">
+                            <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
                             <span>{survey.points_reward}pt</span>
                           </div>
+                          <button
+                            onClick={() => handleSurveyClick(survey)}
+                            className="px-2 py-1 bg-orange-600 text-white rounded text-[10px] sm:text-xs font-semibold hover:bg-orange-700 transition-colors whitespace-nowrap"
+                          >
+                            回答する
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleSurveyClick(survey)}
-                          className="mt-3 w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-semibold"
-                        >
-                          回答する
-                        </button>
                       </div>
                     ))}
                     {/* クイズ */}
                     {availableQuizzes.map((quiz) => (
                       <div
                         key={quiz.id}
-                        className="border border-gray-200 rounded-xl p-4 bg-gradient-to-r from-purple-50 to-pink-50 flex flex-col"
+                        className="border border-gray-200 rounded-lg p-1.5 sm:p-2 bg-gradient-to-r from-purple-50 to-pink-50 flex flex-row items-center gap-2"
                       >
-                        <div className="flex items-center mb-2">
-                          <Trophy className="w-4 h-4 mr-2 text-purple-600 flex-shrink-0" />
-                          <h3 className="text-base font-semibold text-gray-800 line-clamp-2">
+                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">
                             {quiz.title}
                           </h3>
                         </div>
-                        <p className="text-gray-600 mb-3 text-sm line-clamp-2 flex-1">{quiz.description}</p>
-                        <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span>質問数: {quizQuestions.length > 0 ? quizQuestions.length : 5}</span>
-                          </div>
-                          <div className="flex items-center bg-purple-50 rounded-full px-3 py-1 text-purple-700 font-semibold text-sm">
-                            <Gift className="w-4 h-4 mr-1" />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center bg-purple-50 rounded-full px-2 py-0.5 text-purple-700 font-semibold text-[10px] sm:text-xs">
+                            <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
                             <span>{quiz.points_reward}pt</span>
                           </div>
+                          <button
+                            onClick={() => handleQuizClick(quiz)}
+                            className="px-2 py-1 bg-purple-600 text-white rounded text-[10px] sm:text-xs font-semibold hover:bg-purple-700 transition-colors whitespace-nowrap"
+                          >
+                            回答する
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleQuizClick(quiz)}
-                          className="mt-3 w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold"
-                        >
-                          回答する
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -1772,29 +1762,22 @@ export default function MonitorDashboard() {
                     <p className="text-gray-600">新しいアンケート・クイズに回答してポイントを獲得しましょう。</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
+                  <div className="grid grid-cols-1 gap-1.5 px-2 sm:px-0 sm:gap-2">
                     {/* 回答済みアンケート */}
                     {answeredSurveys.map((survey) => (
                       <div
                         key={survey.id}
-                        className="border border-gray-200 rounded-xl p-4 bg-gray-50 opacity-80 flex flex-col" 
+                        className="border border-gray-200 rounded-lg p-1.5 sm:p-2 bg-gray-50 opacity-80 flex flex-row items-center gap-2" 
                       >
-                        <div className="flex items-center mb-2">
-                          <FileText className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0" />
-                          <h3 className="text-base font-semibold text-gray-700 line-clamp-2">
+                        <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold text-gray-700 line-clamp-1">
                             {survey.title}
                           </h3>
                         </div>
-                        <p className="text-gray-500 mb-3 text-sm line-clamp-2 flex-1">{survey.description}</p>
-                        <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center text-xs text-gray-400">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span>質問数: {surveyQuestions.length > 0 ? surveyQuestions.length : 5}</span>
-                          </div>
-                          <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-gray-600 font-semibold text-sm">
-                            <Gift className="w-4 h-4 mr-1" />
-                            <span>{survey.points_reward}pt 獲得済み</span>
-                          </div>
+                        <div className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-gray-600 font-semibold text-[10px] sm:text-xs flex-shrink-0">
+                          <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
+                          <span>{survey.points_reward}pt 獲得済み</span>
                         </div>
                       </div>
                     ))}
@@ -1802,50 +1785,45 @@ export default function MonitorDashboard() {
                     {answeredQuizzes.map((quiz) => (
                       <div
                         key={quiz.id}
-                        className="border border-gray-200 rounded-xl p-4 bg-gray-50 opacity-80 flex flex-col" 
+                        className="border border-gray-200 rounded-lg p-1.5 sm:p-2 bg-gray-50 opacity-80 flex flex-row items-center gap-2" 
                       >
-                        <div className="flex items-center mb-2">
-                          <Trophy className="w-4 h-4 mr-2 text-purple-600 flex-shrink-0" />
-                          <h3 className="text-base font-semibold text-gray-700 line-clamp-2">
+                        <Trophy className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs sm:text-sm font-semibold text-gray-700 line-clamp-1">
                             {quiz.title}
                           </h3>
                         </div>
-                        <p className="text-gray-500 mb-3 text-sm line-clamp-2 flex-1">{quiz.description}</p>
-                        <div className="flex items-center justify-between mt-auto">
-                          <div className="flex items-center text-xs text-gray-400">
-                            <Clock className="w-3 h-3 mr-1" />
-                            <span>質問数: {quizQuestions.length > 0 ? quizQuestions.length : 5}</span>
-                          </div>
-                          <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-gray-600 font-semibold text-sm">
-                            <Gift className="w-4 h-4 mr-1" />
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-gray-600 font-semibold text-[10px] sm:text-xs">
+                            <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
                             <span>{quiz.points_reward}pt 獲得済み</span>
                           </div>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const { data: questions, error } = await supabase
+                                  .from('quiz_questions')
+                                  .select('*')
+                                  .eq('quiz_id', quiz.id)
+                                  .order('order_index');
+                                
+                                if (error) throw error;
+                                
+                                setQuizForAnswers(quiz);
+                                setQuizAnswersQuestions(questions || []);
+                                setShowPerfectScoreMessage(false); // 回答済みクイズでは成功メッセージを表示しない
+                                setShowQuizAnswersModal(true);
+                              } catch (error) {
+                                console.error('クイズ質問の取得エラー:', error);
+                                alert('正解の読み込みに失敗しました。');
+                              }
+                            }}
+                            className="px-2 py-1 bg-purple-600 text-white rounded text-[10px] sm:text-xs font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center whitespace-nowrap"
+                          >
+                            <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
+                            正解を見る
+                          </button>
                         </div>
-                        <button
-                          onClick={async () => {
-                            try {
-                              const { data: questions, error } = await supabase
-                                .from('quiz_questions')
-                                .select('*')
-                                .eq('quiz_id', quiz.id)
-                                .order('order_index');
-                              
-                              if (error) throw error;
-                              
-                              setQuizForAnswers(quiz);
-                              setQuizAnswersQuestions(questions || []);
-                              setShowPerfectScoreMessage(false); // 回答済みクイズでは成功メッセージを表示しない
-                              setShowQuizAnswersModal(true);
-                            } catch (error) {
-                              console.error('クイズ質問の取得エラー:', error);
-                              alert('正解の読み込みに失敗しました。');
-                            }
-                          }}
-                          className="mt-3 w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-semibold flex items-center justify-center"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          正解を見る
-                        </button>
                       </div>
                     ))}
                   </div>
