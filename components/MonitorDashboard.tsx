@@ -46,6 +46,7 @@ import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
 import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
+import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
@@ -119,8 +120,10 @@ export default function MonitorDashboard() {
   // フィルター関連のstate
   const [showIndustryFilter, setShowIndustryFilter] = useState(false);
   const [showPersonalityFilter, setShowPersonalityFilter] = useState(false);
+  const [showJobTypeFilter, setShowJobTypeFilter] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedPersonalityTypes, setSelectedPersonalityTypes] = useState<string[]>([]);
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
@@ -301,6 +304,11 @@ export default function MonitorDashboard() {
       });
     }
 
+    // 職種フィルター
+    if (selectedJobTypes.length > 0 && companyIdsWithJobTypes.size > 0) {
+      filtered = filtered.filter(ad => companyIdsWithJobTypes.has(ad.id));
+    }
+
     // マッチング検索（学生のパーソナリティタイプと企業のパーソナリティタイプをマッチング）
     if (isMatchingSearch && personalityType) {
       filtered = filtered.filter(ad => {
@@ -344,7 +352,7 @@ export default function MonitorDashboard() {
     }
 
     setFilteredAdvertisements(filtered);
-  }, [advertisements, selectedIndustries, selectedPersonalityTypes, searchQuery, isMatchingSearch, personalityType]);
+  }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes]);
 
   // フィルターが変更されたときに適用
   useEffect(() => {
@@ -1910,6 +1918,27 @@ export default function MonitorDashboard() {
                       <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
                     </button>
 
+                    {/* 業種選択ボタン */}
+                    <button
+                      onClick={() => setShowJobTypeFilter(true)}
+                      className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
+                        selectedJobTypes.length > 0
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
+                        <Briefcase className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
+                      </div>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">業種を選択</span>
+                      {selectedJobTypes.length > 0 && (
+                        <span className="bg-green-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
+                          {selectedJobTypes.length}
+                        </span>
+                      )}
+                      <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 flex-shrink-0 hidden sm:block" />
+                    </button>
+
                     {/* マッチング検索ボタン */}
                     <button
                       onClick={() => setIsMatchingSearch(!isMatchingSearch)}
@@ -2678,6 +2707,17 @@ export default function MonitorDashboard() {
           onApply={(types) => {
             setSelectedPersonalityTypes(types);
             setShowPersonalityFilter(false);
+          }}
+        />
+      )}
+
+      {showJobTypeFilter && (
+        <JobTypeFilterModal
+          selectedJobTypes={selectedJobTypes}
+          onClose={() => setShowJobTypeFilter(false)}
+          onApply={(jobTypes) => {
+            setSelectedJobTypes(jobTypes);
+            setShowJobTypeFilter(false);
           }}
         />
       )}
