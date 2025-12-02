@@ -17,7 +17,6 @@ type ActiveTab = 'basic' | 'job_awareness' | 'info_contact';
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
   const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('basic');
-  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -166,13 +165,20 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     setSurveySuccess(null);
   };
 
-  const handleSave = async () => {
+  const handleBasicInfoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authUser) {
+      setSurveyError('ユーザー情報がありません。再度ログインしてください。');
+      return;
+    }
     setLoading(true);
+    setSurveyError(null);
+    setSurveySuccess(null);
     try {
       const { error: userError } = await supabase
         .from('users')
         .update({ name: formData.name })
-        .eq('id', user.id);
+        .eq('id', authUser.id);
 
       if (userError) throw userError;
 
@@ -192,7 +198,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           occupation: formData.occupation,
           location: formData.location
         })
-        .eq('user_id', user.id);
+        .eq('user_id', authUser.id);
 
       if (profileError) throw profileError;
 
@@ -238,12 +244,11 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           .upsert(dataToSave, { onConflict: 'user_id' });
       }
 
-      setIsEditing(false);
+      setSurveySuccess('プロフィールを更新しました。');
       onUpdate();
-      alert('プロフィールを更新しました。');
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert('プロフィールの更新に失敗しました。');
+      setSurveyError('プロフィールの更新に失敗しました。');
     } finally {
       setLoading(false);
     }
@@ -502,184 +507,157 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
         <div className="p-3 sm:p-4 sm:p-6 overflow-y-auto flex-1">
           {activeTab === 'basic' ? (
             <>
-              <div className="space-y-2 sm:space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    お名前
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.name}</p>
-                  )}
+              {loading && !surveySuccess && !surveyError && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm text-gray-600">データを読み込み中...</p>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    メールアドレス
-                  </label>
-                  <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{user?.email}</p>
+              {surveyError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
                 </div>
+              )}
+              {surveySuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
+                </div>
+              )}
 
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      年齢
-                    </label>
-                    {isEditing ? (
+              <form onSubmit={handleBasicInfoSubmit} className="space-y-4 sm:space-y-6">
+                <section>
+                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">基本情報</h3>
+                  <div className="space-y-2 sm:space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        お名前
+                      </label>
                       <input
-                        type="number"
-                        name="age"
-                        value={formData.age}
+                        type="text"
+                        name="name"
+                        value={formData.name}
                         onChange={handleInputChange}
                         className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        min="18"
-                        max="100"
                       />
-                    ) : (
-                      <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.age}歳</p>
-                    )}
-                  </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      性別
-                    </label>
-                    {isEditing ? (
-                      <select
-                        name="gender"
-                        value={formData.gender}
-                        onChange={(e) => {
-                          handleInputChange(e);
-                          // アンケートの性別も同期
-                          const genderMap: { [key: string]: string } = {
-                            'male': '男性',
-                            'female': '女性',
-                            'other': 'その他'
-                          };
-                          setSurveyFormData((prev: any) => ({
-                            ...prev,
-                            gender: genderMap[e.target.value] || ''
-                          }));
-                        }}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        メールアドレス
+                      </label>
+                      <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{user?.email}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          年齢
+                        </label>
+                        <input
+                          type="number"
+                          name="age"
+                          value={formData.age}
+                          onChange={handleInputChange}
+                          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          min="18"
+                          max="100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          性別
+                        </label>
+                        <select
+                          name="gender"
+                          value={formData.gender}
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            // アンケートの性別も同期
+                            const genderMap: { [key: string]: string } = {
+                              'male': '男性',
+                              'female': '女性',
+                              'other': 'その他'
+                            };
+                            setSurveyFormData((prev: any) => ({
+                              ...prev,
+                              gender: genderMap[e.target.value] || ''
+                            }));
+                          }}
+                          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        >
+                          <option value="">選択</option>
+                          <option value="male">男性</option>
+                          <option value="female">女性</option>
+                          <option value="other">その他</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        職業
+                      </label>
+                      <input
+                        type="text"
+                        name="occupation"
+                        value={formData.occupation}
+                        onChange={handleInputChange}
                         className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      >
-                        <option value="">選択</option>
-                        <option value="male">男性</option>
-                        <option value="female">女性</option>
-                        <option value="other">その他</option>
-                      </select>
-                    ) : (
-                      <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">
-                        {formData.gender === 'male' ? '男性' : formData.gender === 'female' ? '女性' : formData.gender === 'other' ? 'その他' : '未設定'}
-                      </p>
-                    )}
+                        placeholder="職業を入力"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        居住地
+                      </label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="居住地を入力"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    職業
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="occupation"
-                      value={formData.occupation}
-                      onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="職業を入力"
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.occupation || '未設定'}</p>
-                  )}
-                </div>
+                  {/* プロフィールアンケートの基本情報（A. 基本情報）を統合 */}
+                  <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+                    <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">基本情報（分類・フィルタ用）</h3>
+                    {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
+                    {surveyFormData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
+                    {renderRadioGroup('Q3. 出身地（いずれかを選択）', 'prefecture', ['福井県', '福井県外（都道府県名：　　　　　　　　　　　）'])}
+                    {surveyFormData.prefecture === '福井県外' && renderTextInput('都道府県名', 'prefectureOther', '都道府県名を入力', 1)}
+                    {renderRadioGroup('Q4. 所属学校（いずれかを選択）', 'school', ['福井大学', '福井県立大学', '福井工業大学', '仁愛大学', 'その他（学校名：　　　　　　　　　　　）'])}
+                    {surveyFormData.school === 'その他' && renderTextInput('学校名', 'schoolOther', '学校名を入力', 1)}
+                    {renderTextInput('Q5. 所属学部・学科 - 学部名', 'faculty', '学部名を入力', 1)}
+                    {renderTextInput('Q5. 所属学部・学科 - 学科名', 'department', '学科名を入力', 1)}
+                    {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['メーカー（製造業）', '小売・流通', 'サービス業', 'IT・インターネット', '広告・マスコミ・出版', '金融・保険', '建設・不動産', '医療・福祉', '教育・公務', '物流・運輸', '商社', 'エネルギー・インフラ', 'ベンチャー／スタートアップ', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                    {surveyFormData.interestedIndustries.includes('その他') && renderTextInput('Q6. その他業界', 'interestedIndustriesOther', 'その他の業界名を入力', 1)}
+                    {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['サービス・接客業', '営業・販売職', '事務・オフィスワーク', '製造・技術職', 'IT・クリエイティブ職', '教育・医療・福祉', '物流・運輸業', '公務員・安定志向の職業', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                    {surveyFormData.interestedOccupations.includes('その他') && renderTextInput('Q7. その他職種', 'interestedOccupationsOther', 'その他の職種名を入力', 1)}
+                    {renderCheckboxGroup('Q8. 就職希望エリア（複数選択可）', 'jobHuntingAreas', ['福井県内', '地元にUターン（福井以外）', '首都圏（東京・神奈川・千葉・埼玉）', '関西圏（大阪・京都・兵庫）', '特に決めていない'])}
+                  </div>
+                </section>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    居住地
-                  </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="居住地を入力"
-                    />
-                  ) : (
-                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.location || '未設定'}</p>
-                  )}
+                <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    className="px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    )}
+                    保存する
+                  </button>
                 </div>
-
-                {/* プロフィールアンケートの基本情報（A. 基本情報）を統合 */}
-                <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
-                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">基本情報（分類・フィルタ用）</h3>
-                  {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
-                  {surveyFormData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
-                  {renderRadioGroup('Q3. 出身地（いずれかを選択）', 'prefecture', ['福井県', '福井県外（都道府県名：　　　　　　　　　　　）'])}
-                  {surveyFormData.prefecture === '福井県外' && renderTextInput('都道府県名', 'prefectureOther', '都道府県名を入力', 1)}
-                  {renderRadioGroup('Q4. 所属学校（いずれかを選択）', 'school', ['福井大学', '福井県立大学', '福井工業大学', '仁愛大学', 'その他（学校名：　　　　　　　　　　　）'])}
-                  {surveyFormData.school === 'その他' && renderTextInput('学校名', 'schoolOther', '学校名を入力', 1)}
-                  {renderTextInput('Q5. 所属学部・学科 - 学部名', 'faculty', '学部名を入力', 1)}
-                  {renderTextInput('Q5. 所属学部・学科 - 学科名', 'department', '学科名を入力', 1)}
-                  {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['メーカー（製造業）', '小売・流通', 'サービス業', 'IT・インターネット', '広告・マスコミ・出版', '金融・保険', '建設・不動産', '医療・福祉', '教育・公務', '物流・運輸', '商社', 'エネルギー・インフラ', 'ベンチャー／スタートアップ', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
-                  {surveyFormData.interestedIndustries.includes('その他') && renderTextInput('Q6. その他業界', 'interestedIndustriesOther', 'その他の業界名を入力', 1)}
-                  {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['サービス・接客業', '営業・販売職', '事務・オフィスワーク', '製造・技術職', 'IT・クリエイティブ職', '教育・医療・福祉', '物流・運輸業', '公務員・安定志向の職業', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
-                  {surveyFormData.interestedOccupations.includes('その他') && renderTextInput('Q7. その他職種', 'interestedOccupationsOther', 'その他の職種名を入力', 1)}
-                  {renderCheckboxGroup('Q8. 就職希望エリア（複数選択可）', 'jobHuntingAreas', ['福井県内', '地元にUターン（福井以外）', '首都圏（東京・神奈川・千葉・埼玉）', '関西圏（大阪・京都・兵庫）', '特に決めていない'])}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex space-x-2 sm:space-x-4 mt-4 sm:mt-6 flex-shrink-0">
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                      disabled={loading}
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={loading}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
-                    >
-                      {loading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
-                      )}
-                      保存
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={onClose}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      閉じる
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      編集
-                    </button>
-                  </>
-                )}
-              </div>
+              </form>
             </>
           ) : activeTab === 'job_awareness' ? (
             <>
