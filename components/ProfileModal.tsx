@@ -15,7 +15,7 @@ interface ProfileModalProps {
 type ActiveTab = 'basic' | 'job_awareness' | 'info_contact';
 
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
-  const { user: authUser } = useAuth();
+  const { user: authUser, refreshSession } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('basic');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -260,6 +260,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       }
 
       setSurveySuccess('プロフィールを更新しました。');
+      // ユーザー情報を再取得して、名前の更新を反映
+      await refreshSession();
       onUpdate();
     } catch (error) {
       console.error('Error updating profile:', error);
