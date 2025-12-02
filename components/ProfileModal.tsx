@@ -13,7 +13,7 @@ interface ProfileModalProps {
 }
 
 type ActiveTab = 'profile' | 'survey';
-type ActiveSection = 'A' | 'B' | 'C' | 'D';
+type ActiveSection = 'B' | 'C' | 'D';
 
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
   const { user: authUser } = useAuth();
@@ -32,7 +32,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
   const [surveyLoading, setSurveyLoading] = useState(false);
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [surveySuccess, setSurveySuccess] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<ActiveSection>('A');
+  const [activeSection, setActiveSection] = useState<ActiveSection>('B');
   const [surveyFormData, setSurveyFormData] = useState<any>({
     gender: '',
     grade: '',
@@ -93,6 +93,17 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
         console.error('Error fetching existing survey data:', error);
         setSurveyError('既存データの読み込みに失敗しました。');
       } else if (data) {
+        // アンケートの性別をプロフィール設定の性別に変換
+        const genderReverseMap: { [key: string]: string } = {
+          '男性': 'male',
+          '女性': 'female',
+          'その他': 'other'
+        };
+        const profileGender = genderReverseMap[data.gender || ''] || '';
+        if (profileGender && formData.gender !== profileGender) {
+          setFormData((prev) => ({ ...prev, gender: profileGender }));
+        }
+
         setSurveyFormData({
           gender: data.gender || '',
           grade: data.grade || '',
@@ -167,6 +178,14 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
       if (userError) throw userError;
 
+      // 性別をアンケート形式に変換
+      const genderMap: { [key: string]: string } = {
+        'male': '男性',
+        'female': '女性',
+        'other': 'その他'
+      };
+      const surveyGender = genderMap[formData.gender] || '';
+
       const { error: profileError } = await supabase
         .from('monitor_profiles')
         .update({
@@ -178,6 +197,48 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
         .eq('user_id', user.id);
 
       if (profileError) throw profileError;
+
+      // アンケートの基本情報も同時に保存
+      if (authUser) {
+        const dataToSave = {
+          user_id: authUser.id,
+          gender: surveyGender,
+          grade: surveyFormData.grade,
+          grade_other: surveyFormData.gradeOther,
+          prefecture: surveyFormData.prefecture,
+          prefecture_other: surveyFormData.prefectureOther,
+          school: surveyFormData.school,
+          school_other: surveyFormData.schoolOther,
+          faculty: surveyFormData.faculty,
+          department: surveyFormData.department,
+          interested_industries: surveyFormData.interestedIndustries,
+          interested_industries_other: surveyFormData.interestedIndustriesOther,
+          interested_occupations: surveyFormData.interestedOccupations,
+          interested_occupations_other: surveyFormData.interestedOccupationsOther,
+          job_hunting_areas: surveyFormData.jobHuntingAreas,
+          important_points: surveyFormData.importantPoints,
+          important_benefits: surveyFormData.importantBenefits,
+          disliked_points: surveyFormData.dislikedPoints,
+          lively_work_state: surveyFormData.livelyWorkState,
+          job_hunting_start_period: surveyFormData.jobHuntingStartPeriod,
+          company_info_sources: surveyFormData.companyInfoSources,
+          job_satisfaction_moments: surveyFormData.job_satisfaction_moments,
+          info_sources: surveyFormData.infoSources,
+          most_helpful_info_source: surveyFormData.mostHelpfulInfoSource,
+          sns_exposure: surveyFormData.snsExposure,
+          impressive_sns_post: surveyFormData.impressiveSnsPost,
+          weekly_use_sns: surveyFormData.weeklyUseSNS,
+          companies_to_watch: surveyFormData.companiesToWatch,
+          good_points_in_selection: surveyFormData.goodPointsInSelection,
+          improvements_in_selection: surveyFormData.improvementsInSelection,
+          impressive_recruitment_page: surveyFormData.impressiveRecruitmentPage,
+          updated_at: new Date().toISOString(),
+        };
+
+        await supabase
+          .from('monitor_profile_survey')
+          .upsert(dataToSave, { onConflict: 'user_id' });
+      }
 
       setIsEditing(false);
       onUpdate();
@@ -300,41 +361,60 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     </div>
   );
 
-  const renderRadioGroup = (question: string, name: string, options: string[]) => (
-    <div className="mb-3 sm:mb-4">
-      <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
-      {options.map((option, index) => {
-        const optionValue = getOptionValue(option);
-        const isOther = option.includes('その他');
-        const isChecked = surveyFormData[name] === optionValue;
+  const renderRadioGroup = (question: string, name: string, options: string[]) => {
+    // 性別の場合は特別な処理
+    const isGender = name === 'gender';
+    
+    return (
+      <div className="mb-3 sm:mb-4">
+        <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
+        {options.map((option, index) => {
+          const optionValue = getOptionValue(option);
+          const isOther = option.includes('その他');
+          const isChecked = surveyFormData[name] === optionValue;
 
-        return (
-          <label key={index} className="flex items-center mb-1">
-            <input
-              type="radio"
-              name={name}
-              value={optionValue}
-              checked={isChecked}
-              onChange={handleSurveyInputChange}
-              className="mr-2"
-            />
-            <span className="text-xs sm:text-sm">{optionValue}</span>
-            {isOther && (
+          return (
+            <label key={index} className="flex items-center mb-1">
               <input
-                type="text"
-                name={`${name}Other`}
-                value={surveyFormData[`${name}Other`]}
-                onChange={handleSurveyInputChange}
-                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
-                placeholder="詳細"
-                disabled={!isChecked}
+                type="radio"
+                name={name}
+                value={optionValue}
+                checked={isChecked}
+                onChange={(e) => {
+                  handleSurveyInputChange(e);
+                  // 性別の場合はプロフィール設定も同期
+                  if (isGender) {
+                    const genderMap: { [key: string]: string } = {
+                      '男性': 'male',
+                      '女性': 'female',
+                      'その他': 'other'
+                    };
+                    const profileGender = genderMap[optionValue] || '';
+                    if (profileGender) {
+                      setFormData((prev) => ({ ...prev, gender: profileGender }));
+                    }
+                  }
+                }}
+                className="mr-2"
               />
-            )}
-          </label>
-        );
-      })}
-    </div>
-  );
+              <span className="text-xs sm:text-sm">{optionValue}</span>
+              {isOther && (
+                <input
+                  type="text"
+                  name={`${name}Other`}
+                  value={surveyFormData[`${name}Other`]}
+                  onChange={handleSurveyInputChange}
+                  className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="詳細"
+                  disabled={!isChecked}
+                />
+              )}
+            </label>
+          );
+        })}
+      </div>
+    );
+  };
 
   const renderTextInput = (question: string, name: string, placeholder: string, rows?: number) => (
     <div className="mb-3 sm:mb-4">
@@ -361,7 +441,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     </div>
   );
 
-  const sections: ActiveSection[] = ['A', 'B', 'C', 'D'];
+  const sections: ActiveSection[] = ['B', 'C', 'D'];
   const currentSectionIndex = sections.indexOf(activeSection);
 
   const goToNextSection = () => {
@@ -485,7 +565,19 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                       <select
                         name="gender"
                         value={formData.gender}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          // アンケートの性別も同期
+                          const genderMap: { [key: string]: string } = {
+                            'male': '男性',
+                            'female': '女性',
+                            'other': 'その他'
+                          };
+                          setSurveyFormData((prev: any) => ({
+                            ...prev,
+                            gender: genderMap[e.target.value] || ''
+                          }));
+                        }}
                         className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       >
                         <option value="">選択</option>
@@ -535,6 +627,24 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                   ) : (
                     <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.location || '未設定'}</p>
                   )}
+                </div>
+
+                {/* プロフィールアンケートの基本情報（A. 基本情報）を統合 */}
+                <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">基本情報（分類・フィルタ用）</h3>
+                  {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
+                  {surveyFormData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
+                  {renderRadioGroup('Q3. 出身地（いずれかを選択）', 'prefecture', ['福井県', '福井県外（都道府県名：　　　　　　　　　　　）'])}
+                  {surveyFormData.prefecture === '福井県外' && renderTextInput('都道府県名', 'prefectureOther', '都道府県名を入力', 1)}
+                  {renderRadioGroup('Q4. 所属学校（いずれかを選択）', 'school', ['福井大学', '福井県立大学', '福井工業大学', '仁愛大学', 'その他（学校名：　　　　　　　　　　　）'])}
+                  {surveyFormData.school === 'その他' && renderTextInput('学校名', 'schoolOther', '学校名を入力', 1)}
+                  {renderTextInput('Q5. 所属学部・学科 - 学部名', 'faculty', '学部名を入力', 1)}
+                  {renderTextInput('Q5. 所属学部・学科 - 学科名', 'department', '学科名を入力', 1)}
+                  {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['メーカー（製造業）', '小売・流通', 'サービス業', 'IT・インターネット', '広告・マスコミ・出版', '金融・保険', '建設・不動産', '医療・福祉', '教育・公務', '物流・運輸', '商社', 'エネルギー・インフラ', 'ベンチャー／スタートアップ', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                  {surveyFormData.interestedIndustries.includes('その他') && renderTextInput('Q6. その他業界', 'interestedIndustriesOther', 'その他の業界名を入力', 1)}
+                  {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['サービス・接客業', '営業・販売職', '事務・オフィスワーク', '製造・技術職', 'IT・クリエイティブ職', '教育・医療・福祉', '物流・運輸業', '公務員・安定志向の職業', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                  {surveyFormData.interestedOccupations.includes('その他') && renderTextInput('Q7. その他職種', 'interestedOccupationsOther', 'その他の職種名を入力', 1)}
+                  {renderCheckboxGroup('Q8. 就職希望エリア（複数選択可）', 'jobHuntingAreas', ['福井県内', '地元にUターン（福井以外）', '首都圏（東京・神奈川・千葉・埼玉）', '関西圏（大阪・京都・兵庫）', '特に決めていない'])}
                 </div>
               </div>
 
@@ -605,14 +715,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               <div className="border-b border-gray-200 mb-4 pb-2">
                 <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
                   <button
-                    onClick={() => setActiveSection('A')}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      activeSection === 'A' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    A. 基本情報
-                  </button>
-                  <button
                     onClick={() => setActiveSection('B')}
                     className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                       activeSection === 'B' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -640,26 +742,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               </div>
 
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
-                {activeSection === 'A' && (
-                  <section>
-                    <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">A. 基本情報（分類・フィルタ用）</h3>
-                    {renderRadioGroup('Q1. 性別（いずれかを選択）', 'gender', ['男性', '女性', 'その他', '無回答'])}
-                    {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
-                    {surveyFormData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
-                    {renderRadioGroup('Q3. 出身地（いずれかを選択）', 'prefecture', ['福井県', '福井県外（都道府県名：　　　　　　　　　　　）'])}
-                    {surveyFormData.prefecture === '福井県外' && renderTextInput('都道府県名', 'prefectureOther', '都道府県名を入力', 1)}
-                    {renderRadioGroup('Q4. 所属学校（いずれかを選択）', 'school', ['福井大学', '福井県立大学', '福井工業大学', '仁愛大学', 'その他（学校名：　　　　　　　　　　　）'])}
-                    {surveyFormData.school === 'その他' && renderTextInput('学校名', 'schoolOther', '学校名を入力', 1)}
-                    {renderTextInput('Q5. 所属学部・学科 - 学部名', 'faculty', '学部名を入力', 1)}
-                    {renderTextInput('Q5. 所属学部・学科 - 学科名', 'department', '学科名を入力', 1)}
-                    {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['メーカー（製造業）', '小売・流通', 'サービス業', 'IT・インターネット', '広告・マスコミ・出版', '金融・保険', '建設・不動産', '医療・福祉', '教育・公務', '物流・運輸', '商社', 'エネルギー・インフラ', 'ベンチャー／スタートアップ', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
-                    {surveyFormData.interestedIndustries.includes('その他') && renderTextInput('Q6. その他業界', 'interestedIndustriesOther', 'その他の業界名を入力', 1)}
-                    {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['サービス・接客業', '営業・販売職', '事務・オフィスワーク', '製造・技術職', 'IT・クリエイティブ職', '教育・医療・福祉', '物流・運輸業', '公務員・安定志向の職業', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
-                    {surveyFormData.interestedOccupations.includes('その他') && renderTextInput('Q7. その他職種', 'interestedOccupationsOther', 'その他の職種名を入力', 1)}
-                    {renderCheckboxGroup('Q8. 就職希望エリア（複数選択可）', 'jobHuntingAreas', ['福井県内', '地元にUターン（福井以外）', '首都圏（東京・神奈川・千葉・埼玉）', '関西圏（大阪・京都・兵庫）', '特に決めていない'])}
-                  </section>
-                )}
-
                 {activeSection === 'B' && (
                   <section>
                     <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">B. 就活意識・価値観</h3>
