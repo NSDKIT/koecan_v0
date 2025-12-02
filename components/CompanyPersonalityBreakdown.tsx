@@ -563,7 +563,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">読み込み中...</p>
+        <p className="text-sm text-gray-600">読み込み中...</p>
       </div>
     );
   }
@@ -572,7 +572,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     return (
       <div className="bg-gray-50 rounded-lg p-6 text-center">
         <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-600">パーソナリティ診断結果がありません</p>
+        <p className="text-sm text-gray-600">パーソナリティ診断結果がありません</p>
       </div>
     );
   }
@@ -584,7 +584,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
         <div className="flex justify-end">
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             診断結果を削除
@@ -597,7 +597,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
         <div className="flex space-x-4">
           <button
             onClick={() => setSelectedView('job')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
+            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
               selectedView === 'job'
                 ? 'bg-orange-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -608,7 +608,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           </button>
           <button
             onClick={() => setSelectedView('years')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
+            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
               selectedView === 'years'
                 ? 'bg-orange-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -623,7 +623,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
         <div className="flex space-x-4">
           <button
             onClick={() => setViewMode('chart')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
+            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
               viewMode === 'chart'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -634,7 +634,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center ${
+            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
               viewMode === 'list'
                 ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -653,7 +653,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border-2 border-purple-200">
             <div className="flex items-center mb-3">
               <TrendingUp className="w-5 h-5 text-orange-600 mr-2" />
-              <h3 className="font-bold text-gray-800">表示するカテゴリーを選択</h3>
+              <h3 className="text-sm font-bold text-gray-800">表示するカテゴリーを選択</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">
               選択したカテゴリーの全従業員を点で表示し、8軸（E, I, N, S, P, R, F, O）の平均を面積として表示します
@@ -665,7 +665,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   <button
                     key={result.id}
                     onClick={() => toggleComparison(result.id)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-all flex items-center space-x-2 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
                       isSelected
                         ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg transform scale-105'
                         : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300'
@@ -673,7 +673,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   >
                     {isSelected && <CheckCircle2 className="w-4 h-4" />}
                     <span>{result.category_value}</span>
-                    <span className="text-xs opacity-75">({result.response_count}名)</span>
+                    <span className="text-sm opacity-75">({result.response_count}名)</span>
                   </button>
                 );
               })}
@@ -684,7 +684,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           {chartData.length > 0 && (
             <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
               <div className="mb-4">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
+                <h3 className="text-sm font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
                 <p className="text-sm text-gray-600 mb-3">8つの軸（E, I, N, S, P, R, F, O）での価値観の傾向を可視化</p>
               </div>
               <ResponsiveContainer width="100%" height={500}>
@@ -764,15 +764,15 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                           className="w-4 h-4 rounded-full mr-2"
                           style={{ backgroundColor: color.stroke }}
                         />
-                        <h4 className="font-bold text-gray-800">{result.category_value}</h4>
+                        <h4 className="text-sm font-bold text-gray-800">{result.category_value}</h4>
                       </div>
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">回答数:</span>
-                          <span className="font-semibold">{result.response_count}名</span>
+                          <span className="text-sm text-gray-600">回答数:</span>
+                          <span className="text-sm font-semibold">{result.response_count}名</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">タイプ:</span>
+                          <span className="text-sm text-gray-600">タイプ:</span>
                           <span 
                             className="font-bold text-orange-600 hover:text-orange-800"
                           >
@@ -787,7 +787,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
               {/* 八角形レーダーチャートについて（ページの一番下） */}
               <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 mt-6 border border-orange-200">
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
                   <Brain className="w-4 h-4 mr-2 text-orange-600" />
                   八角形レーダーチャートについて
                 </h4>
@@ -797,7 +797,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   </p>
                   <div className="space-y-1">
                     <p className="font-semibold">8つの軸:</p>
-                    <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                    <ul className="list-disc list-inside ml-4 text-sm space-y-0.5">
                       <li><span className="font-semibold">E（外向型）⇄ I（内向型）</span> - 市場への関わり方</li>
                       <li><span className="font-semibold">N（革新型）⇄ S（安定型）</span> - 成長・戦略スタンス</li>
                       <li><span className="font-semibold">P（人材志向）⇄ R（成果志向）</span> - 組織運営スタンス</li>
@@ -806,11 +806,11 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   </div>
                   <div className="space-y-1 mt-3">
                     <p className="font-semibold">表示方法:</p>
-                    <ul className="list-disc list-inside ml-4 text-xs space-y-0.5">
+                    <ul className="list-disc list-inside ml-4 text-sm space-y-0.5">
                       <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
                     </ul>
                   </div>
-                  <p className="text-xs text-gray-600 mt-3 pt-3 border-t border-orange-200">
+                  <p className="text-sm text-gray-600 mt-3 pt-3 border-t border-orange-200">
                     ※ 各軸の値は0〜100の範囲で表示されます。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
                   </p>
                 </div>
@@ -821,7 +821,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           {selectedResults.length === 0 && (
             <div className="bg-gray-50 rounded-xl p-8 text-center">
               <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">比較対象を選択してください</p>
+              <p className="text-sm text-gray-600">比較対象を選択してください</p>
             </div>
           )}
         </div>
@@ -843,7 +843,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                 >
                   <div className="flex items-center space-x-4 flex-1">
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-800">
+                      <h3 className="text-sm font-bold text-gray-800">
                         {result.category_value}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
@@ -851,7 +851,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                       </p>
                     </div>
                     <div
-                      className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-lg font-bold cursor-pointer hover:bg-purple-200 transition-colors"
+                      className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-bold cursor-pointer hover:bg-purple-200 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!result.personality_type.includes('/')) {
@@ -876,26 +876,26 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   <div className="px-4 pb-4 border-t border-gray-200 bg-gray-50">
                     <div className="pt-4 space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">市場への関わり方:</span>
-                        <span className="font-semibold">
+                        <span className="text-sm text-gray-600">市場への関わり方:</span>
+                        <span className="text-sm font-semibold">
                           {result.market_engagement_score >= 0 ? 'E' : 'I'} ({result.market_engagement_score.toFixed(2)})
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">成長・戦略スタンス:</span>
-                        <span className="font-semibold">
+                        <span className="text-sm text-gray-600">成長・戦略スタンス:</span>
+                        <span className="text-sm font-semibold">
                           {result.growth_strategy_score >= 0 ? 'N' : 'S'} ({result.growth_strategy_score.toFixed(2)})
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">組織運営スタンス:</span>
-                        <span className="font-semibold">
+                        <span className="text-sm text-gray-600">組織運営スタンス:</span>
+                        <span className="text-sm font-semibold">
                           {result.organization_style_score >= 0 ? 'P' : 'R'} ({result.organization_style_score.toFixed(2)})
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">意思決定スタイル:</span>
-                        <span className="font-semibold">
+                        <span className="text-sm text-gray-600">意思決定スタイル:</span>
+                        <span className="text-sm font-semibold">
                           {result.decision_making_score >= 0 ? 'F' : 'O'} ({result.decision_making_score.toFixed(2)})
                         </span>
                       </div>
@@ -926,7 +926,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-800">診断結果を削除</h3>
+                <h3 className="text-sm font-bold text-gray-800">診断結果を削除</h3>
               </div>
               <p className="text-gray-600 mb-6">
                 この企業のパーソナリティ診断結果を削除しますか？<br />
@@ -942,7 +942,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"
                   disabled={deleting}
                 >
                   {deleting ? '削除中...' : '削除する'}

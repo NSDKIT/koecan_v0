@@ -2691,7 +2691,7 @@ export default function MonitorDashboard() {
                     ) : (
                       <div className="bg-gray-50 rounded-2xl p-8 text-center">
                         <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">この企業のパーソナリティ診断結果はまだ登録されていません</p>
+                        <p className="text-sm text-gray-600">この企業のパーソナリティ診断結果はまだ登録されていません</p>
                       </div>
                     )}
                   </div>
