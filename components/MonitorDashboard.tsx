@@ -2347,7 +2347,15 @@ export default function MonitorDashboard() {
                           displayValue(selectedAdvertisement.highlight_point_1),
                           displayValue(selectedAdvertisement.highlight_point_2),
                           displayValue(selectedAdvertisement.highlight_point_3)
-                        ].filter(Boolean).join(' / ') || '-'}
+                        ].filter(Boolean).length > 0 ? (
+                          [
+                            displayValue(selectedAdvertisement.highlight_point_1),
+                            displayValue(selectedAdvertisement.highlight_point_2),
+                            displayValue(selectedAdvertisement.highlight_point_3)
+                          ].filter(Boolean).map((point, index) => (
+                            <div key={index} className={index > 0 ? 'mt-2' : ''} style={{ whiteSpace: 'pre-wrap' }}>{point}</div>
+                          ))
+                        ) : '-'}
                       </div>
                     </div>
                   </div>
@@ -2409,7 +2417,7 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">必須資格・免許</div>
                     </div>
                     <div className="bg-white p-3">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.required_qualifications) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.required_qualifications) || '-'}</div>
                     </div>
                   </div>
                 </div>
@@ -2424,19 +2432,19 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">勤務時間</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.working_hours) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.working_hours) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">休日</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.holidays) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.holidays) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">年間休日数</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.annual_holidays) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.annual_holidays) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">リモートワーク</div>

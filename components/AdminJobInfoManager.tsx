@@ -607,9 +607,9 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">イチオシポイント</label>
-                          <input type="text" name="highlight_point_1" value={formData.highlight_point_1 || ''} onChange={handleInputChange} placeholder="イチオシポイント①" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm mb-2" />
-                          <input type="text" name="highlight_point_2" value={formData.highlight_point_2 || ''} onChange={handleInputChange} placeholder="イチオシポイント②" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm mb-2" />
-                          <input type="text" name="highlight_point_3" value={formData.highlight_point_3 || ''} onChange={handleInputChange} placeholder="イチオシポイント③" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="highlight_point_1" value={formData.highlight_point_1 || ''} onChange={handleInputChange} rows={2} placeholder="イチオシポイント①（改行や空白を保持できます）" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm mb-2" />
+                          <textarea name="highlight_point_2" value={formData.highlight_point_2 || ''} onChange={handleInputChange} rows={2} placeholder="イチオシポイント②（改行や空白を保持できます）" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm mb-2" />
+                          <textarea name="highlight_point_3" value={formData.highlight_point_3 || ''} onChange={handleInputChange} rows={2} placeholder="イチオシポイント③（改行や空白を保持できます）" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
                         </div>
                         <div className="flex items-center md:col-span-2">
                           <input type="checkbox" id="is_active" name="is_active" checked={formData.is_active ?? true} onChange={handleInputChange} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
@@ -729,11 +729,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700">採用担当部署（担当者）</label>
-                          <input type="text" name="recruitment_department" value={formData.recruitment_department || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="recruitment_department" value={formData.recruitment_department || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">採用に関する問い合わせ先（メール/電話）</label>
-                          <input type="text" name="recruitment_contact" value={formData.recruitment_contact || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="recruitment_contact" value={formData.recruitment_contact || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Instagram URL</label>
