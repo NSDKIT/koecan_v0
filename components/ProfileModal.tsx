@@ -12,7 +12,7 @@ interface ProfileModalProps {
   onUpdate: () => void;
 }
 
-type ActiveTab = 'basic' | 'job_awareness' | 'work_style' | 'info_contact';
+type ActiveTab = 'basic' | 'job_awareness' | 'info_contact';
 
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
   const { user: authUser } = useAuth();
@@ -486,16 +486,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               就活意識
             </button>
             <button
-              onClick={() => setActiveTab('work_style')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === 'work_style'
-                  ? 'border-purple-600 text-purple-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              働き方
-            </button>
-            <button
               onClick={() => setActiveTab('info_contact')}
               className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'info_contact'
@@ -721,48 +711,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                   {renderRadioGroup('Q13. 就活を始めた時期を教えてください', 'jobHuntingStartPeriod', ['1年生の時から', '2年生の時から', '3年生の春前（1〜3月）', '3年生の春（4〜6月）', '3年生の夏（7〜9月）', '3年生の秋（10〜12月）', '3年生の冬（1〜2月）', '4年生以降', '就活はしていない／考えていない'])}
                   {renderCheckboxGroup('Q14. 会社のHPやSNSの採用アカウントで知りたい内容は？', 'companyInfoSources', ['社員の日常', '採用情報', '製品やサービス紹介', '職場の雰囲気', '従業員の雰囲気', '社員インタビュー', '企業文化紹介（企業のミッション・ビジョン）'])}
                   {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
-                </section>
-
-                <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
-                  <button
-                    type="submit"
-                    className="px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    disabled={surveyLoading}
-                  >
-                    {surveyLoading ? (
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    )}
-                    保存する
-                  </button>
-                </div>
-              </form>
-            </>
-          ) : activeTab === 'work_style' ? (
-            <>
-              {surveyLoading && !surveySuccess && !surveyError && (
-                <div className="text-center py-8">
-                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
-                  <p className="text-sm text-gray-600">データを読み込み中...</p>
-                </div>
-              )}
-
-              {surveyError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
-                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
-                </div>
-              )}
-              {surveySuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
-                </div>
-              )}
-
-              <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
-                <section>
-                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">働き方</h3>
-                  <p className="text-sm text-gray-600">現在、質問はありません。</p>
                 </section>
 
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
