@@ -321,7 +321,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     minSelections?: number
   ) => (
     <div className="mb-3 sm:mb-4">
-      <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
+      <p className="font-semibold text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
       {options.map((option, index) => {
         const optionValue = getOptionValue(option);
         const isOther = option.includes('その他');
@@ -339,14 +339,14 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               disabled={isDisabled}
               className="mr-2"
             />
-            <span className="text-xs sm:text-sm">{optionValue}</span>
+            <span className="text-sm">{optionValue}</span>
             {isOther && (
               <input
                 type="text"
                 name={`${name}Other`}
                 value={surveyFormData[`${name}Other`]}
                 onChange={handleSurveyInputChange}
-                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="詳細"
                 disabled={!isChecked}
               />
@@ -354,8 +354,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           </label>
         );
       })}
-      {maxSelections && <p className="text-xs text-gray-500 mt-1">（{maxSelections}つまで選択可）</p>}
-      {minSelections && <p className="text-xs text-red-500 mt-1">（{minSelections}つ以上選択してください）</p>}
+      {maxSelections && <p className="text-sm text-gray-500 mt-1">（{maxSelections}つまで選択可）</p>}
+      {minSelections && <p className="text-sm text-red-500 mt-1">（{minSelections}つ以上選択してください）</p>}
     </div>
   );
 
@@ -365,7 +365,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     
     return (
       <div className="mb-3 sm:mb-4">
-        <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
+        <p className="font-semibold text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
         {options.map((option, index) => {
           const optionValue = getOptionValue(option);
           const isOther = option.includes('その他');
@@ -395,14 +395,14 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 }}
                 className="mr-2"
               />
-              <span className="text-xs sm:text-sm">{optionValue}</span>
+              <span className="text-sm">{optionValue}</span>
               {isOther && (
                 <input
                   type="text"
                   name={`${name}Other`}
                   value={surveyFormData[`${name}Other`]}
                   onChange={handleSurveyInputChange}
-                  className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
                   placeholder="詳細"
                   disabled={!isChecked}
                 />
@@ -416,14 +416,14 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
   const renderTextInput = (question: string, name: string, placeholder: string, rows?: number) => (
     <div className="mb-3 sm:mb-4">
-      <label className="block font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</label>
+      <label className="block font-semibold text-sm text-gray-800 mb-1 sm:mb-2">{question}</label>
       {rows ? (
         <textarea
           name={name}
           value={surveyFormData[name]}
           onChange={handleSurveyInputChange}
           rows={rows}
-          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder={placeholder}
         />
       ) : (
@@ -432,7 +432,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           name={name}
           value={surveyFormData[name]}
           onChange={handleSurveyInputChange}
-          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder={placeholder}
         />
       )}
@@ -450,8 +450,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               <User className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-base sm:text-xl font-bold text-gray-800">プロフィール設定</h2>
-              <p className="text-xs sm:text-sm text-gray-600">アカウント情報の確認・編集</p>
+              <h2 className="text-sm font-bold text-gray-800">プロフィール設定</h2>
+              <p className="text-sm text-gray-600">アカウント情報の確認・編集</p>
             </div>
           </div>
           <button
@@ -467,7 +467,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
           <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('basic')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'basic'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -477,7 +477,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
             </button>
             <button
               onClick={() => setActiveTab('job_awareness')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'job_awareness'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -487,7 +487,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
             </button>
             <button
               onClick={() => setActiveTab('work_style')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'work_style'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -497,7 +497,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
             </button>
             <button
               onClick={() => setActiveTab('info_contact')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'info_contact'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -514,7 +514,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
             <>
               <div className="space-y-2 sm:space-y-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     お名前
                   </label>
                   {isEditing ? (
@@ -523,23 +523,23 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                   ) : (
-                    <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.name}</p>
+                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.name}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     メールアドレス
                   </label>
-                  <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{user?.email}</p>
+                  <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{user?.email}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       年齢
                     </label>
                     {isEditing ? (
@@ -548,17 +548,17 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                         name="age"
                         value={formData.age}
                         onChange={handleInputChange}
-                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         min="18"
                         max="100"
                       />
                     ) : (
-                      <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.age}歳</p>
+                      <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.age}歳</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       性別
                     </label>
                     {isEditing ? (
@@ -578,7 +578,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                             gender: genderMap[e.target.value] || ''
                           }));
                         }}
-                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       >
                         <option value="">選択</option>
                         <option value="male">男性</option>
@@ -586,7 +586,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                         <option value="other">その他</option>
                       </select>
                     ) : (
-                      <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">
+                      <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">
                         {formData.gender === 'male' ? '男性' : formData.gender === 'female' ? '女性' : formData.gender === 'other' ? 'その他' : '未設定'}
                       </p>
                     )}
@@ -594,7 +594,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     職業
                   </label>
                   {isEditing ? (
@@ -603,16 +603,16 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                       name="occupation"
                       value={formData.occupation}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="職業を入力"
                     />
                   ) : (
-                    <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.occupation || '未設定'}</p>
+                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.occupation || '未設定'}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     居住地
                   </label>
                   {isEditing ? (
@@ -621,17 +621,17 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="居住地を入力"
                     />
                   ) : (
-                    <p className="text-sm sm:text-base text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.location || '未設定'}</p>
+                    <p className="text-sm text-gray-900 bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">{formData.location || '未設定'}</p>
                   )}
                 </div>
 
                 {/* プロフィールアンケートの基本情報（A. 基本情報）を統合 */}
                 <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
-                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">基本情報（分類・フィルタ用）</h3>
+                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">基本情報（分類・フィルタ用）</h3>
                   {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
                   {surveyFormData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
                   {renderRadioGroup('Q3. 出身地（いずれかを選択）', 'prefecture', ['福井県', '福井県外（都道府県名：　　　　　　　　　　　）'])}
@@ -654,7 +654,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                   <>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                       disabled={loading}
                     >
                       キャンセル
@@ -662,7 +662,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                     <button
                       onClick={handleSave}
                       disabled={loading}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+                      className="flex-1 px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
                     >
                       {loading ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -676,13 +676,13 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                   <>
                     <button
                       onClick={onClose}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       閉じる
                     </button>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                      className="flex-1 px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-lg hover:from-purple-700 hover:to-purple-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
                     >
                       <Edit className="w-4 h-4 mr-2" />
                       編集
@@ -696,24 +696,24 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               {surveyLoading && !surveySuccess && !surveyError && (
                 <div className="text-center py-8">
                   <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
+                  <p className="text-sm text-gray-600">データを読み込み中...</p>
                 </div>
               )}
 
               {surveyError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
                 </div>
               )}
               {surveySuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
                 </div>
               )}
 
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
                 <section>
-                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">就活意識</h3>
+                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">就活意識</h3>
                   {renderCheckboxGroup('Q9. 企業を選ぶ際に重視するポイントは？', 'importantPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], 3)}
                   {renderCheckboxGroup('Q10. 特に重視する福利厚生は？', 'importantBenefits', ['社会保険・退職金など制度が整っている', '産休・育休・介護休暇などが取りやすい', '有給が取りやすい', '社割・旅行補助・レジャー施設優待などがある', '教育制度（資格支援・外部研修）など自己投資の支援がある', 'イベント・交流・サークル活動などが盛ん', '髪色、ネイル、ピアス、服装などの身だしなみが自由'], 3)}
                   {renderCheckboxGroup('Q11. この項目が充実していないと嫌だなと感じるポイントは？', 'dislikedPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], undefined, 1)}
@@ -725,7 +725,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     disabled={surveyLoading}
                   >
                     {surveyLoading ? (
@@ -743,31 +743,31 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               {surveyLoading && !surveySuccess && !surveyError && (
                 <div className="text-center py-8">
                   <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
+                  <p className="text-sm text-gray-600">データを読み込み中...</p>
                 </div>
               )}
 
               {surveyError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
                 </div>
               )}
               {surveySuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
                 </div>
               )}
 
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
                 <section>
-                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">働き方</h3>
+                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">働き方</h3>
                   {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
                 </section>
 
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     disabled={surveyLoading}
                   >
                     {surveyLoading ? (
@@ -785,24 +785,24 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               {surveyLoading && !surveySuccess && !surveyError && (
                 <div className="text-center py-8">
                   <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
-                  <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
+                  <p className="text-sm text-gray-600">データを読み込み中...</p>
                 </div>
               )}
 
               {surveyError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
                 </div>
               )}
               {surveySuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-sm mb-3 sm:mb-4 flex items-center">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
                 </div>
               )}
 
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
                 <section>
-                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">情報接点</h3>
+                  <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">情報接点</h3>
                   {renderCheckboxGroup('Q16. 企業情報はどこで入手しますか？', 'infoSources', ['マイナビ', 'リクナビ', 'その他就活サイト', '大学のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', '知人からの紹介', 'その他（　　　　　　　　　　　）'])}
                   {renderRadioGroup('Q17. 就職活動で特に参考になった情報源は？', 'mostHelpfulInfoSource', ['マイナビ', 'リクナビ', 'その他就活サイト', '学校のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', 'その他（　　　　　　　　　　　）'])}
                   {renderRadioGroup('Q18. SNSで企業アカウントを見たことがありますか？', 'snsExposure', ['よく見る', 'たまに見る', '見たことはあるが、ほとんど見ない', '見たことがない'])}
@@ -817,7 +817,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
                   <button
                     type="submit"
-                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="px-3 sm:px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     disabled={surveyLoading}
                   >
                     {surveyLoading ? (
