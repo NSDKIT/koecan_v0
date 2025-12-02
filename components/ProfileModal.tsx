@@ -12,12 +12,11 @@ interface ProfileModalProps {
   onUpdate: () => void;
 }
 
-type ActiveTab = 'profile' | 'survey';
-type ActiveSection = 'B' | 'C' | 'D';
+type ActiveTab = 'basic' | 'job_awareness' | 'work_style' | 'info_contact';
 
 export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalProps) {
   const { user: authUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('basic');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,7 +31,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
   const [surveyLoading, setSurveyLoading] = useState(false);
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [surveySuccess, setSurveySuccess] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<ActiveSection>('B');
   const [surveyFormData, setSurveyFormData] = useState<any>({
     gender: '',
     grade: '',
@@ -441,24 +439,6 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
     </div>
   );
 
-  const sections: ActiveSection[] = ['B', 'C', 'D'];
-  const currentSectionIndex = sections.indexOf(activeSection);
-
-  const goToNextSection = () => {
-    if (currentSectionIndex < sections.length - 1) {
-      setActiveSection(sections[currentSectionIndex + 1]);
-      setSurveySuccess(null);
-      setSurveyError(null);
-    }
-  };
-
-  const goToPreviousSection = () => {
-    if (currentSectionIndex > 0) {
-      setActiveSection(sections[currentSectionIndex - 1]);
-      setSurveySuccess(null);
-      setSurveyError(null);
-    }
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
@@ -484,11 +464,11 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
         {/* Tab Navigation - Always visible */}
         <div className="border-b border-gray-200 px-3 sm:px-6 flex-shrink-0">
-          <div className="flex space-x-2 sm:space-x-4">
+          <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
             <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'profile'
+              onClick={() => setActiveTab('basic')}
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'basic'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
@@ -496,21 +476,41 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               基本情報
             </button>
             <button
-              onClick={() => setActiveTab('survey')}
-              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'survey'
+              onClick={() => setActiveTab('job_awareness')}
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'job_awareness'
                   ? 'border-purple-600 text-purple-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              プロフィールアンケート
+              就活意識
+            </button>
+            <button
+              onClick={() => setActiveTab('work_style')}
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'work_style'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              働き方
+            </button>
+            <button
+              onClick={() => setActiveTab('info_contact')}
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'info_contact'
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              情報接点
             </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="p-3 sm:p-4 sm:p-6 overflow-y-auto flex-1">
-          {activeTab === 'profile' ? (
+          {activeTab === 'basic' ? (
             <>
               <div className="space-y-2 sm:space-y-4">
                 <div>
@@ -691,6 +691,95 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 )}
               </div>
             </>
+          ) : activeTab === 'job_awareness' ? (
+            <>
+              {surveyLoading && !surveySuccess && !surveyError && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
+                </div>
+              )}
+
+              {surveyError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
+                </div>
+              )}
+              {surveySuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
+                <section>
+                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">就活意識</h3>
+                  {renderCheckboxGroup('Q9. 企業を選ぶ際に重視するポイントは？', 'importantPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], 3)}
+                  {renderCheckboxGroup('Q10. 特に重視する福利厚生は？', 'importantBenefits', ['社会保険・退職金など制度が整っている', '産休・育休・介護休暇などが取りやすい', '有給が取りやすい', '社割・旅行補助・レジャー施設優待などがある', '教育制度（資格支援・外部研修）など自己投資の支援がある', 'イベント・交流・サークル活動などが盛ん', '髪色、ネイル、ピアス、服装などの身だしなみが自由'], 3)}
+                  {renderCheckboxGroup('Q11. この項目が充実していないと嫌だなと感じるポイントは？', 'dislikedPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], undefined, 1)}
+                  {renderCheckboxGroup('Q12. 生き生き働いていると感じるのは、どのような状態だと思いますか？', 'livelyWorkState', ['やりがいを感じている', '人間関係が良好', 'プライベートが充実している', '評価されていると感じる', '成長実感がある', '自主的に動けている', '月末にお金が振り込まれる瞬間'])}
+                  {renderRadioGroup('Q13. 就活を始めた時期を教えてください', 'jobHuntingStartPeriod', ['1年生の時から', '2年生の時から', '3年生の春前（1〜3月）', '3年生の春（4〜6月）', '3年生の夏（7〜9月）', '3年生の秋（10〜12月）', '3年生の冬（1〜2月）', '4年生以降', '就活はしていない／考えていない'])}
+                  {renderCheckboxGroup('Q14. 会社のHPやSNSの採用アカウントで知りたい内容は？', 'companyInfoSources', ['社員の日常', '採用情報', '製品やサービス紹介', '職場の雰囲気', '従業員の雰囲気', '社員インタビュー', '企業文化紹介（企業のミッション・ビジョン）'])}
+                </section>
+
+                <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled={surveyLoading}
+                  >
+                    {surveyLoading ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    )}
+                    保存する
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : activeTab === 'work_style' ? (
+            <>
+              {surveyLoading && !surveySuccess && !surveyError && (
+                <div className="text-center py-8">
+                  <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
+                </div>
+              )}
+
+              {surveyError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveyError}
+                </div>
+              )}
+              {surveySuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {surveySuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
+                <section>
+                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">働き方</h3>
+                  {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
+                </section>
+
+                <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled={surveyLoading}
+                  >
+                    {surveyLoading ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    )}
+                    保存する
+                  </button>
+                </div>
+              </form>
+            </>
           ) : (
             <>
               {surveyLoading && !surveySuccess && !surveyError && (
@@ -711,104 +800,33 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                 </div>
               )}
 
-              {/* Section Navigation */}
-              <div className="border-b border-gray-200 mb-4 pb-2">
-                <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
-                  <button
-                    onClick={() => setActiveSection('B')}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      activeSection === 'B' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    B. 就活意識・価値観
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('C')}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      activeSection === 'C' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    C. 働き方
-                  </button>
-                  <button
-                    onClick={() => setActiveSection('D')}
-                    className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      activeSection === 'D' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    D. 情報接点
-                  </button>
-                </div>
-              </div>
-
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
-                {activeSection === 'B' && (
-                  <section>
-                    <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">B. 就活意識・価値観</h3>
-                    {renderCheckboxGroup('Q9. 企業を選ぶ際に重視するポイントは？', 'importantPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], 3)}
-                    {renderCheckboxGroup('Q10. 特に重視する福利厚生は？', 'importantBenefits', ['社会保険・退職金など制度が整っている', '産休・育休・介護休暇などが取りやすい', '有給が取りやすい', '社割・旅行補助・レジャー施設優待などがある', '教育制度（資格支援・外部研修）など自己投資の支援がある', 'イベント・交流・サークル活動などが盛ん', '髪色、ネイル、ピアス、服装などの身だしなみが自由'], 3)}
-                    {renderCheckboxGroup('Q11. この項目が充実していないと嫌だなと感じるポイントは？', 'dislikedPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], undefined, 1)}
-                    {renderCheckboxGroup('Q12. 生き生き働いていると感じるのは、どのような状態だと思いますか？', 'livelyWorkState', ['やりがいを感じている', '人間関係が良好', 'プライベートが充実している', '評価されていると感じる', '成長実感がある', '自主的に動けている', '月末にお金が振り込まれる瞬間'])}
-                    {renderRadioGroup('Q13. 就活を始めた時期を教えてください', 'jobHuntingStartPeriod', ['1年生の時から', '2年生の時から', '3年生の春前（1〜3月）', '3年生の春（4〜6月）', '3年生の夏（7〜9月）', '3年生の秋（10〜12月）', '3年生の冬（1〜2月）', '4年生以降', '就活はしていない／考えていない'])}
-                    {renderCheckboxGroup('Q14. 会社のHPやSNSの採用アカウントで知りたい内容は？', 'companyInfoSources', ['社員の日常', '採用情報', '製品やサービス紹介', '職場の雰囲気', '従業員の雰囲気', '社員インタビュー', '企業文化紹介（企業のミッション・ビジョン）'])}
-                  </section>
-                )}
+                <section>
+                  <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">情報接点</h3>
+                  {renderCheckboxGroup('Q16. 企業情報はどこで入手しますか？', 'infoSources', ['マイナビ', 'リクナビ', 'その他就活サイト', '大学のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', '知人からの紹介', 'その他（　　　　　　　　　　　）'])}
+                  {renderRadioGroup('Q17. 就職活動で特に参考になった情報源は？', 'mostHelpfulInfoSource', ['マイナビ', 'リクナビ', 'その他就活サイト', '学校のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', 'その他（　　　　　　　　　　　）'])}
+                  {renderRadioGroup('Q18. SNSで企業アカウントを見たことがありますか？', 'snsExposure', ['よく見る', 'たまに見る', '見たことはあるが、ほとんど見ない', '見たことがない'])}
+                  {renderTextInput('Q19. 印象に残っている企業のSNS投稿があれば、その内容を教えてください。（記述式）', 'impressiveSnsPost', '内容を具体的に記述してください', 3)}
+                  {renderCheckboxGroup('Q20. 週5日以上使用するSNSをすべて教えてください。', 'weeklyUseSNS', ['Instagram', 'TikTok', 'YouTube', 'X（旧Twitter）'])}
+                  {renderCheckboxGroup('Q21. 就職を考えている企業の何を見ますか？', 'companiesToWatch', ['企業ホームページ', 'Instagram', 'TikTok', 'YouTube', 'X（旧Twitter）', 'Googleマップ', 'その他（　　　　　　　　　　　）'])}
+                  {renderTextInput('Q22. 選考過程で「この企業は良い」と感じたポイントは何でしたか？（記述式）', 'goodPointsInSelection', '具体的に記述してください', 3)}
+                  {renderTextInput('Q23. 説明会や選考過程で「もっとこうしてほしい」と感じる点はありますか？（記述式）', 'improvementsInSelection', '具体的に記述してください', 3)}
+                  {renderTextInput('Q24. 採用ページで印象に残っている内容があれば、業界とその内容を教えてください。（記述式）', 'impressiveRecruitmentPage', '業界と内容を記述してください', 3)}
+                </section>
 
-                {activeSection === 'C' && (
-                  <section>
-                    <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">C. 働き方に対する価値観</h3>
-                    {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
-                  </section>
-                )}
-
-                {activeSection === 'D' && (
-                  <section>
-                    <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">D. 情報接点・企業認知</h3>
-                    {renderCheckboxGroup('Q16. 企業情報はどこで入手しますか？', 'infoSources', ['マイナビ', 'リクナビ', 'その他就活サイト', '大学のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', '知人からの紹介', 'その他（　　　　　　　　　　　）'])}
-                    {renderRadioGroup('Q17. 就職活動で特に参考になった情報源は？', 'mostHelpfulInfoSource', ['マイナビ', 'リクナビ', 'その他就活サイト', '学校のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', 'その他（　　　　　　　　　　　）'])}
-                    {renderRadioGroup('Q18. SNSで企業アカウントを見たことがありますか？', 'snsExposure', ['よく見る', 'たまに見る', '見たことはあるが、ほとんど見ない', '見たことがない'])}
-                    {renderTextInput('Q19. 印象に残っている企業のSNS投稿があれば、その内容を教えてください。（記述式）', 'impressiveSnsPost', '内容を具体的に記述してください', 3)}
-                    {renderCheckboxGroup('Q20. 週5日以上使用するSNSをすべて教えてください。', 'weeklyUseSNS', ['Instagram', 'TikTok', 'YouTube', 'X（旧Twitter）'])}
-                    {renderCheckboxGroup('Q21. 就職を考えている企業の何を見ますか？', 'companiesToWatch', ['企業ホームページ', 'Instagram', 'TikTok', 'YouTube', 'X（旧Twitter）', 'Googleマップ', 'その他（　　　　　　　　　　　）'])}
-                    {renderTextInput('Q22. 選考過程で「この企業は良い」と感じたポイントは何でしたか？（記述式）', 'goodPointsInSelection', '具体的に記述してください', 3)}
-                    {renderTextInput('Q23. 説明会や選考過程で「もっとこうしてほしい」と感じる点はありますか？（記述式）', 'improvementsInSelection', '具体的に記述してください', 3)}
-                    {renderTextInput('Q24. 採用ページで印象に残っている内容があれば、業界とその内容を教えてください。（記述式）', 'impressiveRecruitmentPage', '業界と内容を記述してください', 3)}
-                  </section>
-                )}
-
-                <div className="flex space-x-2 sm:space-x-4 pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
+                <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
                   <button
-                    type="button"
-                    onClick={goToPreviousSection}
-                    disabled={currentSectionIndex === 0 || surveyLoading}
-                    className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    type="submit"
+                    className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    disabled={surveyLoading}
                   >
-                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> 前へ
+                    {surveyLoading ? (
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    )}
+                    保存する
                   </button>
-
-                  {currentSectionIndex < sections.length - 1 ? (
-                    <button
-                      type="button"
-                      onClick={goToNextSection}
-                      disabled={surveyLoading}
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                      次へ <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                      disabled={surveyLoading}
-                    >
-                      {surveyLoading ? (
-                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                      )}
-                      保存する
-                    </button>
-                  )}
                 </div>
               </form>
             </>
