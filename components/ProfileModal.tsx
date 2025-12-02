@@ -720,6 +720,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
                   {renderCheckboxGroup('Q12. 生き生き働いていると感じるのは、どのような状態だと思いますか？', 'livelyWorkState', ['やりがいを感じている', '人間関係が良好', 'プライベートが充実している', '評価されていると感じる', '成長実感がある', '自主的に動けている', '月末にお金が振り込まれる瞬間'])}
                   {renderRadioGroup('Q13. 就活を始めた時期を教えてください', 'jobHuntingStartPeriod', ['1年生の時から', '2年生の時から', '3年生の春前（1〜3月）', '3年生の春（4〜6月）', '3年生の夏（7〜9月）', '3年生の秋（10〜12月）', '3年生の冬（1〜2月）', '4年生以降', '就活はしていない／考えていない'])}
                   {renderCheckboxGroup('Q14. 会社のHPやSNSの採用アカウントで知りたい内容は？', 'companyInfoSources', ['社員の日常', '採用情報', '製品やサービス紹介', '職場の雰囲気', '従業員の雰囲気', '社員インタビュー', '企業文化紹介（企業のミッション・ビジョン）'])}
+                  {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
                 </section>
 
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
@@ -761,7 +762,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
               <form onSubmit={handleSurveySubmit} className="space-y-4 sm:space-y-6">
                 <section>
                   <h3 className="text-sm font-bold text-blue-700 mb-3 sm:mb-4">働き方</h3>
-                  {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
+                  <p className="text-sm text-gray-600">現在、質問はありません。</p>
                 </section>
 
                 <div className="flex justify-end pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
