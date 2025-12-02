@@ -2212,22 +2212,20 @@ export default function MonitorDashboard() {
       )}
 
       {selectedAdvertisement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            
-            <div className="relative">
+        <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+            <div className="relative min-h-full">
               <button
                 onClick={() => {
                   setSelectedAdvertisement(null);
                   setCompanyDetailView('info'); // モーダルを閉じる際に表示モードをリセット
                 }}
-                className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
+                className="fixed top-4 right-4 z-50 bg-white rounded-full p-1.5 shadow-lg hover:shadow-xl transition-all hover:scale-110 text-gray-600 hover:text-gray-800"
               >
-                <X className="w-6 h-6" />
+                <X className="w-4 h-4" />
               </button>
 
               {/* ヘッダー - 白背景にオレンジテキスト */}
-              <div className="bg-white rounded-t-3xl p-4 sm:p-8 pb-4 sm:pb-6">
+              <div className="bg-white p-4 sm:p-8 pb-4 sm:pb-6 pt-12 sm:pt-16">
                 <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-4 sm:mb-6">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
                 
                 {/* タブ切り替えボタン */}
