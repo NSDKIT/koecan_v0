@@ -928,14 +928,14 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                 <AlertTriangle className="w-6 h-6 text-red-600 mr-3" />
                 <h3 className="text-sm font-bold text-gray-800">診断結果を削除</h3>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm text-gray-600 mb-6">
                 この企業のパーソナリティ診断結果を削除しますか？<br />
                 この操作は取り消せません。
               </p>
               <div className="flex space-x-4">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
                   disabled={deleting}
                 >
                   キャンセル
