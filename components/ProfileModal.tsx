@@ -66,14 +66,14 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
   useEffect(() => {
     if (profile) {
       setFormData({
-        name: user?.name || '',
+        name: authUser?.name || user?.name || '',
         age: profile.age || '',
         gender: profile.gender || '',
         occupation: profile.occupation || '',
         location: profile.location || ''
       });
     }
-  }, [user, profile]);
+  }, [user, profile, authUser]);
 
   // プロフィールアンケートデータの読み込み
   useEffect(() => {
@@ -260,7 +260,12 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       }
 
       setSurveySuccess('プロフィールを更新しました。');
-      // ユーザー情報を再取得して、名前の更新を反映
+      // formDataを直接更新して、UIに即座に反映
+      setFormData(prev => ({
+        ...prev,
+        name: formData.name.trim()
+      }));
+      // ユーザー情報を再取得して、親コンポーネントの状態も更新
       await refreshSession();
       onUpdate();
     } catch (error) {
