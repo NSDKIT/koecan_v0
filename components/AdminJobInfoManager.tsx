@@ -557,11 +557,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700">会社名 <span className="text-red-500">*</span></label>
-                          <input type="text" name="company_name" value={formData.company_name || ''} onChange={handleInputChange} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="company_name" value={formData.company_name || ''} onChange={handleInputChange} required rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">代表者名</label>
-                          <input type="text" name="representative_name" value={formData.representative_name || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="representative_name" value={formData.representative_name || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">公式ホームページのURL</label>
@@ -579,11 +579,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700">所在地（本社）</label>
-                          <input type="text" name="headquarters_location" value={formData.headquarters_location || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="headquarters_location" value={formData.headquarters_location || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">所在地（支社）</label>
-                          <input type="text" name="branch_office_location" value={formData.branch_office_location || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="branch_office_location" value={formData.branch_office_location || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">設立年</label>
@@ -599,7 +599,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">男女比（例：男性6割、女性4割）</label>
-                          <input type="text" name="employee_gender_ratio" value={formData.employee_gender_ratio || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="employee_gender_ratio" value={formData.employee_gender_ratio || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">業界（カンマ区切り、複数回答）</label>
@@ -628,19 +628,19 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700">初任給</label>
-                          <input type="text" name="starting_salary" value={formData.starting_salary || ''} onChange={handleInputChange} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="starting_salary" value={formData.starting_salary || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="改行や空白を保持できます"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">３年間の定着率</label>
-                          <input type="text" name="three_year_retention_rate" value={formData.three_year_retention_rate || ''} onChange={handleInputChange} placeholder="例: 90%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="three_year_retention_rate" value={formData.three_year_retention_rate || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 90%（改行や空白を保持できます）"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">20代の平均年収</label>
-                          <input type="text" name="avg_annual_income_20s" value={formData.avg_annual_income_20s || ''} onChange={handleInputChange} placeholder="例: 400万円" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="avg_annual_income_20s" value={formData.avg_annual_income_20s || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 400万円（改行や空白を保持できます）"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">30代の平均年収</label>
-                          <input type="text" name="avg_annual_income_30s" value={formData.avg_annual_income_30s || ''} onChange={handleInputChange} placeholder="例: 550万円" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="avg_annual_income_30s" value={formData.avg_annual_income_30s || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 550万円（改行や空白を保持できます）"></textarea>
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">昇進・キャリアパスのモデルケース</label>
@@ -666,15 +666,15 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">女性の育休・産休の取得割合</label>
-                          <input type="text" name="female_parental_leave_rate" value={formData.female_parental_leave_rate || ''} onChange={handleInputChange} placeholder="例: 100%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="female_parental_leave_rate" value={formData.female_parental_leave_rate || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 100%（改行や空白を保持できます）"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">男性の育休取得割合</label>
-                          <input type="text" name="male_parental_leave_rate" value={formData.male_parental_leave_rate || ''} onChange={handleInputChange} placeholder="例: 50%" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="male_parental_leave_rate" value={formData.male_parental_leave_rate || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 50%（改行や空白を保持できます）"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">社内イベントの頻度（懇親会など）</label>
-                          <input type="text" name="internal_event_frequency" value={formData.internal_event_frequency || ''} onChange={handleInputChange} placeholder="例: 年2回、毎月" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="internal_event_frequency" value={formData.internal_event_frequency || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 年2回、毎月（改行や空白を保持できます）"></textarea>
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">実践している健康経営の取り組み（カンマ区切り）</label>
@@ -696,7 +696,7 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">異動や転勤の頻度</label>
-                          <input type="text" name="transfer_frequency" value={formData.transfer_frequency || ''} onChange={handleInputChange} placeholder="例: 3年に一度、原則なし" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="transfer_frequency" value={formData.transfer_frequency || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 3年に一度、原則なし（改行や空白を保持できます）"></textarea>
                         </div>
                       </div>
                     </section>
@@ -764,11 +764,11 @@ export function AdminJobInfoManager({ onDataChange }: AdminJobInfoManagerProps) 
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">インターンシップ実施日程</label>
-                          <input type="text" name="internship_schedule" value={formData.internship_schedule || ''} onChange={handleInputChange} placeholder="例: 8月上旬、随時開催" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="internship_schedule" value={formData.internship_schedule || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 8月上旬、随時開催（改行や空白を保持できます）"></textarea>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">定員（目安でも可）</label>
-                          <input type="text" name="internship_capacity" value={formData.internship_capacity || ''} onChange={handleInputChange} placeholder="例: 10名、各回5名" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+                          <textarea name="internship_capacity" value={formData.internship_capacity || ''} onChange={handleInputChange} rows={2} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" placeholder="例: 10名、各回5名（改行や空白を保持できます）"></textarea>
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700">対象学生（カンマ区切り、複数回答）</label>

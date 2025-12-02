@@ -2294,7 +2294,7 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">代表者名</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.representative_name) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.representative_name) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">設立年</div>
@@ -2306,13 +2306,13 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">所在地（本社）</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.headquarters_location) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.headquarters_location) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">所在地（支社）</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.branch_office_location) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.branch_office_location) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">従業員数</div>
@@ -2324,7 +2324,7 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">男女比</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.employee_gender_ratio) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.employee_gender_ratio) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">平均年齢</div>
@@ -2371,25 +2371,25 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">初任給</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.starting_salary) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.starting_salary) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">3年定着率</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.three_year_retention_rate) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.three_year_retention_rate) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">20代平均年収</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.avg_annual_income_20s) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.avg_annual_income_20s) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">30代平均年収</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.avg_annual_income_30s) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.avg_annual_income_30s) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">キャリアパス</div>
@@ -2468,13 +2468,13 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">女性育休取得率</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.female_parental_leave_rate) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.female_parental_leave_rate) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">男性育休取得率</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.male_parental_leave_rate) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.male_parental_leave_rate) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">異動/転勤</div>
@@ -2489,7 +2489,7 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">社内イベント頻度</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.internal_event_frequency) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.internal_event_frequency) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">健康経営の取り組み</div>
@@ -2563,13 +2563,13 @@ export default function MonitorDashboard() {
                       <div className="text-sm font-semibold text-gray-700">実施日程</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.internship_schedule) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.internship_schedule) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">定員</div>
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
-                      <div className="text-sm sm:text-base text-gray-900">{displayValue(selectedAdvertisement.internship_capacity) || '-'}</div>
+                      <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.internship_capacity) || '-'}</div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">対象学生</div>
