@@ -171,16 +171,31 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       setSurveyError('ユーザー情報がありません。再度ログインしてください。');
       return;
     }
+    
+    // バリデーション: 名前が空でないことを確認
+    if (!formData.name || formData.name.trim() === '') {
+      setSurveyError('お名前を入力してください。');
+      return;
+    }
+    
     setLoading(true);
     setSurveyError(null);
     setSurveySuccess(null);
     try {
-      const { error: userError } = await supabase
+      const { data: updateData, error: userError } = await supabase
         .from('users')
-        .update({ name: formData.name })
-        .eq('id', authUser.id);
+        .update({ name: formData.name.trim() })
+        .eq('id', authUser.id)
+        .select();
 
-      if (userError) throw userError;
+      if (userError) {
+        console.error('名前更新エラー:', userError);
+        throw new Error(`名前の更新に失敗しました: ${userError.message}`);
+      }
+      
+      if (!updateData || updateData.length === 0) {
+        throw new Error('名前の更新に失敗しました: 更新されたデータが見つかりません');
+      }
 
       // 性別をアンケート形式に変換
       const genderMap: { [key: string]: string } = {
@@ -248,7 +263,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       onUpdate();
     } catch (error) {
       console.error('Error updating profile:', error);
-      setSurveyError('プロフィールの更新に失敗しました。');
+      const errorMessage = error instanceof Error ? error.message : 'プロフィールの更新に失敗しました。';
+      setSurveyError(errorMessage);
     } finally {
       setLoading(false);
     }
