@@ -221,8 +221,8 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
     maxSelections?: number,
     minSelections?: number
   ) => (
-    <div className="mb-4">
-      <p className="font-semibold text-gray-800 mb-2">{question}</p>
+    <div className="mb-3 sm:mb-4">
+      <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
       {options.map((option, index) => {
         const optionValue = getOptionValue(option);
         const isOther = option.includes('その他');
@@ -240,14 +240,14 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
               disabled={isDisabled}
               className="mr-2"
             />
-            <span>{optionValue}</span>
+            <span className="text-xs sm:text-sm">{optionValue}</span>
             {isOther && (
               <input
                 type="text"
                 name={`${name}Other`} // `Other` サフィックスを付ける
                 value={formData[`${name}Other`]}
                 onChange={handleInputChange}
-                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="詳細"
                 disabled={!isChecked} // 「その他」がチェックされていない場合は無効
               />
@@ -261,8 +261,8 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
   );
 
   const renderRadioGroup = (question: string, name: string, options: string[]) => (
-    <div className="mb-4">
-      <p className="font-semibold text-gray-800 mb-2">{question}</p>
+    <div className="mb-3 sm:mb-4">
+      <p className="font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</p>
       {options.map((option, index) => {
         const optionValue = getOptionValue(option);
         const isOther = option.includes('その他');
@@ -278,14 +278,14 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
               onChange={handleInputChange}
               className="mr-2"
             />
-            <span>{optionValue}</span>
+            <span className="text-xs sm:text-sm">{optionValue}</span>
             {isOther && (
               <input
                 type="text"
                 name={`${name}Other`} // `Other` サフィックスを付ける
                 value={formData[`${name}Other`]}
                 onChange={handleInputChange}
-                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                className="ml-2 border border-gray-300 rounded-md px-2 py-1 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                 placeholder="詳細"
                 disabled={!isChecked} // 「その他」がチェックされていない場合は無効
               />
@@ -297,15 +297,15 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
   );
 
   const renderTextInput = (question: string, name: string, placeholder: string, rows?: number) => (
-    <div className="mb-4">
-      <label className="block font-semibold text-gray-800 mb-2">{question}</label>
+    <div className="mb-3 sm:mb-4">
+      <label className="block font-semibold text-xs sm:text-sm text-gray-800 mb-1 sm:mb-2">{question}</label>
       {rows ? (
         <textarea
           name={name}
           value={formData[name]}
           onChange={handleInputChange}
           rows={rows}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder={placeholder}
         />
       ) : (
@@ -314,7 +314,7 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
           name={name}
           value={formData[name]}
           onChange={handleInputChange}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           placeholder={placeholder}
         />
       )}
@@ -343,23 +343,23 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
 
   if (loading && !success && !error) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">データを読み込み中...</p>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 text-center">
+          <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500 animate-spin mx-auto mb-3 sm:mb-4" />
+          <p className="text-sm sm:text-base text-gray-600">データを読み込み中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full my-auto max-h-[95vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center">
-            <h2 className="text-2xl font-bold text-gray-800">プロフィールアンケート</h2>
-            <span className="ml-3 px-3 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-full text-sm font-medium">
+            <h2 className="text-base sm:text-xl font-bold text-gray-800">プロフィールアンケート</h2>
+            <span className="ml-2 sm:ml-3 px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-full text-xs sm:text-sm font-medium">
               追加情報
             </span>
           </div>
@@ -367,41 +367,41 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         {/* Tab Navigation for sections */}
-        <div className="sticky top-0 bg-white z-10 border-b border-gray-200 p-4">
-          <div className="flex justify-between md:justify-around">
+        <div className="border-b border-gray-200 px-3 sm:px-6 flex-shrink-0">
+          <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
             <button
               onClick={() => setActiveSection('A')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeSection === 'A' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === 'A' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               A. 基本情報
             </button>
             <button
               onClick={() => setActiveSection('B')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeSection === 'B' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === 'B' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               B. 就活意識・価値観
             </button>
             <button
               onClick={() => setActiveSection('C')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeSection === 'C' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === 'C' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               C. 働き方
             </button>
             <button
               onClick={() => setActiveSection('D')}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeSection === 'D' ? 'bg-blue-600 text-white' : 'text-blue-700 hover:bg-blue-50'
+              className={`px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeSection === 'D' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
               D. 情報接点
@@ -410,23 +410,23 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-4 sm:p-6 overflow-y-auto flex-1">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm mb-4 flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2" /> {error}
+            <div className="bg-red-50 border border-red-200 text-red-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {error}
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-lg text-sm mb-4 flex items-center">
-              <CheckCircle className="w-5 h-5 mr-2" /> {success}
+            <div className="bg-green-50 border border-green-200 text-green-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm mb-3 sm:mb-4 flex items-center">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> {success}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* A. 基本情報 */}
             {activeSection === 'A' && (
               <section>
-                <h3 className="text-xl font-bold text-blue-700 mb-4">A. 基本情報（分類・フィルタ用）</h3>
+                <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">A. 基本情報（分類・フィルタ用）</h3>
                 {renderRadioGroup('Q1. 性別（いずれかを選択）', 'gender', ['男性', '女性', 'その他', '無回答'])}
                 {renderRadioGroup('Q2. 学年（いずれかを選択）', 'grade', ['大学1年', '大学2年', '大学3年', '大学4年', '大学院生', 'その他（　　　　　　　　　　　）'])}
                 {formData.grade === 'その他' && renderTextInput('その他学年', 'gradeOther', '学年を入力', 1)}
@@ -447,7 +447,7 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
             {/* B. 就活意識・価値観 */}
             {activeSection === 'B' && (
               <section>
-                <h3 className="text-xl font-bold text-blue-700 mb-4">B. 就活意識・価値観</h3>
+                <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">B. 就活意識・価値観</h3>
                 {renderCheckboxGroup('Q9. 企業を選ぶ際に重視するポイントは？', 'importantPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], 3)}
                 {renderCheckboxGroup('Q10. 特に重視する福利厚生は？', 'importantBenefits', ['社会保険・退職金など制度が整っている', '産休・育休・介護休暇などが取りやすい', '有給が取りやすい', '社割・旅行補助・レジャー施設優待などがある', '教育制度（資格支援・外部研修）など自己投資の支援がある', 'イベント・交流・サークル活動などが盛ん', '髪色、ネイル、ピアス、服装などの身だしなみが自由'], 3)}
                 {renderCheckboxGroup('Q11. この項目が充実していないと嫌だなと感じるポイントは？', 'dislikedPoints', ['福利厚生', '成長できる環境', '職場の雰囲気・人間関係', '自分の得意分野が活かせる', 'ワークライフバランス', '地元・地域への貢献性', '経営・雇用が安定している', '裁量の大きさ（若手でも任せてもらえる）', 'やりがいを感じられる仕事', 'リモートワーク・柔軟な働き方ができる', '副業可能', '企業の知名度', '勤務地', '業界', '会社として力を入れていること（職場環境や事業など）', '企業のミッション・ビジョンに共感できる', 'その他（　　　　　　　　　　　）'], undefined, 1)}
@@ -460,7 +460,7 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
             {/* C. 働き方に対する価値観 */}
             {activeSection === 'C' && (
               <section>
-                <h3 className="text-xl font-bold text-blue-700 mb-4">C. 働き方に対する価値観</h3>
+                <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">C. 働き方に対する価値観</h3>
                 {renderCheckboxGroup('Q15. あなたが「働きがい」を感じるのはどんなときですか？', 'job_satisfaction_moments', ['感謝されたとき', 'チームで成果を出したとき', '自分の意見が活かされたとき', '昇給・評価されたとき', '挑戦ができたとき', '人の役に立ったとき', 'その他（　　　　　　　　　　　）'])}
               </section>
             )}
@@ -468,7 +468,7 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
             {/* D. 情報接点・企業認知 */}
             {activeSection === 'D' && (
               <section>
-                <h3 className="text-xl font-bold text-blue-700 mb-4">D. 情報接点・企業認知</h3>
+                <h3 className="text-base sm:text-lg font-bold text-blue-700 mb-3 sm:mb-4">D. 情報接点・企業認知</h3>
                 {renderCheckboxGroup('Q16. 企業情報はどこで入手しますか？', 'infoSources', ['マイナビ', 'リクナビ', 'その他就活サイト', '大学のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', '知人からの紹介', 'その他（　　　　　　　　　　　）'])}
                 {renderRadioGroup('Q17. 就職活動で特に参考になった情報源は？', 'mostHelpfulInfoSource', ['マイナビ', 'リクナビ', 'その他就活サイト', '学校のキャリアセンター', '合同説明会', 'Instagram', 'YouTube', 'TikTok', 'X（旧Twitter）', '企業ホームページ', 'その他（　　　　　　　　　　　）'])}
                 {renderRadioGroup('Q18. SNSで企業アカウントを見たことがありますか？', 'snsExposure', ['よく見る', 'たまに見る', '見たことはあるが、ほとんど見ない', '見たことがない'])}
@@ -481,14 +481,14 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
               </section>
             )}
 
-            <div className="flex justify-between space-x-4 pt-4 sticky bottom-0 bg-white p-6 border-t border-gray-200">
+            <div className="flex space-x-2 sm:space-x-4 pt-4 sm:pt-6 mt-4 sm:mt-6 flex-shrink-0 border-t border-gray-200">
               <button
                 type="button"
                 onClick={goToPreviousSection}
                 disabled={currentSectionIndex === 0 || loading}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                <ArrowLeft className="w-5 h-5 mr-2" /> 前へ
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" /> 前へ
               </button>
 
               {currentSectionIndex < sections.length - 1 ? (
@@ -496,20 +496,20 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
                   type="button"
                   onClick={goToNextSection}
                   disabled={loading}
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  次へ <ArrowRight className="w-5 h-5 ml-2" />
+                  次へ <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
                   ) : (
-                    <Save className="w-5 h-5 mr-2" />
+                    <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   )}
                   保存する
                 </button>
