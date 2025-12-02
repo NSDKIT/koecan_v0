@@ -2698,8 +2698,6 @@ export default function MonitorDashboard() {
                 )}
               </div>
             </div>
-            
-          </div>
         </div>
       )}
 
