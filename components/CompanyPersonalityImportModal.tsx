@@ -54,38 +54,123 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
   // タイプコードを生成する関数
   // 注意: スコアの符号とタイプの対応
   // マイナス → E, N, P, F / プラス → I, S, R, O
-  const calculateType = (scores: { market_engagement: number; growth_strategy: number; organization_style: number; decision_making: number }): string => {
+  // スコアが0の場合、従業員の個別回答を見て多い方を採用
+  const calculateType = (
+    scores: { market_engagement: number; growth_strategy: number; organization_style: number; decision_making: number },
+    rows?: ParsedRow[] // スコアが0の場合に使用する従業員の個別回答データ
+  ): string => {
+    const convertUIToDB = (uiValue: number): number => {
+      return uiValue - 3; // 1→-2, 2→-1, 3→0, 4→+1, 5→+2
+    };
+
     let typeCode = '';
+    
+    // 市場への関わり方（E vs I）
     if (scores.market_engagement < 0) {
       typeCode += 'E';
     } else if (scores.market_engagement > 0) {
       typeCode += 'I';
     } else {
-      typeCode += 'E/I';
+      // スコアが0の場合、従業員の個別回答を見て多い方を採用
+      if (rows && rows.length > 0) {
+        let eCount = 0; // E（負の値）の従業員数
+        let iCount = 0; // I（正の値）の従業員数
+        
+        rows.forEach(row => {
+          const marketDBValues = row.answers.market_engagement.map(v => convertUIToDB(v));
+          const rowScore = marketDBValues.reduce((a, b) => a + b, 0);
+          if (rowScore < 0) {
+            eCount++;
+          } else if (rowScore > 0) {
+            iCount++;
+          }
+        });
+        
+        typeCode += eCount >= iCount ? 'E' : 'I';
+      } else {
+        typeCode += 'E/I';
+      }
     }
     
+    // 成長・戦略スタンス（N vs S）
     if (scores.growth_strategy < 0) {
       typeCode += 'N';
     } else if (scores.growth_strategy > 0) {
       typeCode += 'S';
     } else {
-      typeCode += 'N/S';
+      // スコアが0の場合、従業員の個別回答を見て多い方を採用
+      if (rows && rows.length > 0) {
+        let nCount = 0; // N（負の値）の従業員数
+        let sCount = 0; // S（正の値）の従業員数
+        
+        rows.forEach(row => {
+          const growthDBValues = row.answers.growth_strategy.map(v => convertUIToDB(v));
+          const rowScore = growthDBValues.reduce((a, b) => a + b, 0);
+          if (rowScore < 0) {
+            nCount++;
+          } else if (rowScore > 0) {
+            sCount++;
+          }
+        });
+        
+        typeCode += nCount >= sCount ? 'N' : 'S';
+      } else {
+        typeCode += 'N/S';
+      }
     }
     
+    // 組織運営スタンス（P vs R）
     if (scores.organization_style < 0) {
       typeCode += 'P';
     } else if (scores.organization_style > 0) {
       typeCode += 'R';
     } else {
-      typeCode += 'P/R';
+      // スコアが0の場合、従業員の個別回答を見て多い方を採用
+      if (rows && rows.length > 0) {
+        let pCount = 0; // P（負の値）の従業員数
+        let rCount = 0; // R（正の値）の従業員数
+        
+        rows.forEach(row => {
+          const orgDBValues = row.answers.organization_style.map(v => convertUIToDB(v));
+          const rowScore = orgDBValues.reduce((a, b) => a + b, 0);
+          if (rowScore < 0) {
+            pCount++;
+          } else if (rowScore > 0) {
+            rCount++;
+          }
+        });
+        
+        typeCode += pCount >= rCount ? 'P' : 'R';
+      } else {
+        typeCode += 'P/R';
+      }
     }
     
+    // 意思決定スタイル（F vs O）
     if (scores.decision_making < 0) {
       typeCode += 'F';
     } else if (scores.decision_making > 0) {
       typeCode += 'O';
     } else {
-      typeCode += 'F/O';
+      // スコアが0の場合、従業員の個別回答を見て多い方を採用
+      if (rows && rows.length > 0) {
+        let fCount = 0; // F（負の値）の従業員数
+        let oCount = 0; // O（正の値）の従業員数
+        
+        rows.forEach(row => {
+          const decisionDBValues = row.answers.decision_making.map(v => convertUIToDB(v));
+          const rowScore = decisionDBValues.reduce((a, b) => a + b, 0);
+          if (rowScore < 0) {
+            fCount++;
+          } else if (rowScore > 0) {
+            oCount++;
+          }
+        });
+        
+        typeCode += fCount >= oCount ? 'F' : 'O';
+      } else {
+        typeCode += 'F/O';
+      }
     }
     
     return typeCode;
@@ -281,8 +366,8 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
       scores.organization_style = scores.organization_style / count;
       scores.decision_making = scores.decision_making / count;
 
-      // タイプコードを生成
-      const personalityType = calculateType(scores);
+      // タイプコードを生成（スコアが0の場合に従業員の個別回答を使用）
+      const personalityType = calculateType(scores, preview);
 
       // advertisementsテーブルにpersonality_typeを保存
       const { error: updateError } = await supabase
@@ -343,7 +428,7 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           growth_strategy_score: jobScores.growth_strategy,
           organization_style_score: jobScores.organization_style,
           decision_making_score: jobScores.decision_making,
-          personality_type: calculateType(jobScores),
+          personality_type: calculateType(jobScores, rows),
           response_count: count
         });
       });
@@ -399,7 +484,7 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           growth_strategy_score: yearsScores.growth_strategy,
           organization_style_score: yearsScores.organization_style,
           decision_making_score: yearsScores.decision_making,
-          personality_type: calculateType(yearsScores),
+          personality_type: calculateType(yearsScores, rows),
           response_count: count
         });
       });
