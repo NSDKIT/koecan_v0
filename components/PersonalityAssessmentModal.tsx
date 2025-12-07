@@ -207,6 +207,21 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // モーダルを開くときに背景のスクロール位置を保持
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
 
   // UI値（1〜5）をDB値（-2〜+2）に変換
   const convertUIToDB = (uiValue: number): number => {
@@ -336,8 +351,8 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
   const progress = ((activeCategoryIndex + 1) / categories.length) * 100;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8">
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div className="min-h-full flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
           <div className="flex items-center justify-between mb-4">
@@ -366,7 +381,7 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>

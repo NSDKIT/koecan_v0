@@ -18,6 +18,21 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
   const { user: authUser, refreshSession } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('basic');
   const [loading, setLoading] = useState(false);
+  
+  // モーダルを開くときに背景のスクロール位置を保持
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+    
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     age: profile?.age || '',
@@ -469,10 +484,10 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div className="min-h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
+        <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center">
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-full p-2 sm:p-3 mr-2 sm:mr-4">
               <User className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
@@ -491,7 +506,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
         </div>
 
         {/* Tab Navigation - Always visible */}
-        <div className="border-b border-gray-200 px-3 sm:px-6 flex-shrink-0">
+        <div className="sticky top-[73px] sm:top-[81px] bg-white z-10 border-b border-gray-200 px-3 sm:px-6 flex-shrink-0">
           <div className="flex space-x-1 sm:space-x-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('basic')}
