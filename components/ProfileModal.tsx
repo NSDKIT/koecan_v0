@@ -18,6 +18,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
   const { user: authUser, refreshSession } = useAuth();
   const [activeTab, setActiveTab] = useState<ActiveTab>('basic');
   const [loading, setLoading] = useState(false);
+  const modalContainerRef = React.useRef<HTMLDivElement>(null);
   
   // モーダルを開くときに背景のスクロール位置を保持
   useEffect(() => {
@@ -284,7 +285,9 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       await refreshSession();
       onUpdate();
       // 画面上部にスクロール
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (modalContainerRef.current) {
+        modalContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       const errorMessage = error instanceof Error ? error.message : 'プロフィールの更新に失敗しました。';
@@ -349,7 +352,9 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       setSurveySuccess('プロフィールアンケートを保存しました！');
       onUpdate();
       // 画面上部にスクロール
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (modalContainerRef.current) {
+        modalContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     } catch (err) {
       console.error('Error saving profile survey:', err);
       setSurveyError(err instanceof Error ? err.message : '保存に失敗しました。');
@@ -488,7 +493,7 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div ref={modalContainerRef} className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="min-h-full flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">

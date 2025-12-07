@@ -207,6 +207,7 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const modalContainerRef = React.useRef<HTMLDivElement>(null);
   
   // モーダルを開くときに背景のスクロール位置を保持
   useEffect(() => {
@@ -351,7 +352,7 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
   const progress = ((activeCategoryIndex + 1) / categories.length) * 100;
 
   return (
-    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+    <div ref={modalContainerRef} className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="min-h-full flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-6 z-10">
@@ -504,7 +505,11 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
                         setError(null);
                         setSuccess(null);
                         // 画面上部にスクロール
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        setTimeout(() => {
+                          if (modalContainerRef.current) {
+                            modalContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+                          }
+                        }, 100);
                       } else {
                         setError('このカテゴリーのすべての質問に回答してください。');
                       }
