@@ -436,9 +436,9 @@ export function MonitorProfileSurveyModal({ onClose, onSaveSuccess }: MonitorPro
                 {formData.school === 'その他' && renderTextInput('学校名', 'schoolOther', '学校名を入力', 1)}
                 {renderTextInput('Q5. 所属学部・学科 - 学部名', 'faculty', '学部名を入力', 1)}
                 {renderTextInput('Q5. 所属学部・学科 - 学科名', 'department', '学科名を入力', 1)}
-                {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['メーカー（製造業）', '小売・流通', 'サービス業', 'IT・インターネット', '広告・マスコミ・出版', '金融・保険', '建設・不動産', '医療・福祉', '教育・公務', '物流・運輸', '商社', 'エネルギー・インフラ', 'ベンチャー／スタートアップ', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                {renderCheckboxGroup('Q6. 興味のある業界（複数選択可）', 'interestedIndustries', ['製造業', '建設・不動産', '運送・物流・倉庫', '卸売', '小売', '飲食・宿泊・サービス', 'IT・情報通信', '広告・デザイン', 'マーケティング・コンサルティング', '医療・福祉', '人材・教育', '金融・保険', '公務・団体・インフラ', '美容・健康', 'その他（　　　　　　　　　　　）'])}
                 {formData.interestedIndustries.includes('その他') && renderTextInput('Q6. その他業界', 'interestedIndustriesOther', 'その他の業界名を入力', 1)}
-                {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['サービス・接客業', '営業・販売職', '事務・オフィスワーク', '製造・技術職', 'IT・クリエイティブ職', '教育・医療・福祉', '物流・運輸業', '公務員・安定志向の職業', '特に決まっていない／わからない', 'その他（　　　　　　　　　　　）'])}
+                {renderCheckboxGroup('Q7. 興味のある職種（複数選択可）', 'interestedOccupations', ['経営・管理職', '企画・マーケティング', '営業', '販売・サービス', '専門職', '金融', '医療・福祉', 'IT', 'クリエイティブ', '技術・研究', '教育・保育・公共サービス', 'その他（　　　　　　　　　　　）'])}
                 {formData.interestedOccupations.includes('その他') && renderTextInput('Q7. その他職種', 'interestedOccupationsOther', 'その他の職種名を入力', 1)}
                 {renderCheckboxGroup('Q8. 就職希望エリア（複数選択可）', 'jobHuntingAreas', ['福井県内', '地元にUターン（福井以外）', '首都圏（東京・神奈川・千葉・埼玉）', '関西圏（大阪・京都・兵庫）', '特に決めていない'])}
               </section>
