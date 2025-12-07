@@ -197,6 +197,22 @@ export interface Advertisement {
   internship_info?: string | null; // 旧のインターン情報
 }
 
+// 企業のお気に入り（いいね）
+export interface CompanyFavorite {
+  id: string;
+  user_id: string;
+  company_id: string;
+  created_at: string;
+}
+
+// 企業の保存（ブックマーク）
+export interface CompanySaved {
+  id: string;
+  user_id: string;
+  company_id: string;
+  created_at: string;
+}
+
 export interface ChatRoom {
   id: string;
   name?: string | null; // null許容

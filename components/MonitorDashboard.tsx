@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
-import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse, Quiz, QuizQuestion, QuizResponse } from '@/types'; 
+import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse, Quiz, QuizQuestion, QuizResponse, CompanyFavorite, CompanySaved } from '@/types'; 
 import { 
   Star, 
   Gift, 
@@ -32,7 +32,9 @@ import {
   Calendar,
   DollarSign,
   BarChart3,
-  Brain
+  Brain,
+  Heart,
+  Bookmark
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -130,6 +132,8 @@ export default function MonitorDashboard() {
   const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
   const [characterTip, setCharacterTip] = useState<Tip | null>(null);
   const [selectedOneCharDiffType, setSelectedOneCharDiffType] = useState<string | null>(null);
+  const [favoriteCompanyIds, setFavoriteCompanyIds] = useState<Set<string>>(new Set());
+  const [savedCompanyIds, setSavedCompanyIds] = useState<Set<string>>(new Set());
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -248,14 +252,116 @@ export default function MonitorDashboard() {
     }
   }, [user?.id]);
 
+  // お気に入りと保存の状態を取得
+  const fetchFavoriteAndSavedStatus = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      // お気に入りの取得
+      const { data: favorites, error: favoritesError } = await supabase
+        .from('company_favorites')
+        .select('company_id')
+        .eq('user_id', user.id);
+
+      if (favoritesError) throw favoritesError;
+      setFavoriteCompanyIds(new Set(favorites?.map(f => f.company_id) || []));
+
+      // 保存の取得
+      const { data: saved, error: savedError } = await supabase
+        .from('company_saved')
+        .select('company_id')
+        .eq('user_id', user.id);
+
+      if (savedError) throw savedError;
+      setSavedCompanyIds(new Set(saved?.map(s => s.company_id) || []));
+    } catch (error) {
+      console.error('お気に入り・保存状態の取得エラー:', error);
+    }
+  }, [user?.id]);
+
+  // お気に入りのトグル
+  const toggleFavorite = useCallback(async (companyId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // 企業カードのクリックイベントを防ぐ
+    if (!user?.id) return;
+
+    try {
+      const isFavorite = favoriteCompanyIds.has(companyId);
+      
+      if (isFavorite) {
+        // 削除
+        const { error } = await supabase
+          .from('company_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('company_id', companyId);
+
+        if (error) throw error;
+        setFavoriteCompanyIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(companyId);
+          return newSet;
+        });
+      } else {
+        // 追加
+        const { error } = await supabase
+          .from('company_favorites')
+          .insert([{ user_id: user.id, company_id: companyId }]);
+
+        if (error) throw error;
+        setFavoriteCompanyIds(prev => new Set(prev).add(companyId));
+      }
+    } catch (error) {
+      console.error('お気に入りの更新エラー:', error);
+      alert('お気に入りの更新に失敗しました。');
+    }
+  }, [user?.id, favoriteCompanyIds]);
+
+  // 保存のトグル
+  const toggleSaved = useCallback(async (companyId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // 企業カードのクリックイベントを防ぐ
+    if (!user?.id) return;
+
+    try {
+      const isSaved = savedCompanyIds.has(companyId);
+      
+      if (isSaved) {
+        // 削除
+        const { error } = await supabase
+          .from('company_saved')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('company_id', companyId);
+
+        if (error) throw error;
+        setSavedCompanyIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(companyId);
+          return newSet;
+        });
+      } else {
+        // 追加
+        const { error } = await supabase
+          .from('company_saved')
+          .insert([{ user_id: user.id, company_id: companyId }]);
+
+        if (error) throw error;
+        setSavedCompanyIds(prev => new Set(prev).add(companyId));
+      }
+    } catch (error) {
+      console.error('保存の更新エラー:', error);
+      alert('保存の更新に失敗しました。');
+    }
+  }, [user?.id, savedCompanyIds]);
+
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchSurveysAndResponses();
       fetchAdvertisements();
       calculatePersonalityType();
+      fetchFavoriteAndSavedStatus();
     }
-  }, [user, fetchProfile, calculatePersonalityType]);
+  }, [user, fetchProfile, calculatePersonalityType, fetchFavoriteAndSavedStatus]);
 
   // タブが変更されたときにキャラクターのメッセージを更新（就活のポイント・豆知識・雑学を使用）
   useEffect(() => {
@@ -2123,6 +2229,31 @@ export default function MonitorDashboard() {
                                         target.style.display = 'none';
                                       }}
                                     />
+                                    {/* いいね・保存ボタン */}
+                                    <div className="absolute top-2 right-2 flex gap-2 z-10">
+                                      <button
+                                        onClick={(e) => toggleFavorite(ad.id, e)}
+                                        className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                          favoriteCompanyIds.has(ad.id)
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-white/80 text-gray-600 hover:bg-white'
+                                        }`}
+                                        title={favoriteCompanyIds.has(ad.id) ? 'お気に入りから削除' : 'お気に入りに追加'}
+                                      >
+                                        <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favoriteCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => toggleSaved(ad.id, e)}
+                                        className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                          savedCompanyIds.has(ad.id)
+                                            ? 'bg-blue-500 text-white'
+                                            : 'bg-white/80 text-gray-600 hover:bg-white'
+                                        }`}
+                                        title={savedCompanyIds.has(ad.id) ? '保存から削除' : '保存する'}
+                                      >
+                                        <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                      </button>
+                                    </div>
                                     {displayValue(ad.company_vision) && (
                                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                         <div className="flex items-center gap-1 mb-0.5">
@@ -2246,6 +2377,31 @@ export default function MonitorDashboard() {
                                                 target.style.display = 'none';
                                               }}
                                             />
+                                            {/* いいね・保存ボタン */}
+                                            <div className="absolute top-2 right-2 flex gap-2 z-10">
+                                              <button
+                                                onClick={(e) => toggleFavorite(ad.id, e)}
+                                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                  favoriteCompanyIds.has(ad.id)
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                                }`}
+                                                title={favoriteCompanyIds.has(ad.id) ? 'お気に入りから削除' : 'お気に入りに追加'}
+                                              >
+                                                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favoriteCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                              </button>
+                                              <button
+                                                onClick={(e) => toggleSaved(ad.id, e)}
+                                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                  savedCompanyIds.has(ad.id)
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                                }`}
+                                                title={savedCompanyIds.has(ad.id) ? '保存から削除' : '保存する'}
+                                              >
+                                                <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                              </button>
+                                            </div>
                                             {displayValue(ad.company_vision) && (
                                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2261,6 +2417,31 @@ export default function MonitorDashboard() {
                                         ) : (
                                           <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
                                             <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                                            {/* いいね・保存ボタン */}
+                                            <div className="absolute top-2 right-2 flex gap-2 z-10">
+                                              <button
+                                                onClick={(e) => toggleFavorite(ad.id, e)}
+                                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                  favoriteCompanyIds.has(ad.id)
+                                                    ? 'bg-red-500 text-white'
+                                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                                }`}
+                                                title={favoriteCompanyIds.has(ad.id) ? 'お気に入りから削除' : 'お気に入りに追加'}
+                                              >
+                                                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favoriteCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                              </button>
+                                              <button
+                                                onClick={(e) => toggleSaved(ad.id, e)}
+                                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                                  savedCompanyIds.has(ad.id)
+                                                    ? 'bg-blue-500 text-white'
+                                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                                }`}
+                                                title={savedCompanyIds.has(ad.id) ? '保存から削除' : '保存する'}
+                                              >
+                                                <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                                              </button>
+                                            </div>
                                             {displayValue(ad.company_vision) && (
                                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2348,6 +2529,31 @@ export default function MonitorDashboard() {
                                 target.style.display = 'none';
                               }}
                             />
+                            {/* いいね・保存ボタン */}
+                            <div className="absolute top-2 right-2 flex gap-2 z-10">
+                              <button
+                                onClick={(e) => toggleFavorite(ad.id, e)}
+                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                  favoriteCompanyIds.has(ad.id)
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                }`}
+                                title={favoriteCompanyIds.has(ad.id) ? 'お気に入りから削除' : 'お気に入りに追加'}
+                              >
+                                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favoriteCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                              </button>
+                              <button
+                                onClick={(e) => toggleSaved(ad.id, e)}
+                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                  savedCompanyIds.has(ad.id)
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                }`}
+                                title={savedCompanyIds.has(ad.id) ? '保存から削除' : '保存する'}
+                              >
+                                <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                              </button>
+                            </div>
                             {displayValue(ad.company_vision) && (
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2363,6 +2569,31 @@ export default function MonitorDashboard() {
                         ) : (
                           <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
                             <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                            {/* いいね・保存ボタン */}
+                            <div className="absolute top-2 right-2 flex gap-2 z-10">
+                              <button
+                                onClick={(e) => toggleFavorite(ad.id, e)}
+                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                  favoriteCompanyIds.has(ad.id)
+                                    ? 'bg-red-500 text-white'
+                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                }`}
+                                title={favoriteCompanyIds.has(ad.id) ? 'お気に入りから削除' : 'お気に入りに追加'}
+                              >
+                                <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${favoriteCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                              </button>
+                              <button
+                                onClick={(e) => toggleSaved(ad.id, e)}
+                                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all ${
+                                  savedCompanyIds.has(ad.id)
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-white/80 text-gray-600 hover:bg-white'
+                                }`}
+                                title={savedCompanyIds.has(ad.id) ? '保存から削除' : '保存する'}
+                              >
+                                <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
+                              </button>
+                            </div>
                             {displayValue(ad.company_vision) && (
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                 <div className="flex items-center gap-1 mb-0.5">
