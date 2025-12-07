@@ -2406,7 +2406,7 @@ export default function MonitorDashboard() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="max-w-7xl mx-auto flex justify-around h-16 sm:h-20">
+        <div className="max-w-7xl mx-auto flex justify-around h-[83.2px] sm:h-[104px]">
           <button
             onClick={() => setActiveTab('bulletin_board')}
             className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
