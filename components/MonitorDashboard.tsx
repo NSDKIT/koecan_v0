@@ -49,7 +49,7 @@ import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBrea
 import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
-import { DetailedSearchModal } from '@/components/DetailedSearchModal';
+import { LocationFilterModal } from '@/components/LocationFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 import { getRandomTip, Tip } from '@/lib/tips';
 
@@ -124,9 +124,11 @@ export default function MonitorDashboard() {
   const [showIndustryFilter, setShowIndustryFilter] = useState(false);
   const [showPersonalityFilter, setShowPersonalityFilter] = useState(false);
   const [showJobTypeFilter, setShowJobTypeFilter] = useState(false);
+  const [showLocationFilter, setShowLocationFilter] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedPersonalityTypes, setSelectedPersonalityTypes] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
@@ -135,10 +137,6 @@ export default function MonitorDashboard() {
   const [selectedOneCharDiffType, setSelectedOneCharDiffType] = useState<string | null>(null);
   const [favoriteCompanyIds, setFavoriteCompanyIds] = useState<Set<string>>(new Set());
   const [savedCompanyIds, setSavedCompanyIds] = useState<Set<string>>(new Set());
-  const [showDetailedSearch, setShowDetailedSearch] = useState(false);
-  const [userInterestedIndustries, setUserInterestedIndustries] = useState<string[]>([]);
-  const [userInterestedOccupations, setUserInterestedOccupations] = useState<string[]>([]);
-  const [isValueMatchingSearch, setIsValueMatchingSearch] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -358,31 +356,6 @@ export default function MonitorDashboard() {
     }
   }, [user?.id, savedCompanyIds]);
 
-  // 学生のプロフィールアンケートからQ6（業界）とQ7（職種）を取得
-  const fetchUserProfileSurvey = useCallback(async () => {
-    if (!user?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('monitor_profile_survey')
-        .select('interested_industries, interested_occupations')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('プロフィールアンケート取得エラー:', error);
-        return;
-      }
-
-      if (data) {
-        setUserInterestedIndustries(data.interested_industries || []);
-        setUserInterestedOccupations(data.interested_occupations || []);
-      }
-    } catch (error) {
-      console.error('プロフィールアンケート取得エラー:', error);
-    }
-  }, [user?.id]);
-
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -390,9 +363,8 @@ export default function MonitorDashboard() {
       fetchAdvertisements();
       calculatePersonalityType();
       fetchFavoriteAndSavedStatus();
-      fetchUserProfileSurvey();
     }
-  }, [user, fetchProfile, calculatePersonalityType, fetchFavoriteAndSavedStatus, fetchUserProfileSurvey]);
+  }, [user, fetchProfile, calculatePersonalityType, fetchFavoriteAndSavedStatus]);
 
   // タブが変更されたときにキャラクターのメッセージを更新（就活のポイント・豆知識・雑学を使用）
   useEffect(() => {
@@ -494,6 +466,16 @@ export default function MonitorDashboard() {
       filtered = filtered.filter(ad => companyIdsWithJobTypes.has(ad.id));
     }
 
+    // 勤務地フィルター
+    if (selectedLocations.length > 0) {
+      filtered = filtered.filter(ad => {
+        const headquarters = ad.headquarters_location || '';
+        const branchOffice = ad.branch_office_location || '';
+        const locationText = `${headquarters} ${branchOffice}`;
+        return selectedLocations.some(location => locationText.includes(location));
+      });
+    }
+
     // マッチング検索（学生のパーソナリティタイプと企業のパーソナリティタイプをマッチング）
     if (isMatchingSearch && personalityType) {
       filtered = filtered.filter(ad => {
@@ -537,7 +519,7 @@ export default function MonitorDashboard() {
     }
 
     setFilteredAdvertisements(filtered);
-  }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes]);
+  }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, selectedLocations, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes]);
 
   // 職種を持つ企業IDを取得
   useEffect(() => {
@@ -2087,26 +2069,27 @@ export default function MonitorDashboard() {
                       )}
                     </button>
 
-                    {/* 価値観選択ボタン（マッチング検索機能を適用） */}
+                    {/* 16タイプ選択ボタン */}
                     <button
-                      onClick={() => {
-                        setIsValueMatchingSearch(!isValueMatchingSearch);
-                        setSelectedOneCharDiffType(null);
-                      }}
+                      onClick={() => setShowPersonalityFilter(true)}
                       className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-b border-gray-300 transition-all ${
-                        isValueMatchingSearch
+                        selectedPersonalityTypes.length > 0
                           ? 'bg-purple-50 text-purple-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
-                      disabled={!personalityType || personalityType.length !== 4}
                     >
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Brain className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">価値観を選択</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">16タイプを選択</span>
+                      {selectedPersonalityTypes.length > 0 && (
+                        <span className="bg-purple-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
+                          {selectedPersonalityTypes.length}
+                        </span>
+                      )}
                     </button>
 
-                    {/* 業種選択ボタン */}
+                    {/* 職種選択ボタン */}
                     <button
                       onClick={() => setShowJobTypeFilter(true)}
                       className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
@@ -2118,7 +2101,7 @@ export default function MonitorDashboard() {
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Briefcase className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">業種を選択</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">職種を選択</span>
                       {selectedJobTypes.length > 0 && (
                         <span className="bg-green-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
                           {selectedJobTypes.length}
@@ -2126,21 +2109,30 @@ export default function MonitorDashboard() {
                       )}
                     </button>
 
-                    {/* 詳細検索ボタン */}
+                    {/* 勤務地選択ボタン */}
                     <button
-                      onClick={() => setShowDetailedSearch(true)}
-                      className="flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all bg-white text-gray-700 hover:bg-gray-50"
+                      onClick={() => setShowLocationFilter(true)}
+                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
+                        selectedLocations.length > 0
+                          ? 'bg-orange-50 text-orange-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
+                        <MapPin className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
                       </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">詳細検索</span>
+                      <span className="text-[15px] sm:text-xs whitespace-nowrap">勤務地を選択</span>
+                      {selectedLocations.length > 0 && (
+                        <span className="bg-orange-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
+                          {selectedLocations.length}
+                        </span>
+                      )}
                     </button>
                   </div>
 
                   {/* フィルター表示 */}
-                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || selectedJobTypes.length > 0 || isMatchingSearch || isValueMatchingSearch) && (
-                    <div className="flex flex-wrap gap-2">
+                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || selectedJobTypes.length > 0 || selectedLocations.length > 0 || isMatchingSearch) && (
+                    <div className="flex flex-wrap gap-2 p-4">
                       {selectedIndustries.map((industry) => (
                         <span
                           key={industry}
@@ -2183,6 +2175,20 @@ export default function MonitorDashboard() {
                           </button>
                         </span>
                       ))}
+                      {selectedLocations.map((location) => (
+                        <span
+                          key={location}
+                          className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm"
+                        >
+                          {location}
+                          <button
+                            onClick={() => setSelectedLocations(prev => prev.filter(l => l !== location))}
+                            className="ml-2 hover:text-orange-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
                       {isMatchingSearch && (
                         <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
                           マッチング検索
@@ -2194,25 +2200,14 @@ export default function MonitorDashboard() {
                           </button>
                         </span>
                       )}
-                      {isValueMatchingSearch && (
-                        <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
-                          価値観を選択
-                          <button
-                            onClick={() => setIsValueMatchingSearch(false)}
-                            className="ml-2 hover:text-purple-600"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      )}
                       <button
                         onClick={() => {
                           setSelectedIndustries([]);
                           setSelectedPersonalityTypes([]);
                           setSelectedJobTypes([]);
+                          setSelectedLocations([]);
                           setSearchQuery('');
                           setIsMatchingSearch(false);
-                          setIsValueMatchingSearch(false);
                           setSelectedOneCharDiffType(null);
                         }}
                         className="text-sm text-gray-600 hover:text-gray-800 underline"
@@ -2224,7 +2219,7 @@ export default function MonitorDashboard() {
                 </div>
 
                 {/* 企業一覧 */}
-                {(isMatchingSearch || isValueMatchingSearch) && personalityType && personalityType.length === 4 ? (
+                {isMatchingSearch && personalityType && personalityType.length === 4 ? (
                   // マッチング検索UI（完全一致 + 一文字違い）
                   <div className="p-0 sm:p-6">
                     {/* 完全一致の企業 */}
@@ -3319,55 +3314,14 @@ export default function MonitorDashboard() {
         />
       )}
 
-      {showDetailedSearch && (
-        <DetailedSearchModal
-          onClose={() => setShowDetailedSearch(false)}
-          onApply={async (selectedValues) => {
-            // 詳細検索の結果を適用
-            // 価値観に基づいて企業をフィルタリング
-            try {
-              const personalityTypes = convertValuesToPersonalityTypes(selectedValues);
-              
-              // パーソナリティタイプに一致する企業を取得
-              let filtered = advertisements.filter(ad => {
-                if (!ad.personality_type) return false;
-                return personalityTypes.includes(ad.personality_type);
-              });
-
-              // 業界で絞り込み
-              if (userInterestedIndustries.length > 0) {
-                filtered = filtered.filter(ad => {
-                  if (!ad.industries || !Array.isArray(ad.industries)) return false;
-                  return userInterestedIndustries.some(industry => 
-                    ad.industries!.some(compIndustry => compIndustry === industry)
-                  );
-                });
-              }
-
-              // 職種で絞り込み
-              if (userInterestedOccupations.length > 0) {
-                const { data: jobTypeData, error: jobError } = await supabase
-                  .from('company_personality_individual_responses')
-                  .select('company_id, job_type')
-                  .in('job_type', userInterestedOccupations);
-
-                if (!jobError && jobTypeData) {
-                  const companyIdsWithJobTypes = new Set(
-                    jobTypeData.map((item: { company_id: string | null }) => item.company_id).filter((id: string | null): id is string => id !== null)
-                  );
-                  filtered = filtered.filter(ad => companyIdsWithJobTypes.has(ad.id));
-                }
-              }
-
-              setFilteredAdvertisements(filtered);
-              setShowDetailedSearch(false);
-            } catch (error) {
-              console.error('詳細検索の適用エラー:', error);
-              alert('詳細検索の適用に失敗しました。');
-            }
+      {showLocationFilter && (
+        <LocationFilterModal
+          selectedLocations={selectedLocations}
+          onClose={() => setShowLocationFilter(false)}
+          onApply={(locations) => {
+            setSelectedLocations(locations);
+            setShowLocationFilter(false);
           }}
-          userInterestedIndustries={userInterestedIndustries}
-          userInterestedOccupations={userInterestedOccupations}
         />
       )}
 

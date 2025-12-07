@@ -45,7 +45,7 @@ export function PersonalityFilterModal({ selectedTypes, onClose, onApply }: Pers
         <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-purple-500 text-white p-6 rounded-t-2xl z-10">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold">価値観（パーソナリティタイプ）を選択</h2>
+              <h2 className="text-2xl font-bold">16タイプを選択</h2>
               <p className="text-purple-50 text-sm mt-1">複数選択可能</p>
             </div>
             <button
