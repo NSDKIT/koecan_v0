@@ -114,7 +114,7 @@ export default function MonitorDashboard() {
   const [quizAnswers, setQuizAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
   const [activeTab, setActiveTab] = useState<ActiveTab>('bulletin_board');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
   const [selectedAdvertisement, setSelectedAdvertisement] = useState<Advertisement | null>(null);
@@ -1811,13 +1811,13 @@ export default function MonitorDashboard() {
                     連携済み
                   </div>
                 ) : (
-                  <button 
-                    onClick={() => setShowLineLinkModal(true)}
-                    className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    LINE連携
-                  </button>
+                <button 
+                  onClick={() => setShowLineLinkModal(true)}
+                  className="flex items-center px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-full text-sm font-medium transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4 mr-1" />
+                  LINE連携
+                </button>
                 )}
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -1903,7 +1903,7 @@ export default function MonitorDashboard() {
                       }
                       return null;
                     })()}
-                  </div>
+              </div>
                   
                   {/* 右側3/5: 吹き出し（タイプを含む） */}
                   <div className="col-span-3 flex items-center justify-center">
@@ -1914,7 +1914,7 @@ export default function MonitorDashboard() {
                             あなたは、<span className="text-base sm:text-lg font-bold text-purple-600">{personalityType}</span>タイプ！
                           </p>
                           <p className="text-[12pt] leading-tight flex-1 overflow-hidden whitespace-pre-line">{characterTip.content}</p>
-                        </div>
+              </div>
                         {/* 吹き出しのしっぽ（左側に向かって） */}
                         <div className="absolute top-1/2 left-0 transform -translate-x-full -translate-y-1/2">
                           <div className="w-0 h-0 border-t-8 border-b-8 border-r-8 border-transparent border-r-orange-300"></div>
@@ -1926,7 +1926,7 @@ export default function MonitorDashboard() {
                 </div>
               )}
             </div>
-          )} 
+          )}
 
           <div 
             className={`
@@ -1956,21 +1956,21 @@ export default function MonitorDashboard() {
                         <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <h3 className="text-xs sm:text-sm font-semibold text-gray-800 line-clamp-1">
-                            {survey.title}
-                          </h3>
-                        </div>
+                              {survey.title}
+                            </h3>
+                              </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="flex items-center bg-orange-50 rounded-full px-2 py-0.5 text-orange-700 font-semibold text-[10px] sm:text-xs">
                             <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
-                            <span>{survey.points_reward}pt</span>
-                          </div>
-                          <button
-                            onClick={() => handleSurveyClick(survey)}
+                              <span>{survey.points_reward}pt</span>
+                            </div>
+                            <button
+                              onClick={() => handleSurveyClick(survey)}
                             className="px-2 py-1 bg-orange-600 text-white rounded text-[10px] sm:text-xs font-semibold hover:bg-orange-700 transition-colors whitespace-nowrap"
-                          >
-                            回答する
-                          </button>
-                        </div>
+                            >
+                              回答する
+                            </button>
+                          </div>
                       </div>
                     ))}
                     {/* クイズ */}
@@ -2022,14 +2022,14 @@ export default function MonitorDashboard() {
                         <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <h3 className="text-xs sm:text-sm font-semibold text-gray-700 line-clamp-1">
-                            {survey.title}
-                          </h3>
-                        </div>
+                              {survey.title}
+                            </h3>
+                              </div>
                         <div className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-gray-600 font-semibold text-[10px] sm:text-xs flex-shrink-0">
                           <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
                           <span>{survey.points_reward}pt 獲得済み</span>
-                        </div>
-                      </div>
+                              </div>
+                            </div>
                     ))}
                     {/* 回答済みクイズ */}
                     {answeredQuizzes.map((quiz) => (
@@ -2042,12 +2042,12 @@ export default function MonitorDashboard() {
                           <h3 className="text-xs sm:text-sm font-semibold text-gray-700 line-clamp-1">
                             {quiz.title}
                           </h3>
-                        </div>
+                          </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 text-gray-600 font-semibold text-[10px] sm:text-xs">
                             <Gift className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />
                             <span>{quiz.points_reward}pt 獲得済み</span>
-                          </div>
+                            </div>
                           <button
                             onClick={async () => {
                               try {
@@ -2133,7 +2133,7 @@ export default function MonitorDashboard() {
                       {selectedValues.length > 0 && (
                         <div className="mt-2 text-sm text-purple-700">
                           {selectedValues.length}個選択中
-                        </div>
+                  </div>
                       )}
                     </button>
                   </div>
@@ -2319,32 +2319,32 @@ export default function MonitorDashboard() {
                           </h3>
                           <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
                             {exactMatchCompanies.map((ad) => (
-                              <div
-                                key={ad.id}
+                      <div
+                        key={ad.id}
                                 className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
                                 onClick={() => {
                                   setSelectedAdvertisement(ad);
                                   setCompanyDetailView('info');
                                 }}
-                              >
-                                {(() => {
-                                  const imageUrl = ad.image_url;
-                                  const optimizedUrl = getSecureImageUrl(imageUrl);
-                                  return (imageUrl && imageUrl.length > 0);
-                                })() ? (
+                      >
+                        {(() => {
+                          const imageUrl = ad.image_url;
+                          const optimizedUrl = getSecureImageUrl(imageUrl);
+                          return (imageUrl && imageUrl.length > 0);
+                        })() ? (
                                   <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
-                                    <img
-                                      src={getSecureImageUrl(ad.image_url) || ''}
+                            <img
+                              src={getSecureImageUrl(ad.image_url) || ''}
                                       alt={ad.company_name || '企業情報'}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      loading="lazy"
-                                      referrerPolicy="no-referrer"
-                                      crossOrigin="anonymous"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                      }}
-                                    />
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
                                     {/* いいね・保存ボタン */}
                                     <div className="absolute top-2 right-2 flex gap-2 z-10">
                                       <button
@@ -2381,8 +2381,8 @@ export default function MonitorDashboard() {
                                         </p>
                                       </div>
                                     )}
-                                  </div>
-                                ) : (
+                          </div>
+                        ) : (
                                   <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
                                     <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
                                     {displayValue(ad.company_vision) && (
@@ -2394,26 +2394,26 @@ export default function MonitorDashboard() {
                                         <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
                                           {displayValue(ad.company_vision)}
                                         </p>
-                                      </div>
-                                    )}
+                          </div>
+                        )}
                                   </div>
                                 )}
                                 <div className="p-3 sm:p-4">
                                   <div className="flex items-center justify-between gap-1.5 sm:gap-2">
                                     <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
-                                      {displayValue(ad.company_name) || '企業名未設定'}
-                                    </h3>
+                            {displayValue(ad.company_name) || '企業名未設定'}
+                          </h3>
                                     {ad.personality_type && (
                                       <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
                                         {ad.personality_type}
                                       </div>
                                     )}
                                   </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+              </div>
                       ) : null;
                     })()}
 
@@ -2517,13 +2517,13 @@ export default function MonitorDashboard() {
                                               >
                                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                                               </button>
-                                            </div>
+                        </div>
                                             {displayValue(ad.company_vision) && (
                                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                                 <div className="flex items-center gap-1 mb-0.5">
                                                   <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
                                                   <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
-                                                </div>
+                    </div>
                                                 <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
                                                   {displayValue(ad.company_vision)}
                                                 </p>
@@ -2669,7 +2669,7 @@ export default function MonitorDashboard() {
                               >
                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                               </button>
-                            </div>
+                </div>
                             {displayValue(ad.company_vision) && (
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2952,10 +2952,10 @@ export default function MonitorDashboard() {
                     </div>
                     <div className="bg-orange-50 p-3">
                       <div className="text-sm sm:text-base text-orange-800 font-medium">
-                        {[
-                          displayValue(selectedAdvertisement.highlight_point_1),
-                          displayValue(selectedAdvertisement.highlight_point_2),
-                          displayValue(selectedAdvertisement.highlight_point_3)
+                            {[
+                              displayValue(selectedAdvertisement.highlight_point_1),
+                              displayValue(selectedAdvertisement.highlight_point_2),
+                              displayValue(selectedAdvertisement.highlight_point_3)
                         ].filter(Boolean).length > 0 ? (
                           [
                             displayValue(selectedAdvertisement.highlight_point_1),
@@ -3017,8 +3017,8 @@ export default function MonitorDashboard() {
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
                       <div className="text-sm sm:text-base text-gray-900">
-                        {selectedAdvertisement.selection_flow_steps && selectedAdvertisement.selection_flow_steps.length > 0 
-                          ? selectedAdvertisement.selection_flow_steps.join(' → ') 
+                            {selectedAdvertisement.selection_flow_steps && selectedAdvertisement.selection_flow_steps.length > 0 
+                              ? selectedAdvertisement.selection_flow_steps.join(' → ') 
                           : '-'}
                       </div>
                     </div>
@@ -3090,8 +3090,8 @@ export default function MonitorDashboard() {
                     </div>
                     <div className="bg-white p-3 border-b border-gray-200">
                       <div className="text-sm sm:text-base text-gray-900">
-                        {formatBoolean(selectedAdvertisement.transfer_existence)}
-                        {displayValue(selectedAdvertisement.transfer_frequency) && ` (${displayValue(selectedAdvertisement.transfer_frequency)})`}
+                            {formatBoolean(selectedAdvertisement.transfer_existence)}
+                            {displayValue(selectedAdvertisement.transfer_frequency) && ` (${displayValue(selectedAdvertisement.transfer_frequency)})`}
                       </div>
                     </div>
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
@@ -3133,26 +3133,26 @@ export default function MonitorDashboard() {
                     <div className={`bg-white p-3 ${selectedAdvertisement.recruitment_info_page_url ? 'border-b border-gray-200' : ''}`}>
                       <div className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{displayValue(selectedAdvertisement.recruitment_contact) || '-'}</div>
                     </div>
-                    {selectedAdvertisement.recruitment_info_page_url && (
+                        {selectedAdvertisement.recruitment_info_page_url && (
                       <>
                         <div className="bg-gray-50 p-3 border-b border-gray-200">
                           <div className="text-sm font-semibold text-gray-700">採用情報ページ</div>
                         </div>
                         <div className="bg-white p-3">
                           <div className="text-sm sm:text-base">
-                            <a 
-                              href={selectedAdvertisement.recruitment_info_page_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
-                            >
-                              採用情報ページを見る
-                              <ExternalLink className="w-4 h-4 ml-2" />
-                            </a>
+                              <a 
+                                href={selectedAdvertisement.recruitment_info_page_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                採用情報ページを見る
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
                           </div>
                         </div>
                       </>
-                    )}
+                        )}
                   </div>
                 </div>
 
@@ -3210,26 +3210,26 @@ export default function MonitorDashboard() {
                     <div className={`bg-white p-3 ${selectedAdvertisement.internship_application_url ? 'border-b border-gray-200' : ''}`}>
                       <div className="text-sm sm:text-base text-gray-900">{formatBoolean(selectedAdvertisement.transport_lodging_stipend, '支給あり', '支給なし')}</div>
                     </div>
-                    {selectedAdvertisement.internship_application_url && (
+                        {selectedAdvertisement.internship_application_url && (
                       <>
                         <div className="bg-gray-50 p-3 border-b border-gray-200">
                           <div className="text-sm font-semibold text-gray-700">申込</div>
                         </div>
                         <div className="bg-white p-3">
                           <div className="text-sm sm:text-base">
-                            <a 
-                              href={selectedAdvertisement.internship_application_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
-                            >
-                              インターンシップに申し込む
-                              <ExternalLink className="w-4 h-4 ml-2" />
-                            </a>
+                              <a 
+                                href={selectedAdvertisement.internship_application_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center text-orange-600 hover:text-orange-700 font-semibold"
+                              >
+                                インターンシップに申し込む
+                                <ExternalLink className="w-4 h-4 ml-2" />
+                              </a>
                           </div>
                         </div>
                       </>
-                    )}
+                        )}
                   </div>
                 </div>
 
@@ -3304,17 +3304,17 @@ export default function MonitorDashboard() {
                     {selectedAdvertisement.personality_type ? (
                       <div className="bg-white rounded-2xl p-6 border border-gray-200">
                         <CompanyPersonalityBreakdown companyId={selectedAdvertisement.id} />
-                      </div>
+              </div>
                     ) : (
                       <div className="bg-gray-50 rounded-2xl p-8 text-center">
                         <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-sm text-gray-600">この企業のパーソナリティ診断結果はまだ登録されていません</p>
-                      </div>
+            </div>
                     )}
                   </div>
                 )}
               </div>
-            </div>
+          </div>
         </div>
       )}
 
@@ -3419,17 +3419,6 @@ export default function MonitorDashboard() {
           onApply={(values) => {
             setSelectedValues(values);
             setShowValueFilter(false);
-          }}
-        />
-      )}
-
-      {showJobTypeFilter && (
-        <JobTypeFilterModal
-          selectedJobTypes={selectedJobTypes}
-          onClose={() => setShowJobTypeFilter(false)}
-          onApply={(jobTypes) => {
-            setSelectedJobTypes(jobTypes);
-            setShowJobTypeFilter(false);
           }}
         />
       )}
