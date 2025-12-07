@@ -264,7 +264,7 @@ export default function MonitorDashboard() {
         .eq('user_id', user.id);
 
       if (favoritesError) throw favoritesError;
-      setFavoriteCompanyIds(new Set(favorites?.map(f => f.company_id) || []));
+      setFavoriteCompanyIds(new Set((favorites as { company_id: string }[] | null)?.map((f: { company_id: string }) => f.company_id) || []));
 
       // 保存の取得
       const { data: saved, error: savedError } = await supabase
@@ -273,7 +273,7 @@ export default function MonitorDashboard() {
         .eq('user_id', user.id);
 
       if (savedError) throw savedError;
-      setSavedCompanyIds(new Set(saved?.map(s => s.company_id) || []));
+      setSavedCompanyIds(new Set((saved as { company_id: string }[] | null)?.map((s: { company_id: string }) => s.company_id) || []));
     } catch (error) {
       console.error('お気に入り・保存状態の取得エラー:', error);
     }
