@@ -129,6 +129,7 @@ export default function MonitorDashboard() {
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
   const [companyIdsWithJobTypes, setCompanyIdsWithJobTypes] = useState<Set<string>>(new Set());
   const [characterTip, setCharacterTip] = useState<Tip | null>(null);
+  const [selectedOneCharDiffType, setSelectedOneCharDiffType] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -263,6 +264,43 @@ export default function MonitorDashboard() {
       setCharacterTip(tip);
     }
   }, [activeTab]);
+
+  // 一文字違いのタイプを計算する関数
+  const getOneCharDiffTypes = useCallback((type: string): string[] => {
+    if (!type || type.length !== 4) return [];
+    
+    const types: string[] = [];
+    const axes = [
+      { index: 0, options: ['E', 'I'] },
+      { index: 1, options: ['N', 'S'] },
+      { index: 2, options: ['P', 'R'] },
+      { index: 3, options: ['F', 'O'] }
+    ];
+    
+    axes.forEach(axis => {
+      const currentChar = type[axis.index];
+      const otherChar = axis.options.find(opt => opt !== currentChar);
+      if (otherChar) {
+        const newType = type.split('');
+        newType[axis.index] = otherChar;
+        types.push(newType.join(''));
+      }
+    });
+    
+    return types;
+  }, []);
+
+  // 完全一致の企業を取得
+  const getExactMatchCompanies = useCallback((type: string): Advertisement[] => {
+    if (!type) return [];
+    return advertisements.filter(ad => ad.personality_type === type);
+  }, [advertisements]);
+
+  // 特定タイプの企業を取得
+  const getCompaniesByType = useCallback((type: string): Advertisement[] => {
+    if (!type) return [];
+    return advertisements.filter(ad => ad.personality_type === type);
+  }, [advertisements]);
 
   // フィルター適用関数
   const applyFilters = useCallback(() => {
@@ -1954,13 +1992,16 @@ export default function MonitorDashboard() {
 
                     {/* マッチング検索ボタン */}
                     <button
-                      onClick={() => setIsMatchingSearch(!isMatchingSearch)}
+                      onClick={() => {
+                        setIsMatchingSearch(!isMatchingSearch);
+                        setSelectedOneCharDiffType(null);
+                      }}
                       className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
                         isMatchingSearch
                           ? 'bg-orange-50 text-orange-700'
                           : 'bg-white text-gray-700 hover:bg-gray-50'
                       }`}
-                      disabled={!personalityType}
+                      disabled={!personalityType || personalityType.length !== 4}
                     >
                       <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
                         <Sparkles className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
@@ -2032,6 +2073,7 @@ export default function MonitorDashboard() {
                           setSelectedJobTypes([]);
                           setSearchQuery('');
                           setIsMatchingSearch(false);
+                          setSelectedOneCharDiffType(null);
                         }}
                         className="text-sm text-gray-600 hover:text-gray-800 underline"
                       >
@@ -2042,29 +2084,248 @@ export default function MonitorDashboard() {
                 </div>
 
                 {/* 企業一覧 */}
-                {filteredAdvertisements.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">
-                      {advertisements.length === 0
-                        ? '現在、公開されている企業情報はありません。'
-                        : '条件に一致する企業が見つかりませんでした。'}
-                    </p>
+                {isMatchingSearch && personalityType && personalityType.length === 4 ? (
+                  // マッチング検索UI（完全一致 + 一文字違い）
+                  <div className="p-0 sm:p-6">
+                    {/* 完全一致の企業 */}
+                    {(() => {
+                      const exactMatchCompanies = getExactMatchCompanies(personalityType);
+                      return exactMatchCompanies.length > 0 ? (
+                        <div className="mb-8">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 px-4 sm:px-0">
+                            「{personalityType}」の企業（完全一致）
+                          </h3>
+                          <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
+                            {exactMatchCompanies.map((ad) => (
+                              <div
+                                key={ad.id}
+                                className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
+                                onClick={() => {
+                                  setSelectedAdvertisement(ad);
+                                  setCompanyDetailView('info');
+                                }}
+                              >
+                                {(() => {
+                                  const imageUrl = ad.image_url;
+                                  const optimizedUrl = getSecureImageUrl(imageUrl);
+                                  return (imageUrl && imageUrl.length > 0);
+                                })() ? (
+                                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                    <img
+                                      src={getSecureImageUrl(ad.image_url) || ''}
+                                      alt={ad.company_name || '企業情報'}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                      referrerPolicy="no-referrer"
+                                      crossOrigin="anonymous"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                    {displayValue(ad.company_vision) && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                          <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                        </div>
+                                        <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                          {displayValue(ad.company_vision)}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                    <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                                    {displayValue(ad.company_vision) && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                          <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                        </div>
+                                        <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                          {displayValue(ad.company_vision)}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                <div className="p-3 sm:p-4">
+                                  <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                                    <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
+                                      {displayValue(ad.company_name) || '企業名未設定'}
+                                    </h3>
+                                    {ad.personality_type && (
+                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
+                                        {ad.personality_type}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {/* 一文字違いのタイプ */}
+                    {(() => {
+                      const oneCharDiffTypes = getOneCharDiffTypes(personalityType);
+                      return oneCharDiffTypes.length > 0 ? (
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 px-4 sm:px-0">
+                            一文字違いのタイプ
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2 sm:px-0">
+                            {oneCharDiffTypes.map((type) => {
+                              const companies = getCompaniesByType(type);
+                              return (
+                                <div
+                                  key={type}
+                                  className={`border-2 rounded-xl overflow-hidden cursor-pointer transition-all ${
+                                    selectedOneCharDiffType === type
+                                      ? 'border-orange-500 bg-orange-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                  onClick={() => setSelectedOneCharDiffType(selectedOneCharDiffType === type ? null : type)}
+                                >
+                                  <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                    <video
+                                      src={`/character/${type}.mp4`}
+                                      autoPlay
+                                      loop
+                                      muted
+                                      playsInline
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="p-3 text-center">
+                                    <div className="text-lg sm:text-xl font-bold text-gray-800 mb-1">{type}</div>
+                                    <div className="text-xs sm:text-sm text-gray-600">{companies.length}件の企業</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* 選択された一文字違いのタイプの企業を表示 */}
+                          {selectedOneCharDiffType && (
+                            <div className="mt-8">
+                              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 px-4 sm:px-0">
+                                「{selectedOneCharDiffType}」の企業
+                              </h3>
+                              {(() => {
+                                const companies = getCompaniesByType(selectedOneCharDiffType);
+                                return companies.length > 0 ? (
+                                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
+                                    {companies.map((ad) => (
+                                      <div
+                                        key={ad.id}
+                                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
+                                        onClick={() => {
+                                          setSelectedAdvertisement(ad);
+                                          setCompanyDetailView('info');
+                                        }}
+                                      >
+                                        {(() => {
+                                          const imageUrl = ad.image_url;
+                                          return (imageUrl && imageUrl.length > 0);
+                                        })() ? (
+                                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                            <img
+                                              src={getSecureImageUrl(ad.image_url) || ''}
+                                              alt={ad.company_name || '企業情報'}
+                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                              loading="lazy"
+                                              referrerPolicy="no-referrer"
+                                              crossOrigin="anonymous"
+                                              onError={(e) => {
+                                                const target = e.target as HTMLImageElement;
+                                                target.style.display = 'none';
+                                              }}
+                                            />
+                                            {displayValue(ad.company_vision) && (
+                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                                <div className="flex items-center gap-1 mb-0.5">
+                                                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                                  <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                                </div>
+                                                <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                                  {displayValue(ad.company_vision)}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                            <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                                            {displayValue(ad.company_vision) && (
+                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
+                                                <div className="flex items-center gap-1 mb-0.5">
+                                                  <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                                  <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                                </div>
+                                                <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                                  {displayValue(ad.company_vision)}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                        <div className="p-3 sm:p-4">
+                                          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                                            <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
+                                              {displayValue(ad.company_name) || '企業名未設定'}
+                                            </h3>
+                                            {ad.personality_type && (
+                                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
+                                                {ad.personality_type}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-8 px-4">
+                                    <p className="text-gray-600">このタイプの企業は見つかりませんでした。</p>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 ) : (
-                  <div className="p-0 sm:p-6">
-                    <p className="text-sm text-gray-600 mb-4 px-4 sm:px-0">
-                      {filteredAdvertisements.length}件の企業が見つかりました
-                    </p>
-                  <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
-                      {filteredAdvertisements.map((ad) => (
-                      <div
-                        key={ad.id}
-                        className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
-                        onClick={() => {
-                          setSelectedAdvertisement(ad);
-                          setCompanyDetailView('info'); // 企業を選択した際に「企業情報」タブを表示
-                        }} 
-                      >
+                  // 通常のフィルター適用結果
+                  filteredAdvertisements.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600">
+                        {advertisements.length === 0
+                          ? '現在、公開されている企業情報はありません。'
+                          : '条件に一致する企業が見つかりませんでした。'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-0 sm:p-6">
+                      <p className="text-sm text-gray-600 mb-4 px-4 sm:px-0">
+                        {filteredAdvertisements.length}件の企業が見つかりました
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 px-2 sm:px-0 sm:gap-3">
+                        {filteredAdvertisements.map((ad) => (
+                          <div
+                            key={ad.id}
+                            className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
+                            onClick={() => {
+                              setSelectedAdvertisement(ad);
+                              setCompanyDetailView('info'); // 企業を選択した際に「企業情報」タブを表示
+                            }} 
+                          >
                         {(() => {
                           const imageUrl = ad.image_url;
                           const optimizedUrl = getSecureImageUrl(imageUrl);
@@ -2129,9 +2390,10 @@ export default function MonitorDashboard() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
               </div>
             )}
