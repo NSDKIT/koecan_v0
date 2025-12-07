@@ -414,6 +414,48 @@ export default function MonitorDashboard() {
     return types;
   }, []);
 
+  // 価値観の選択肢をパーソナリティタイプに変換
+  // 注意: F/TとP/Jは逆になっている
+  // F（人を大切にする柔らかい雰囲気）→ P（人材志向）
+  // T（数値的な目標に向かって突き進む）→ R（成果志向）
+  // P（自分なりのやり方で進められる）→ F（柔軟型）
+  // J（ルールが明確で迷わず働ける）→ O（規律型）
+  const convertValuesToPersonalityTypes = useCallback((values: string[]): string[] => {
+    const types: string[] = [];
+    
+    // E/I, N/S, P/R, F/Oの組み合わせを生成
+    const eSelected = values.includes('E');
+    const iSelected = values.includes('I');
+    const nSelected = values.includes('N');
+    const sSelected = values.includes('S');
+    // F（人を大切にする柔らかい雰囲気）→ P（人材志向）
+    const pSelected = values.includes('F');
+    // T（数値的な目標に向かって突き進む）→ R（成果志向）
+    const rSelected = values.includes('T');
+    // P（自分なりのやり方で進められる）→ F（柔軟型）
+    const fSelected = values.includes('P');
+    // J（ルールが明確で迷わず働ける）→ O（規律型）
+    const oSelected = values.includes('J');
+
+    // 16タイプを生成（E/I, N/S, P/R, F/Oの順）
+    const eOptions = eSelected ? ['E'] : iSelected ? ['I'] : ['E', 'I'];
+    const nOptions = nSelected ? ['N'] : sSelected ? ['S'] : ['N', 'S'];
+    const pOptions = pSelected ? ['P'] : rSelected ? ['R'] : ['P', 'R'];
+    const fOptions = fSelected ? ['F'] : oSelected ? ['O'] : ['F', 'O'];
+
+    for (const e of eOptions) {
+      for (const n of nOptions) {
+        for (const p of pOptions) {
+          for (const f of fOptions) {
+            types.push(e + n + p + f);
+          }
+        }
+      }
+    }
+
+    return types;
+  }, []);
+
   // 完全一致の企業を取得
   const getExactMatchCompanies = useCallback((type: string): Advertisement[] => {
     if (!type) return [];
@@ -488,6 +530,18 @@ export default function MonitorDashboard() {
         const branchOffice = ad.branch_office_location || '';
         const locationText = `${headquarters} ${branchOffice}`;
         return selectedLocations.some(location => locationText.includes(location));
+      });
+    }
+
+    // 8つの価値観フィルター
+    if (selectedValues.length > 0) {
+      // 価値観の選択肢をパーソナリティタイプに変換
+      const personalityTypes = convertValuesToPersonalityTypes(selectedValues);
+      
+      filtered = filtered.filter(ad => {
+        const adPersonalityType = ad.personality_type;
+        if (!adPersonalityType) return false;
+        return personalityTypes.includes(adPersonalityType);
       });
     }
 
