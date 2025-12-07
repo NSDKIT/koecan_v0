@@ -631,7 +631,7 @@ export default function MonitorDashboard() {
     if (advertisements.length > 0) {
       applyFilters();
     }
-  }, [advertisements.length]);
+  }, [advertisements.length, applyFilters]);
 
   // リアルタイムでmonitor_profilesのポイント更新を監視
   useEffect(() => {
@@ -2303,7 +2303,6 @@ export default function MonitorDashboard() {
                       </button>
                     </div>
                   )}
-                </div>
 
                 {/* 企業一覧 */}
                 {isMatchingSearch && personalityType && personalityType.length === 4 ? (
