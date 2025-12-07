@@ -86,7 +86,9 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           }
         });
         
-        typeCode += eCount >= iCount ? 'E' : 'I';
+        const result = eCount >= iCount ? 'E' : 'I';
+        console.log(`[市場への関わり方] スコア=0 → 個別回答を確認: E傾向=${eCount}名, I傾向=${iCount}名 → ${result}`);
+        typeCode += result;
       } else {
         typeCode += 'E/I';
       }
@@ -113,7 +115,9 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           }
         });
         
-        typeCode += nCount >= sCount ? 'N' : 'S';
+        const result = nCount >= sCount ? 'N' : 'S';
+        console.log(`[成長・戦略スタンス] スコア=0 → 個別回答を確認: N傾向=${nCount}名, S傾向=${sCount}名 → ${result}`);
+        typeCode += result;
       } else {
         typeCode += 'N/S';
       }
@@ -140,7 +144,9 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           }
         });
         
-        typeCode += pCount >= rCount ? 'P' : 'R';
+        const result = pCount >= rCount ? 'P' : 'R';
+        console.log(`[組織運営スタンス] スコア=0 → 個別回答を確認: P傾向=${pCount}名, R傾向=${rCount}名 → ${result}`);
+        typeCode += result;
       } else {
         typeCode += 'P/R';
       }
@@ -167,7 +173,9 @@ export function CompanyPersonalityImportModal({ onClose, onImportSuccess }: Comp
           }
         });
         
-        typeCode += fCount >= oCount ? 'F' : 'O';
+        const result = fCount >= oCount ? 'F' : 'O';
+        console.log(`[意思決定スタイル] スコア=0 → 個別回答を確認: F傾向=${fCount}名, O傾向=${oCount}名 → ${result}`);
+        typeCode += result;
       } else {
         typeCode += 'F/O';
       }
