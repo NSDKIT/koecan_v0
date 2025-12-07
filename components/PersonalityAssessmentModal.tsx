@@ -503,6 +503,8 @@ export function PersonalityAssessmentModal({ onClose, onSaveSuccess }: Personali
                         setActiveCategoryIndex(activeCategoryIndex + 1);
                         setError(null);
                         setSuccess(null);
+                        // 画面上部にスクロール
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       } else {
                         setError('このカテゴリーのすべての質問に回答してください。');
                       }

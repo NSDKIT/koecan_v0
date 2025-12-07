@@ -283,6 +283,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
       // ユーザー情報を再取得して、親コンポーネントの状態も更新
       await refreshSession();
       onUpdate();
+      // 画面上部にスクロール
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error updating profile:', error);
       const errorMessage = error instanceof Error ? error.message : 'プロフィールの更新に失敗しました。';
@@ -346,6 +348,8 @@ export function ProfileModal({ user, profile, onClose, onUpdate }: ProfileModalP
 
       setSurveySuccess('プロフィールアンケートを保存しました！');
       onUpdate();
+      // 画面上部にスクロール
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error('Error saving profile survey:', err);
       setSurveyError(err instanceof Error ? err.message : '保存に失敗しました。');
