@@ -100,7 +100,7 @@ export function PersonalityFilterModal({ selectedTypes, onClose, onApply }: Pers
             onClick={handleApply}
             className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
           >
-            適用 ({selected.length})
+            適用
           </button>
         </div>
       </div>

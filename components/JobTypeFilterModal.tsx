@@ -142,7 +142,7 @@ export function JobTypeFilterModal({ selectedJobTypes, onClose, onApply }: JobTy
               onClick={handleApply}
               className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
             >
-              適用 ({selected.length})
+              適用
             </button>
           </div>
         </div>
