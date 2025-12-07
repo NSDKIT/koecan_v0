@@ -50,8 +50,21 @@ import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
 import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
 import { LocationFilterModal } from '@/components/LocationFilterModal';
+import { ValueFilterModal } from '@/components/ValueFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 import { getRandomTip, Tip } from '@/lib/tips';
+
+// 8つの価値観の選択肢（ValueFilterModalと共有）
+const VALUE_OPTIONS = [
+  { id: 'E', label: '外の人と関わる仕事（E）' },
+  { id: 'I', label: '一人で集中できる仕事（I）' },
+  { id: 'N', label: '新しいことに挑戦したい（N）' },
+  { id: 'S', label: '安定した業務を求める（S）' },
+  { id: 'F', label: '人を大切にする柔らかい雰囲気（F）' },
+  { id: 'T', label: '数値的な目標に向かって突き進む（T）' },
+  { id: 'P', label: '自分なりのやり方で進められる（P）' },
+  { id: 'J', label: 'ルールが明確で迷わず働ける（J）' },
+];
 
 type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
 
@@ -125,10 +138,12 @@ export default function MonitorDashboard() {
   const [showPersonalityFilter, setShowPersonalityFilter] = useState(false);
   const [showJobTypeFilter, setShowJobTypeFilter] = useState(false);
   const [showLocationFilter, setShowLocationFilter] = useState(false);
+  const [showValueFilter, setShowValueFilter] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedPersonalityTypes, setSelectedPersonalityTypes] = useState<string[]>([]);
   const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedValues, setSelectedValues] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isMatchingSearch, setIsMatchingSearch] = useState(false);
   const [filteredAdvertisements, setFilteredAdvertisements] = useState<Advertisement[]>([]);
@@ -519,7 +534,7 @@ export default function MonitorDashboard() {
     }
 
     setFilteredAdvertisements(filtered);
-  }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, selectedLocations, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes]);
+  }, [advertisements, selectedIndustries, selectedPersonalityTypes, selectedJobTypes, selectedLocations, selectedValues, searchQuery, isMatchingSearch, personalityType, companyIdsWithJobTypes, convertValuesToPersonalityTypes]);
 
   // 職種を持つ企業IDを取得
   useEffect(() => {
@@ -2047,92 +2062,109 @@ export default function MonitorDashboard() {
             {activeTab === 'recruitment' && ( 
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {/* フィルターセクション */}
-                <div className="p-0 border-b border-gray-200">
-                  <div className="grid grid-cols-2 gap-0 bg-white">
+                <div className="p-4 sm:p-6 border-b border-gray-200 bg-white">
+                  {/* 8つの価値観から選択 */}
+                  <div className="mb-4">
+                    <button
+                      onClick={() => setShowValueFilter(true)}
+                      className={`w-full p-4 sm:p-6 rounded-lg border-4 border-black transition-all text-center ${
+                        selectedValues.length > 0
+                          ? 'bg-purple-50 border-purple-600'
+                          : 'bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-lg sm:text-xl font-bold text-gray-800">
+                        8つの価値観から選択
+                      </span>
+                      {selectedValues.length > 0 && (
+                        <div className="mt-2 text-sm text-purple-700">
+                          {selectedValues.length}個選択中
+                        </div>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* 3つのフィルターボタン */}
+                  <div className="grid grid-cols-3 gap-4">
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-b border-gray-300 transition-all ${
+                      className={`p-4 sm:p-6 rounded-lg border-4 border-black transition-all text-center ${
                         selectedIndustries.length > 0
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                          ? 'bg-blue-50 border-blue-600'
+                          : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
-                        <Building className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
-                      </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">業界を選択</span>
+                      <span className="text-base sm:text-lg font-bold text-gray-800">
+                        業界を選択
+                      </span>
                       {selectedIndustries.length > 0 && (
-                        <span className="bg-blue-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
-                          {selectedIndustries.length}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* 16タイプ選択ボタン */}
-                    <button
-                      onClick={() => setShowPersonalityFilter(true)}
-                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-b border-gray-300 transition-all ${
-                        selectedPersonalityTypes.length > 0
-                          ? 'bg-purple-50 text-purple-700'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
-                        <Brain className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
-                      </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">16タイプを選択</span>
-                      {selectedPersonalityTypes.length > 0 && (
-                        <span className="bg-purple-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
-                          {selectedPersonalityTypes.length}
-                        </span>
+                        <div className="mt-1 text-xs text-blue-700">
+                          {selectedIndustries.length}個
+                        </div>
                       )}
                     </button>
 
                     {/* 職種選択ボタン */}
                     <button
                       onClick={() => setShowJobTypeFilter(true)}
-                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 border-r border-gray-300 transition-all ${
+                      className={`p-4 sm:p-6 rounded-lg border-4 border-black transition-all text-center ${
                         selectedJobTypes.length > 0
-                          ? 'bg-green-50 text-green-700'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                          ? 'bg-green-50 border-green-600'
+                          : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
-                        <Briefcase className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
-                      </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">職種を選択</span>
+                      <span className="text-base sm:text-lg font-bold text-gray-800">
+                        職種を選択
+                      </span>
                       {selectedJobTypes.length > 0 && (
-                        <span className="bg-green-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
-                          {selectedJobTypes.length}
-                        </span>
+                        <div className="mt-1 text-xs text-green-700">
+                          {selectedJobTypes.length}個
+                        </div>
                       )}
                     </button>
 
                     {/* 勤務地選択ボタン */}
                     <button
                       onClick={() => setShowLocationFilter(true)}
-                      className={`flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 sm:py-3 px-0 transition-all ${
+                      className={`p-4 sm:p-6 rounded-lg border-4 border-black transition-all text-center ${
                         selectedLocations.length > 0
-                          ? 'bg-orange-50 text-orange-700'
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
+                          ? 'bg-orange-50 border-orange-600'
+                          : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-orange-500 flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-orange-500" />
-                      </div>
-                      <span className="text-[15px] sm:text-xs whitespace-nowrap">勤務地を選択</span>
+                      <span className="text-base sm:text-lg font-bold text-gray-800">
+                        勤務地を選択
+                      </span>
                       {selectedLocations.length > 0 && (
-                        <span className="bg-orange-500 text-white rounded-full px-1 py-0.5 text-[10px] sm:text-xs flex-shrink-0">
-                          {selectedLocations.length}
-                        </span>
+                        <div className="mt-1 text-xs text-orange-700">
+                          {selectedLocations.length}個
+                        </div>
                       )}
                     </button>
                   </div>
+                </div>
 
                   {/* フィルター表示 */}
-                  {(selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || selectedJobTypes.length > 0 || selectedLocations.length > 0 || isMatchingSearch) && (
+                  {(selectedValues.length > 0 || selectedIndustries.length > 0 || selectedPersonalityTypes.length > 0 || selectedJobTypes.length > 0 || selectedLocations.length > 0 || isMatchingSearch) && (
                     <div className="flex flex-wrap gap-2 p-4">
+                      {selectedValues.map((value) => {
+                        const valueOption = VALUE_OPTIONS.find(opt => opt.id === value);
+                        return (
+                          <span
+                            key={value}
+                            className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
+                          >
+                            {valueOption?.label || value}
+                            <button
+                              onClick={() => setSelectedValues(prev => prev.filter(v => v !== value))}
+                              className="ml-2 hover:text-purple-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        );
+                      })}
                       {selectedIndustries.map((industry) => (
                         <span
                           key={industry}
@@ -2202,6 +2234,7 @@ export default function MonitorDashboard() {
                       )}
                       <button
                         onClick={() => {
+                          setSelectedValues([]);
                           setSelectedIndustries([]);
                           setSelectedPersonalityTypes([]);
                           setSelectedJobTypes([]);
@@ -3321,6 +3354,17 @@ export default function MonitorDashboard() {
           onApply={(locations) => {
             setSelectedLocations(locations);
             setShowLocationFilter(false);
+          }}
+        />
+      )}
+
+      {showValueFilter && (
+        <ValueFilterModal
+          selectedValues={selectedValues}
+          onClose={() => setShowValueFilter(false)}
+          onApply={(values) => {
+            setSelectedValues(values);
+            setShowValueFilter(false);
           }}
         />
       )}
