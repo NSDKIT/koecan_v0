@@ -651,7 +651,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       {viewMode === 'chart' && (
         <div className="space-y-6">
           {/* 比較対象選択 */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border-2 border-purple-200">
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4">
             <div className="flex items-center mb-3">
               <TrendingUp className="w-5 h-5 text-orange-600 mr-2" />
               <h3 className="text-sm font-bold text-gray-800">表示するカテゴリーを選択</h3>
@@ -683,13 +683,13 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
           {/* レーダーチャート */}
           {chartData.length > 0 && (
-            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-              <div className="mb-4">
+            <div className="bg-white rounded-xl p-0">
+              <div className="mb-0">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">パーソナリティプロファイル比較</h3>
-                <p className="text-sm text-gray-600 mb-3">8つの軸（E, I, N, S, P, R, F, O）での価値観の傾向を可視化</p>
+                <p className="text-sm text-gray-600 mb-0">8つの軸（E, I, N, S, P, R, F, O）での価値観の傾向を可視化</p>
               </div>
               <ResponsiveContainer width="100%" height={500}>
-                <RadarChart data={chartData}>
+                <RadarChart data={chartData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                   <PolarGrid stroke="#e0e7ff" />
                   <PolarAngleAxis 
                     dataKey="axis" 
@@ -731,7 +731,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                     />
                   )}
                   <Legend 
-                    wrapperStyle={{ paddingTop: '20px' }}
+                    wrapperStyle={{ paddingTop: '0px' }}
                     iconType="line"
                     formatter={(value: string) => {
                       // 職種/年代別の平均のみを凡例に表示
@@ -752,7 +752,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   return (
                     <div
                       key={result.id}
-                      className="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 border-2 border-gray-200 hover:border-orange-400 transition-all cursor-pointer"
+                      className="bg-gradient-to-br from-white to-gray-50 rounded-lg p-4 transition-all cursor-pointer"
                       onClick={() => {
                         if (!result.personality_type.includes('/')) {
                           setSelectedType(result.personality_type);
