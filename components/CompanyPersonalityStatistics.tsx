@@ -209,7 +209,7 @@ export function CompanyPersonalityStatistics({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={jobMarketData} 
-                margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                margin={{ top: 10, right: 0, left: 0, bottom: 40 }}
                 barCategoryGap={0}
                 barGap={0}
               >
