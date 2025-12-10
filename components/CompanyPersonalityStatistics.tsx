@@ -199,7 +199,7 @@ export function CompanyPersonalityStatistics({
           </div>
 
           {/* 4つのグラフを2×2グリッドで表示 */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 市場への関わり方 (E ~ I) - 職種別 */}
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center mb-4">
@@ -410,7 +410,7 @@ export function CompanyPersonalityStatistics({
           </div>
 
           {/* 4つのグラフを2×2グリッドで表示 */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 市場への関わり方 (E ~ I) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center mb-4">
