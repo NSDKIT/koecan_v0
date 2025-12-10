@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/config/supabase';
 import { Survey, Question, Answer, User, MonitorProfile, Advertisement, Response as UserResponse, Quiz, QuizQuestion, QuizResponse, CompanyFavorite, CompanySaved } from '@/types'; 
@@ -156,6 +156,9 @@ export default function MonitorDashboard() {
   const [selectedOneCharDiffType, setSelectedOneCharDiffType] = useState<string | null>(null);
   const [favoriteCompanyIds, setFavoriteCompanyIds] = useState<Set<string>>(new Set());
   const [savedCompanyIds, setSavedCompanyIds] = useState<Set<string>>(new Set());
+  const [companySlideIndex, setCompanySlideIndex] = useState(0);
+  const [bulletinSlideIndex, setBulletinSlideIndex] = useState(0);
+  const [selectedBulletinPost, setSelectedBulletinPost] = useState<any>(null);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -392,6 +395,32 @@ export default function MonitorDashboard() {
       setCharacterTip(tip);
     }
   }, [activeTab]);
+
+  // 企業紹介セクションのスライドショー用：直近1ヶ月の企業をペアに分割
+  const recentCompanyPairs = useMemo(() => {
+    const recentCompanies = advertisements.filter(ad => {
+      if (!ad.created_at) return false;
+      const createdDate = new Date(ad.created_at);
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      return createdDate >= oneMonthAgo;
+    });
+
+    const pairs: Advertisement[][] = [];
+    for (let i = 0; i < recentCompanies.length; i += 2) {
+      pairs.push(recentCompanies.slice(i, i + 2));
+    }
+    return pairs;
+  }, [advertisements]);
+
+  // 企業紹介セクションのスライドショー自動切り替え
+  useEffect(() => {
+    if (recentCompanyPairs.length <= 1 || activeTab !== 'home') return;
+    const interval = setInterval(() => {
+      setCompanySlideIndex((prev) => (prev + 1) % recentCompanyPairs.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [recentCompanyPairs.length, activeTab]);
 
   // 一文字違いのタイプを計算する関数
   const getOneCharDiffTypes = useCallback((type: string): string[] => {
@@ -2786,80 +2815,90 @@ export default function MonitorDashboard() {
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    {advertisements
-                      .filter(ad => {
-                        // 直近1ヶ月で掲載された企業をフィルタ
-                        if (!ad.created_at) return false;
-                        const createdDate = new Date(ad.created_at);
-                        const oneMonthAgo = new Date();
-                        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                        return createdDate >= oneMonthAgo;
-                      })
-                      .slice(0, 4)
-                      .map((ad) => (
-                        <div
-                          key={ad.id}
-                          className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
-                          onClick={() => {
-                            setSelectedAdvertisement(ad);
-                            setCompanyDetailView('info');
-                          }}
-                        >
-                          {(() => {
-                            const imageUrl = ad.image_url;
-                            return (imageUrl && imageUrl.length > 0);
-                          })() ? (
-                            <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
-                              <img
-                                src={getSecureImageUrl(ad.image_url) || ''}
-                                alt={ad.company_name || '企業情報'}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                crossOrigin="anonymous"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                              <div className="absolute top-2 left-2">
-                                <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
-                                  NEW
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
-                              <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
-                              <div className="absolute top-2 left-2">
-                                <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
-                                  NEW
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          {ad.personality_type && (
-                            <div className="p-2 sm:p-3">
-                              <div className="flex items-center justify-end">
-                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
-                                  {ad.personality_type}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                  {advertisements.filter(ad => {
-                    if (!ad.created_at) return false;
-                    const createdDate = new Date(ad.created_at);
-                    const oneMonthAgo = new Date();
-                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                    return createdDate >= oneMonthAgo;
-                  }).length === 0 && (
+                  {recentCompanyPairs.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <p>直近1ヶ月で掲載された企業はありません</p>
+                    </div>
+                  ) : (
+                    <div className="relative overflow-hidden">
+                      <div 
+                        className="flex transition-transform duration-500 ease-in-out"
+                        style={{ transform: `translateX(-${companySlideIndex * 100}%)` }}
+                      >
+                        {recentCompanyPairs.map((pair, pairIndex) => (
+                          <div key={pairIndex} className="min-w-full grid grid-cols-2 gap-3 sm:gap-4">
+                            {pair.map((ad) => (
+                              <div
+                                key={ad.id}
+                                className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
+                                onClick={() => {
+                                  setSelectedAdvertisement(ad);
+                                  setCompanyDetailView('info');
+                                }}
+                              >
+                                {(() => {
+                                  const imageUrl = ad.image_url;
+                                  return (imageUrl && imageUrl.length > 0);
+                                })() ? (
+                                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                    <img
+                                      src={getSecureImageUrl(ad.image_url) || ''}
+                                      alt={ad.company_name || '企業情報'}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      loading="lazy"
+                                      referrerPolicy="no-referrer"
+                                      crossOrigin="anonymous"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                      }}
+                                    />
+                                    <div className="absolute top-2 left-2">
+                                      <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
+                                        NEW
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                    <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                                    <div className="absolute top-2 left-2">
+                                      <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
+                                        NEW
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                                {ad.personality_type && (
+                                  <div className="p-2 sm:p-3">
+                                    <div className="flex items-center justify-end">
+                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
+                                        {ad.personality_type}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {/* ペアが1つしかない場合は空のスロットを追加 */}
+                            {pair.length === 1 && <div></div>}
+                          </div>
+                        ))}
+                      </div>
+                      {/* インジケーター */}
+                      {recentCompanyPairs.length > 1 && (
+                        <div className="flex justify-center gap-2 mt-4">
+                          {recentCompanyPairs.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCompanySlideIndex(index)}
+                              className={`h-2 rounded-full transition-all ${
+                                index === companySlideIndex ? 'w-8 bg-orange-600' : 'w-2 bg-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

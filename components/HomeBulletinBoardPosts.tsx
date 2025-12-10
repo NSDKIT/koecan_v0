@@ -26,6 +26,7 @@ const categoryConfig = {
 export function HomeBulletinBoardPosts() {
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [slideIndex, setSlideIndex] = useState(0);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -84,6 +85,18 @@ export function HomeBulletinBoardPosts() {
     );
   }
 
+  // スライドショーの自動切り替え
+  useEffect(() => {
+    if (posts.length <= 2) return;
+    const pairs = Math.ceil(posts.length / 2);
+    if (pairs <= 1) return;
+    
+    const interval = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % pairs);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [posts.length]);
+
   if (posts.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -93,41 +106,72 @@ export function HomeBulletinBoardPosts() {
     );
   }
 
+  // 2つずつのペアに分割
+  const pairs: BulletinPost[][] = [];
+  for (let i = 0; i < posts.length; i += 2) {
+    pairs.push(posts.slice(i, i + 2));
+  }
+
   return (
-    <div className="space-y-3">
-      {posts.map((post) => {
-        const categoryInfo = post.category ? categoryConfig[post.category as keyof typeof categoryConfig] : null;
-        const CategoryIcon = categoryInfo?.icon || MessageCircle;
-        
-        return (
-          <div
-            key={post.id}
-            className={`bg-white border-2 rounded-xl p-4 ${
-              post.is_pinned ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {post.category && categoryInfo && (
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${categoryInfo.color} flex-shrink-0`}>
-                    <CategoryIcon className="w-3 h-3" />
-                    <span>{post.category}</span>
+    <div className="relative overflow-hidden">
+      <div 
+        className="flex transition-transform duration-500 ease-in-out"
+        style={{ transform: `translateX(-${slideIndex * 100}%)` }}
+      >
+        {pairs.map((pair, pairIndex) => (
+          <div key={pairIndex} className="min-w-full grid grid-cols-2 gap-3">
+            {pair.map((post) => {
+              const categoryInfo = post.category ? categoryConfig[post.category as keyof typeof categoryConfig] : null;
+              const CategoryIcon = categoryInfo?.icon || MessageCircle;
+              
+              return (
+                <div
+                  key={post.id}
+                  className={`bg-white border-2 rounded-xl p-4 ${
+                    post.is_pinned ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {post.category && categoryInfo && (
+                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${categoryInfo.color} flex-shrink-0`}>
+                          <CategoryIcon className="w-3 h-3" />
+                          <span>{post.category}</span>
+                        </div>
+                      )}
+                      <h3 className="text-base sm:text-lg font-bold text-gray-800 truncate">{post.title}</h3>
+                    </div>
                   </div>
-                )}
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 truncate">{post.title}</h3>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 line-clamp-2 mb-2">{post.content}</p>
-            <div className="text-xs text-gray-500">
-              {new Date(post.created_at).toLocaleDateString('ja-JP', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </div>
+                  <p className="text-sm text-gray-600 line-clamp-2 mb-2">{post.content}</p>
+                  <div className="text-xs text-gray-500">
+                    {new Date(post.created_at).toLocaleDateString('ja-JP', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {/* ペアが1つしかない場合は空のスロットを追加 */}
+            {pair.length === 1 && <div></div>}
           </div>
-        );
-      })}
+        ))}
+      </div>
+      {/* インジケーター */}
+      {pairs.length > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          {pairs.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setSlideIndex(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === slideIndex ? 'w-8 bg-orange-600' : 'w-2 bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
