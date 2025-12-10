@@ -215,7 +215,7 @@ export function CompanyPersonalityStatistics({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={jobMarketData} 
-                margin={{ top: 50, right: 0, left: 0, bottom: 60 }}
+                margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
                 barCategoryGap={0}
                 barGap={0}
               >
@@ -272,7 +272,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobGrowthData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -329,7 +329,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobOrgData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -386,7 +386,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobDecisionData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -458,7 +458,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsMarketData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -515,7 +515,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsGrowthData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -572,7 +572,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsOrgData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -629,7 +629,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsDecisionData} 
-                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
