@@ -247,7 +247,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            </div>
 
             {/* 成長・戦略 (N ~ S) - 職種別 */}
             <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
