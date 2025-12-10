@@ -198,16 +198,18 @@ export function CompanyPersonalityStatistics({
             </h2>
           </div>
 
-          {/* 市場への関わり方 (E ~ I) - 職種別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-purple-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">市場への関わり方 (E ⇄ I) - 職種別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
+          {/* 4つのグラフを2×2グリッドで表示 */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* 市場への関わり方 (E ~ I) - 職種別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方 (E ⇄ I) - 職種別</h3>
+              </div>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={jobMarketData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
                 barCategoryGap={0}
                 barGap={0}
               >
@@ -216,13 +218,13 @@ export function CompanyPersonalityStatistics({
                   type="number"
                   dataKey="xValue"
                   domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
+                  tick={{ fontSize: 14, fill: '#6b7280' }}
+                  label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                 />
                 <YAxis 
                   type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                  tick={{ fontSize: 14, fill: '#6b7280' }}
+                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                 />
                 <Tooltip 
                   contentStyle={{ 
@@ -247,30 +249,32 @@ export function CompanyPersonalityStatistics({
             </ResponsiveContainer>
           </div>
 
-          {/* 成長・戦略 (N ~ S) - 職種別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-green-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">成長・戦略 (N ⇄ S) - 職種別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={jobGrowthData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+            {/* 成長・戦略 (N ~ S) - 職種別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略 (N ⇄ S) - 職種別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={jobGrowthData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
@@ -290,34 +294,36 @@ export function CompanyPersonalityStatistics({
                     name={result.category_value}
                   />
                 ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* 組織運営 (P ~ R) - 職種別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-orange-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">組織運営 (P ⇄ R) - 職種別</h3>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={jobOrgData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+
+            {/* 組織運営 (P ~ R) - 職種別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営 (P ⇄ R) - 職種別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={jobOrgData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
@@ -337,34 +343,36 @@ export function CompanyPersonalityStatistics({
                     name={result.category_value}
                   />
                 ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* 意思決定 (F ~ O) - 職種別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-pink-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-pink-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">意思決定 (F ⇄ O) - 職種別</h3>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={jobDecisionData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+
+            {/* 意思決定 (F ~ O) - 職種別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-pink-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定 (F ⇄ O) - 職種別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={jobDecisionData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
@@ -447,30 +455,32 @@ export function CompanyPersonalityStatistics({
             </ResponsiveContainer>
           </div>
 
-          {/* 成長・戦略 (N ~ S) - 年代別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-green-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">成長・戦略 (N ⇄ S) - 年代別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={yearsGrowthData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+            {/* 成長・戦略 (N ~ S) - 年代別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略 (N ⇄ S) - 年代別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={yearsGrowthData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
@@ -494,30 +504,32 @@ export function CompanyPersonalityStatistics({
             </ResponsiveContainer>
           </div>
 
-          {/* 組織運営 (P ~ R) - 年代別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-orange-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">組織運営 (P ⇄ R) - 年代別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={yearsOrgData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+            {/* 組織運営 (P ~ R) - 年代別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営 (P ⇄ R) - 年代別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={yearsOrgData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
@@ -541,30 +553,32 @@ export function CompanyPersonalityStatistics({
             </ResponsiveContainer>
           </div>
 
-          {/* 意思決定 (F ~ O) - 年代別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-pink-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-pink-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">意思決定 (F ⇄ O) - 年代別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={yearsDecisionData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+            {/* 意思決定 (F ~ O) - 年代別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-pink-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定 (F ⇄ O) - 年代別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={yearsDecisionData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
