@@ -788,8 +788,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
 
               {/* 八角形レーダーチャートについて（ページの一番下） */}
               <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-4 mt-6 border border-orange-200">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-                  <Brain className="w-4 h-4 mr-2 text-orange-600" />
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">
                   八角形レーダーチャートについて
                 </h4>
                 <div className="text-sm text-gray-700 space-y-2">
@@ -798,22 +797,23 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
                   </p>
                   <div className="space-y-1">
                     <p className="font-semibold">8つの軸:</p>
-                    <ul className="list-disc list-inside ml-4 text-sm space-y-0.5">
-                      <li><span className="font-semibold">E（外向型）⇄ I（内向型）</span> - 市場への関わり方</li>
-                      <li><span className="font-semibold">N（革新型）⇄ S（安定型）</span> - 成長・戦略スタンス</li>
-                      <li><span className="font-semibold">P（人材志向）⇄ R（成果志向）</span> - 組織運営スタンス</li>
-                      <li><span className="font-semibold">F（柔軟型）⇄ O（規律型）</span> - 意思決定スタイル</li>
-                    </ul>
+                    <div className="space-y-1 ml-4">
+                      <div>□ 外の人と関わる仕事（E）</div>
+                      <div>□ 一人で集中できる仕事（I）</div>
+                      <div>□ 新しいことに挑戦したい（N）</div>
+                      <div>□ 安定した業務を求める（S）</div>
+                      <div>□ 人を大切にする柔らかい雰囲気（F）</div>
+                      <div>□ 数値的な目標に向かって突き進む（T）</div>
+                      <div>□ 自分なりのやり方で進められる（P）</div>
+                      <div>□ ルールが明確で迷わず働ける（J）</div>
+                    </div>
                   </div>
                   <div className="space-y-1 mt-3">
                     <p className="font-semibold">表示方法:</p>
-                    <ul className="list-disc list-inside ml-4 text-sm space-y-0.5">
-                      <li><span className="font-semibold">面積（職種/年代別平均）:</span> 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</li>
-                    </ul>
+                    <div className="ml-4">
+                      <div>面積: 各{selectedView === 'job' ? '職種' : '年代'}の平均値を異なる色の面積として表示</div>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600 mt-3 pt-3 border-t border-orange-200">
-                    ※ 各軸の値は0〜100の範囲で表示されます。数値が高い・低いに関わらず、それぞれの価値観に優劣はありません。
-                  </p>
                 </div>
               </div>
             </div>
