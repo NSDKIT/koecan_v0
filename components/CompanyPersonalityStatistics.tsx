@@ -30,30 +30,6 @@ const normalizeScore = (score: number): number => {
   return Math.abs(score) * 50; // -2から+2の範囲を0-100に変換
 };
 
-// 統計値を計算
-const calculateStatistics = (values: number[]) => {
-  if (values.length === 0) {
-    return {
-      mean: 0,
-      median: 0,
-      min: 0,
-      max: 0,
-      stdDev: 0
-    };
-  }
-
-  const sorted = [...values].sort((a, b) => a - b);
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const median = sorted.length % 2 === 0
-    ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
-    : sorted[Math.floor(sorted.length / 2)];
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
-  const stdDev = Math.sqrt(variance);
-
-  return { mean, median, min, max, stdDev };
-};
 
 export function CompanyPersonalityStatistics({ 
   jobTypeResults,
@@ -146,9 +122,9 @@ export function CompanyPersonalityStatistics({
       const isValidCategory = results.some(r => r.category_value === categoryValue);
       if (!isValidCategory) return;
 
-      // スコアを丸めてキーにする（例: -2.0, -1.5, -1.0, ..., 0, ..., 1.0, 1.5, 2.0）
-      // 0.5刻みで丸める
-      const roundedValue = Math.round(score * 2) / 2;
+      // スコアを丸めてキーにする（整数値のみ：-2, -1, 0, 1, 2）
+      // 最も近い整数に丸める
+      const roundedValue = Math.round(score);
 
       if (!dataMap.has(roundedValue)) {
         dataMap.set(roundedValue, {});
@@ -332,34 +308,6 @@ export function CompanyPersonalityStatistics({
 
   return (
     <div className="space-y-6">
-      {/* マッチングスコア表示 */}
-      {matchingScores && matchingScores.length > 0 && (
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border-2 border-purple-200">
-          <div className="flex items-center mb-4">
-            <TrendingUp className="w-6 h-6 text-purple-600 mr-2" />
-            <h3 className="text-lg font-bold text-gray-800">あなたとの適合度</h3>
-          </div>
-          <div className="space-y-3">
-            {matchingScores.map((item, index) => (
-              <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-gray-800">{item.category}</span>
-                  <span className="text-2xl font-bold text-purple-600">{item.matchScore}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${item.matchScore}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {item.responseCount}名の回答に基づく
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* カテゴリー別積み上げ棒グラフ - 職種別 */}
       {jobTypeResults.length > 0 && (
@@ -761,62 +709,6 @@ export function CompanyPersonalityStatistics({
         </div>
       )}
 
-      {/* 統計サマリーテーブル */}
-      <div className="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-lg">
-        <div className="flex items-center mb-4">
-          <Users className="w-6 h-6 text-gray-600 mr-2" />
-          <h3 className="text-lg font-bold text-gray-800">統計サマリー（8軸別）</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b-2 border-gray-200">
-                <th className="px-4 py-3 text-left font-semibold text-gray-700">軸</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">平均値</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">中央値</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">最小値</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">最大値</th>
-                <th className="px-4 py-3 text-center font-semibold text-gray-700">標準偏差</th>
-                {studentAxes && (
-                  <th className="px-4 py-3 text-center font-semibold text-purple-700">あなたの値</th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {statisticsData.map((item, index) => (
-                <tr 
-                  key={index} 
-                  className={`border-b border-gray-100 hover:bg-gray-50 ${
-                    studentAxes && item.studentValue !== null && item.studentValue > 0
-                      ? 'bg-purple-50'
-                      : ''
-                  }`}
-                >
-                  <td className="px-4 py-3 font-semibold text-gray-800">{item.axis}</td>
-                  <td className="px-4 py-3 text-center text-gray-700">{item.mean.toFixed(1)}</td>
-                  <td className="px-4 py-3 text-center text-gray-700">{item.median.toFixed(1)}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{item.min.toFixed(1)}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{item.max.toFixed(1)}</td>
-                  <td className="px-4 py-3 text-center text-gray-600">{item.stdDev.toFixed(1)}</td>
-                  {studentAxes && (
-                    <td className="px-4 py-3 text-center font-semibold text-purple-600">
-                      {item.studentValue !== null && item.studentValue > 0 
-                        ? item.studentValue.toFixed(1) 
-                        : '-'}
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 text-xs text-gray-500">
-          <p>※ 統計値は{selectedView === 'job' ? '職種別' : '年代別'}の各カテゴリーのスコアから計算されています。</p>
-          {studentAxes && (
-            <p className="mt-1">※ 紫色の行は、あなたの値が存在する軸を示しています。</p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
