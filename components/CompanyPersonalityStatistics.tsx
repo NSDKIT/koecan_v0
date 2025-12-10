@@ -394,6 +394,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         </div>
       )}
