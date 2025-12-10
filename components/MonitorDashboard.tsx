@@ -2882,25 +2882,11 @@ export default function MonitorDashboard() {
                 </div>
               </div>
 
-              {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
-                <div className="px-4 sm:px-8 pt-4 sm:pt-6 relative z-10">
-                  <div className="bg-white rounded-2xl overflow-hidden border-4 border-white">
-                    <img
-                      src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
-                      alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
-                      className="w-full h-auto object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
               <div className="p-4 sm:p-8">
                 {/* 企業情報タブの内容 */}
                 {companyDetailView === 'info' && (
                   <>
+                {/* 目指すべき未来（上部、全幅） */}
                 {displayValue(selectedAdvertisement.company_vision) && (
                   <div className="mb-8">
                     <div className="bg-orange-50 rounded-2xl p-6 border-l-4 border-orange-500">
@@ -2913,11 +2899,30 @@ export default function MonitorDashboard() {
                   </div>
                 )}
               
-                <div className="mb-8">
-                  <div className="flex items-center mb-4">
-                    <Building className="w-6 h-6 text-orange-600 mr-2" />
-                    <h3 className="text-sm sm:text-2xl font-bold text-gray-800">企業概要</h3>
-                  </div>
+                {/* 画像と企業概要を横並び（デスクトップ）または縦並び（モバイル） */}
+                <div className="mb-8 flex flex-col md:flex-row gap-6 md:gap-8">
+                  {/* 画像（左側、デスクトップ / 上側、モバイル） */}
+                  {selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) && (
+                    <div className="w-full md:w-1/2 flex-shrink-0">
+                      <div className="bg-white rounded-2xl overflow-hidden border-4 border-white">
+                        <img
+                          src={getSecureImageUrl(selectedAdvertisement.image_url) || undefined}
+                          alt={displayValue(selectedAdvertisement.company_name) || '企業画像'}
+                          className="w-full h-auto object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* 企業概要（右側、デスクトップ） */}
+                  <div className={`${selectedAdvertisement.image_url && getSecureImageUrl(selectedAdvertisement.image_url) ? 'w-full md:w-1/2' : 'w-full'}`}>
+                    <div className="flex items-center mb-4">
+                      <Building className="w-6 h-6 text-orange-600 mr-2" />
+                      <h3 className="text-sm sm:text-2xl font-bold text-gray-800">企業概要</h3>
+                    </div>
                   <div className="space-y-0 rounded-lg overflow-hidden border border-gray-200">
                     <div className="bg-gray-50 p-3 border-b border-gray-200">
                       <div className="text-sm font-semibold text-gray-700">代表者名</div>
@@ -2987,6 +2992,7 @@ export default function MonitorDashboard() {
                         ) : '-'}
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               
