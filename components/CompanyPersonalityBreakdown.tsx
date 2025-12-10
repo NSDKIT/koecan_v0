@@ -650,37 +650,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
       {/* レーダーチャート表示 */}
       {viewMode === 'chart' && (
         <div className="space-y-6">
-          {/* 比較対象選択 */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4">
-            <div className="flex items-center mb-3">
-              <TrendingUp className="w-5 h-5 text-orange-600 mr-2" />
-              <h3 className="text-sm font-bold text-gray-800">表示するカテゴリーを選択</h3>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              選択したカテゴリーの全従業員を点で表示し、8軸（E, I, N, S, P, R, F, O）の平均を面積として表示します
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {currentResults.map((result) => {
-                const isSelected = selectedForComparison.has(result.id);
-                return (
-                  <button
-                    key={result.id}
-                    onClick={() => toggleComparison(result.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center space-x-2 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg transform scale-105'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border-2 border-gray-300'
-                    }`}
-                  >
-                    {isSelected && <CheckCircle2 className="w-4 h-4" />}
-                    <span>{result.category_value}</span>
-                    <span className="text-sm opacity-75">({result.response_count}名)</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* レーダーチャート */}
           {chartData.length > 0 && (
             <div className="bg-white rounded-xl p-0">

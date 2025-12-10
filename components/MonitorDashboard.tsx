@@ -2427,18 +2427,15 @@ export default function MonitorDashboard() {
                         )}
                                   </div>
                                 )}
-                                <div className="p-3 sm:p-4">
-                                  <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                                    <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
-                            {displayValue(ad.company_name) || '企業名未設定'}
-                          </h3>
-                                    {ad.personality_type && (
-                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
+                                {ad.personality_type && (
+                                  <div className="p-3 sm:p-4">
+                                    <div className="flex items-center justify-end">
+                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
                                         {ad.personality_type}
                                       </div>
-                                    )}
+                                    </div>
                                   </div>
-                        </div>
+                                )}
                       </div>
                     ))}
                   </div>
@@ -2600,18 +2597,15 @@ export default function MonitorDashboard() {
                                             )}
                                           </div>
                                         )}
-                                        <div className="p-3 sm:p-4">
-                                          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                                            <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
-                                              {displayValue(ad.company_name) || '企業名未設定'}
-                                            </h3>
-                                            {ad.personality_type && (
-                                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
+                                        {ad.personality_type && (
+                                          <div className="p-3 sm:p-4">
+                                            <div className="flex items-center justify-end">
+                                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
                                                 {ad.personality_type}
                                               </div>
-                                            )}
+                                            </div>
                                           </div>
-                                        </div>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -2753,18 +2747,15 @@ export default function MonitorDashboard() {
                           </div>
                         )}
                         
-                        <div className="p-3 sm:p-4">
-                          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                            <h3 className="font-semibold text-gray-800 text-xs sm:text-base flex-1 line-clamp-1">
-                              {displayValue(ad.company_name) || '企業名未設定'}
-                            </h3>
-                            {ad.personality_type && (
-                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold flex-shrink-0">
+                        {ad.personality_type && (
+                          <div className="p-3 sm:p-4">
+                            <div className="flex items-center justify-end">
+                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
                                 {ad.personality_type}
                               </div>
-                            )}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                         ))}
                       </div>
