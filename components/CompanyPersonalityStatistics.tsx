@@ -186,7 +186,7 @@ export function CompanyPersonalityStatistics({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 -mx-4 sm:mx-0 px-2 sm:px-0">
 
       {/* カテゴリー別積み上げ棒グラフ - 職種別 */}
       {jobTypeResults.length > 0 && (
