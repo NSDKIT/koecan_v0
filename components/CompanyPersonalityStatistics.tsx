@@ -199,9 +199,9 @@ export function CompanyPersonalityStatistics({
           </div>
 
           {/* 4つのグラフを2×2グリッドで表示 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {/* 市場への関わり方 (E ~ I) - 職種別 */}
-            <div className="bg-white rounded-xl p-6">
+            <div className="bg-white rounded-xl p-3 sm:p-6">
               <div className="flex items-center mb-4">
                 <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
                 <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方 (E ⇄ I) - 職種別</h3>
@@ -250,7 +250,7 @@ export function CompanyPersonalityStatistics({
             </div>
 
             {/* 成長・戦略 (N ~ S) - 職種別 */}
-            <div className="bg-white rounded-xl p-6">
+            <div className="bg-white rounded-xl p-3 sm:p-6">
               <div className="flex items-center mb-4">
                 <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
                 <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略 (N ⇄ S) - 職種別</h3>
@@ -299,7 +299,7 @@ export function CompanyPersonalityStatistics({
             </div>
 
             {/* 組織運営 (P ~ R) - 職種別 */}
-            <div className="bg-white rounded-xl p-6">
+            <div className="bg-white rounded-xl p-3 sm:p-6">
               <div className="flex items-center mb-4">
                 <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
                 <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営 (P ⇄ R) - 職種別</h3>
@@ -348,7 +348,7 @@ export function CompanyPersonalityStatistics({
             </div>
 
             {/* 意思決定 (F ~ O) - 職種別 */}
-            <div className="bg-white rounded-xl p-6">
+            <div className="bg-white rounded-xl p-3 sm:p-6">
               <div className="flex items-center mb-4">
                 <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
                 <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定 (F ⇄ O) - 職種別</h3>
@@ -410,7 +410,7 @@ export function CompanyPersonalityStatistics({
           </div>
 
           {/* 4つのグラフを2×2グリッドで表示 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {/* 市場への関わり方 (E ~ I) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
               <div className="flex items-center mb-4">
