@@ -70,46 +70,50 @@ export function CompanyPersonalityStatistics({
   // カテゴリー別の積み上げ棒グラフ用データを準備
   // 横軸を対極の値（E~I、N~S、P~R、F~O）にして、各職種/年代を色分け
   // 横軸は元のスコア値（-2から+2）を使用
-  // 縦軸はそのスコア値を持つ人の数（回答者数）
+  // 縦軸はそのスコア値を持つ回答の数（各質問の回答を個別に集計）
   const prepareCategoryBarData = (
     results: PersonalityResult[],
     categoryType: 'market' | 'growth' | 'org' | 'decision',
     viewType: 'job' | 'years'
   ) => {
-    // 横軸の値（-2から+2）ごとに、各職種/年代の回答者数を集計
+    // 横軸の値（-2から+2）ごとに、各職種/年代の回答数を集計
     const dataMap = new Map<number, Record<string, number>>();
     
-    // 個別回答データから各スコア値ごとの人数を集計
+    // 個別回答データから各質問の回答を個別に集計
     individualData.forEach((row: any) => {
-      let score = 0;
+      let questionValues: number[] = []; // 各質問の回答値（DB値）
       let categoryValue = '';
 
-      // カテゴリーに応じてスコアを計算
+      // カテゴリーに応じて各質問の回答を取得
       switch (categoryType) {
         case 'market':
-          const marketQ1 = convertUIToDB(row.market_engagement_q1 || 0);
-          const marketQ2 = convertUIToDB(row.market_engagement_q2 || 0);
-          const marketQ3 = convertUIToDB(row.market_engagement_q3 || 0);
-          score = (marketQ1 + marketQ2 + marketQ3) / 3; // 平均値
+          questionValues = [
+            convertUIToDB(row.market_engagement_q1 || 0),
+            convertUIToDB(row.market_engagement_q2 || 0),
+            convertUIToDB(row.market_engagement_q3 || 0)
+          ].filter(v => v !== 0); // 0（回答なし）は除外
           break;
         case 'growth':
-          const growthQ1 = convertUIToDB(row.growth_strategy_q1 || 0);
-          const growthQ2 = convertUIToDB(row.growth_strategy_q2 || 0);
-          const growthQ3 = convertUIToDB(row.growth_strategy_q3 || 0);
-          const growthQ4 = convertUIToDB(row.growth_strategy_q4 || 0);
-          score = (growthQ1 + growthQ2 + growthQ3 + growthQ4) / 4; // 平均値
+          questionValues = [
+            convertUIToDB(row.growth_strategy_q1 || 0),
+            convertUIToDB(row.growth_strategy_q2 || 0),
+            convertUIToDB(row.growth_strategy_q3 || 0),
+            convertUIToDB(row.growth_strategy_q4 || 0)
+          ].filter(v => v !== 0); // 0（回答なし）は除外
           break;
         case 'org':
-          const orgQ1 = convertUIToDB(row.organization_style_q1 || 0);
-          const orgQ2 = convertUIToDB(row.organization_style_q2 || 0);
-          const orgQ3 = convertUIToDB(row.organization_style_q3 || 0);
-          score = (orgQ1 + orgQ2 + orgQ3) / 3; // 平均値
+          questionValues = [
+            convertUIToDB(row.organization_style_q1 || 0),
+            convertUIToDB(row.organization_style_q2 || 0),
+            convertUIToDB(row.organization_style_q3 || 0)
+          ].filter(v => v !== 0); // 0（回答なし）は除外
           break;
         case 'decision':
-          const decisionQ1 = convertUIToDB(row.decision_making_q1 || 0);
-          const decisionQ2 = convertUIToDB(row.decision_making_q2 || 0);
-          const decisionQ3 = convertUIToDB(row.decision_making_q3 || 0);
-          score = (decisionQ1 + decisionQ2 + decisionQ3) / 3; // 平均値
+          questionValues = [
+            convertUIToDB(row.decision_making_q1 || 0),
+            convertUIToDB(row.decision_making_q2 || 0),
+            convertUIToDB(row.decision_making_q3 || 0)
+          ].filter(v => v !== 0); // 0（回答なし）は除外
           break;
       }
 
@@ -122,17 +126,19 @@ export function CompanyPersonalityStatistics({
       const isValidCategory = results.some(r => r.category_value === categoryValue);
       if (!isValidCategory) return;
 
-      // スコアを丸めてキーにする（整数値のみ：-2, -1, 0, 1, 2）
-      // 最も近い整数に丸める
-      const roundedValue = Math.round(score);
+      // 各質問の回答を個別に集計
+      questionValues.forEach(answerValue => {
+        // スコアを整数値に丸める（-2, -1, 0, 1, 2）
+        const roundedValue = Math.round(answerValue);
 
-      if (!dataMap.has(roundedValue)) {
-        dataMap.set(roundedValue, {});
-      }
+        if (!dataMap.has(roundedValue)) {
+          dataMap.set(roundedValue, {});
+        }
 
-      const categoryData = dataMap.get(roundedValue)!;
-      // 縦軸（積み上げの高さ）はそのスコア値を持つ人の数
-      categoryData[categoryValue] = (categoryData[categoryValue] || 0) + 1;
+        const categoryData = dataMap.get(roundedValue)!;
+        // 縦軸（積み上げの高さ）はそのスコア値を持つ回答の数
+        categoryData[categoryValue] = (categoryData[categoryValue] || 0) + 1;
+      });
     });
 
     // Mapを配列に変換してソート
