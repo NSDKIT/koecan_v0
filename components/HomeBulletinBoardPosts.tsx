@@ -76,15 +76,6 @@ export function HomeBulletinBoardPosts() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">読み込み中...</p>
-      </div>
-    );
-  }
-
   // スライドショーの自動切り替え
   useEffect(() => {
     if (posts.length <= 2) return;
@@ -96,6 +87,15 @@ export function HomeBulletinBoardPosts() {
     }, 5000);
     return () => clearInterval(interval);
   }, [posts.length]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">読み込み中...</p>
+      </div>
+    );
+  }
 
   if (posts.length === 0) {
     return (
