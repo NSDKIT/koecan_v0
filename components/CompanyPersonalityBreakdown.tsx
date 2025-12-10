@@ -38,7 +38,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'list' | 'chart' | 'statistics'>('chart'); // デフォルトをチャートに
+  const [viewMode, setViewMode] = useState<'chart' | 'statistics'>('chart'); // デフォルトをチャートに
   const [studentAxes, setStudentAxes] = useState<Record<string, number> | null>(null);
 
   const fetchResults = async () => {
@@ -644,17 +644,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             <TrendingUp className="w-5 h-5 mr-2" />
             統計表示
           </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
-              viewMode === 'list'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <FileText className="w-5 h-5 mr-2" />
-            リスト表示
-          </button>
         </div>
       </div>
 
@@ -850,86 +839,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
         />
       )}
 
-      {/* リスト表示 */}
-      {viewMode === 'list' && (
-        <div className="space-y-4">
-          {currentResults.map((result) => {
-            const isExpanded = expandedCategories.has(result.category_value);
-            return (
-              <div
-                key={result.id}
-                className="bg-white border-2 border-purple-200 rounded-xl overflow-hidden hover:border-purple-500 transition-all"
-              >
-                <div
-                  className="p-4 cursor-pointer flex items-center justify-between"
-                  onClick={() => toggleCategory(result.category_value)}
-                >
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-bold text-gray-800">
-                        {result.category_value}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {result.response_count}名の回答
-                      </p>
-                    </div>
-                    <div
-                      className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-bold cursor-pointer hover:bg-purple-200 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!result.personality_type.includes('/')) {
-                          setSelectedType(result.personality_type);
-                          setShowTypeModal(true);
-                        }
-                      }}
-                    >
-                      {result.personality_type}
-                    </div>
-                  </div>
-                  <button className="ml-4 text-gray-500 hover:text-gray-700">
-                    {isExpanded ? (
-                      <ChevronUp className="w-6 h-6" />
-                    ) : (
-                      <ChevronDown className="w-6 h-6" />
-                    )}
-                  </button>
-                </div>
-
-                {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-gray-200 bg-gray-50">
-                    <div className="pt-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">市場への関わり方:</span>
-                        <span className="text-sm font-semibold">
-                          {result.market_engagement_score >= 0 ? 'E' : 'I'} ({result.market_engagement_score.toFixed(2)})
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">成長・戦略スタンス:</span>
-                        <span className="text-sm font-semibold">
-                          {result.growth_strategy_score >= 0 ? 'N' : 'S'} ({result.growth_strategy_score.toFixed(2)})
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">組織運営スタンス:</span>
-                        <span className="text-sm font-semibold">
-                          {result.organization_style_score >= 0 ? 'P' : 'R'} ({result.organization_style_score.toFixed(2)})
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">意思決定スタイル:</span>
-                        <span className="text-sm font-semibold">
-                          {result.decision_making_score >= 0 ? 'F' : 'O'} ({result.decision_making_score.toFixed(2)})
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* タイプ詳細モーダル */}
       {selectedType && showTypeModal && (
