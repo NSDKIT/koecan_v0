@@ -156,9 +156,10 @@ export default function MonitorDashboard() {
   const [selectedOneCharDiffType, setSelectedOneCharDiffType] = useState<string | null>(null);
   const [favoriteCompanyIds, setFavoriteCompanyIds] = useState<Set<string>>(new Set());
   const [savedCompanyIds, setSavedCompanyIds] = useState<Set<string>>(new Set());
-  const [companySlideIndex, setCompanySlideIndex] = useState(0);
+  const [companySlideIndex, setCompanySlideIndex] = useState(1); // 無限ループ用に1から開始（0は複製された最後のペア）
   const [bulletinSlideIndex, setBulletinSlideIndex] = useState(0);
   const [selectedBulletinPost, setSelectedBulletinPost] = useState<any>(null);
+  const [isCompanyTransitioning, setIsCompanyTransitioning] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     console.log("MonitorDashboard: fetchProfile started.");
@@ -423,12 +424,7 @@ export default function MonitorDashboard() {
 
   // 企業紹介セクションのスライドショー自動切り替え（無限ループ）
   useEffect(() => {
-    if (recentCompanyPairs.length <= 1 || activeTab !== 'home') return;
-    
-    // 最初のスライド（複製された最後のペア）から開始
-    if (companySlideIndex === 0) {
-      setCompanySlideIndex(1);
-    }
+    if (recentCompanyPairs.length <= 2 || activeTab !== 'home') return; // 複製があるので2以上必要
     
     const interval = setInterval(() => {
       setCompanySlideIndex((prev) => {
@@ -437,7 +433,9 @@ export default function MonitorDashboard() {
         if (next >= recentCompanyPairs.length - 1) {
           // アニメーションなしで1番目のスライドに戻す
           setTimeout(() => {
+            setIsCompanyTransitioning(false);
             setCompanySlideIndex(1);
+            setTimeout(() => setIsCompanyTransitioning(true), 50);
           }, 500);
           return next;
         }
@@ -446,6 +444,13 @@ export default function MonitorDashboard() {
     }, 5000);
     return () => clearInterval(interval);
   }, [recentCompanyPairs.length, activeTab]);
+
+  // 初期化時にトランジションを有効化
+  useEffect(() => {
+    if (activeTab === 'home' && recentCompanyPairs.length > 2) {
+      setIsCompanyTransitioning(true);
+    }
+  }, [activeTab, recentCompanyPairs.length]);
 
   // 一文字違いのタイプを計算する関数
   const getOneCharDiffTypes = useCallback((type: string): string[] => {
@@ -2847,10 +2852,10 @@ export default function MonitorDashboard() {
                   ) : (
                     <div className="relative overflow-hidden">
                       <div 
-                        className="flex transition-transform duration-500 ease-in-out"
+                        className="flex"
                         style={{ 
                           transform: `translateX(-${companySlideIndex * 100}%)`,
-                          transition: companySlideIndex === 0 || companySlideIndex >= recentCompanyPairs.length - 1 ? 'none' : 'transform 0.5s ease-in-out'
+                          transition: isCompanyTransitioning ? 'transform 0.5s ease-in-out' : 'none'
                         }}
                       >
                         {recentCompanyPairs.map((pair, pairIndex) => (
