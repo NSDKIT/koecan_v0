@@ -2149,82 +2149,82 @@ export default function MonitorDashboard() {
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
-                      className={`flex-1 flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 transition-all duration-200 group ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-3 px-2 sm:px-6 py-3 sm:py-5 transition-all duration-200 group ${
                         selectedIndustries.length > 0 ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${
                         selectedIndustries.length > 0 
                           ? 'border-orange-500 bg-orange-50' 
                           : 'border-orange-400 bg-white group-hover:border-orange-500'
                       }`}>
-                        <Building className={`w-5 h-5 ${selectedIndustries.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
+                        <Building className={`w-4 h-4 sm:w-5 sm:h-5 ${selectedIndustries.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-base sm:text-lg font-bold text-gray-900">
+                      <div className="flex-1 text-center sm:text-left min-w-0">
+                        <div className="text-xs sm:text-base font-bold text-gray-900 truncate">
                           業界
                         </div>
                         {selectedIndustries.length > 0 && (
-                          <div className="text-xs sm:text-sm text-gray-500">
-                            {selectedIndustries.length}個選択中
+                          <div className="text-[10px] sm:text-xs text-gray-500 truncate">
+                            {selectedIndustries.length}個
                           </div>
                         )}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ArrowRight className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 hidden sm:block" />
                     </button>
 
                     {/* 職種選択ボタン */}
                     <button
                       onClick={() => setShowJobTypeFilter(true)}
-                      className={`flex-1 flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 transition-all duration-200 group ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-3 px-2 sm:px-6 py-3 sm:py-5 transition-all duration-200 group ${
                         selectedJobTypes.length > 0 ? 'bg-green-50' : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${
                         selectedJobTypes.length > 0 
                           ? 'border-orange-500 bg-orange-50' 
                           : 'border-orange-400 bg-white group-hover:border-orange-500'
                       }`}>
-                        <Briefcase className={`w-5 h-5 ${selectedJobTypes.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
+                        <Briefcase className={`w-4 h-4 sm:w-5 sm:h-5 ${selectedJobTypes.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-base sm:text-lg font-bold text-gray-900">
+                      <div className="flex-1 text-center sm:text-left min-w-0">
+                        <div className="text-xs sm:text-base font-bold text-gray-900 truncate">
                           職種
                         </div>
                         {selectedJobTypes.length > 0 && (
-                          <div className="text-xs sm:text-sm text-gray-500">
-                            {selectedJobTypes.length}個選択中
+                          <div className="text-[10px] sm:text-xs text-gray-500 truncate">
+                            {selectedJobTypes.length}個
                           </div>
                         )}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ArrowRight className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 hidden sm:block" />
                     </button>
 
                     {/* 勤務地選択ボタン */}
                     <button
                       onClick={() => setShowLocationFilter(true)}
-                      className={`flex-1 flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 transition-all duration-200 group ${
+                      className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-3 px-2 sm:px-6 py-3 sm:py-5 transition-all duration-200 group ${
                         selectedLocations.length > 0 ? 'bg-orange-50' : 'bg-white hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 flex-shrink-0 ${
                         selectedLocations.length > 0 
                           ? 'border-orange-500 bg-orange-50' 
                           : 'border-orange-400 bg-white group-hover:border-orange-500'
                       }`}>
-                        <MapPin className={`w-5 h-5 ${selectedLocations.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
+                        <MapPin className={`w-4 h-4 sm:w-5 sm:h-5 ${selectedLocations.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-base sm:text-lg font-bold text-gray-900">
+                      <div className="flex-1 text-center sm:text-left min-w-0">
+                        <div className="text-xs sm:text-base font-bold text-gray-900 truncate">
                           勤務地
                         </div>
                         {selectedLocations.length > 0 && (
-                          <div className="text-xs sm:text-sm text-gray-500">
-                            {selectedLocations.length}個選択中
+                          <div className="text-[10px] sm:text-xs text-gray-500 truncate">
+                            {selectedLocations.length}個
                           </div>
                         )}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ArrowRight className="w-3 h-3 sm:w-5 sm:h-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 hidden sm:block" />
                     </button>
                   </div>
                 </div>
