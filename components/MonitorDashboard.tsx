@@ -2891,6 +2891,17 @@ export default function MonitorDashboard() {
                                         NEW
                                       </span>
                                     </div>
+                                    {displayValue(ad.company_vision) && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                          <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                        </div>
+                                        <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                          {displayValue(ad.company_vision)}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
@@ -2900,6 +2911,17 @@ export default function MonitorDashboard() {
                                         NEW
                                       </span>
                                     </div>
+                                    {displayValue(ad.company_vision) && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-orange-400 flex-shrink-0" />
+                                          <h4 className="text-[10px] sm:text-xs font-bold text-white">目指す未来</h4>
+                                        </div>
+                                        <p className="text-white text-[10px] sm:text-xs line-clamp-2 leading-relaxed">
+                                          {displayValue(ad.company_vision)}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                                 {ad.personality_type && (
