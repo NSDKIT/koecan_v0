@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
+import { CompanyPersonalityStatistics } from '@/components/CompanyPersonalityStatistics';
 import { Building, Users, Brain, ChevronDown, ChevronUp, Trash2, AlertTriangle, BarChart3, TrendingUp, FileText, CheckCircle2, User } from 'lucide-react';
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, ResponsiveContainer } from 'recharts';
 
@@ -37,7 +38,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'list' | 'chart'>('chart'); // デフォルトをチャートに
+  const [viewMode, setViewMode] = useState<'list' | 'chart' | 'statistics'>('chart'); // デフォルトをチャートに
   const [studentAxes, setStudentAxes] = useState<Record<string, number> | null>(null);
 
   const fetchResults = async () => {
@@ -633,6 +634,17 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             レーダーチャート
           </button>
           <button
+            onClick={() => setViewMode('statistics')}
+            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
+              viewMode === 'statistics'
+                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <TrendingUp className="w-5 h-5 mr-2" />
+            統計表示
+          </button>
+          <button
             onClick={() => setViewMode('list')}
             className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
               viewMode === 'list'
@@ -825,6 +837,16 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             </div>
           )}
         </div>
+      )}
+
+      {/* 統計表示 */}
+      {viewMode === 'statistics' && (
+        <CompanyPersonalityStatistics
+          jobTypeResults={jobTypeResults}
+          yearsResults={yearsResults}
+          companyId={companyId}
+          studentAxes={studentAxes}
+        />
       )}
 
       {/* リスト表示 */}
