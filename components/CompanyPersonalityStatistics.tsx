@@ -202,9 +202,15 @@ export function CompanyPersonalityStatistics({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {/* 市場への関わり方 (E ~ I) - 職種別 */}
             <div className="bg-white rounded-xl p-3 sm:p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方 (E ⇄ I) - 職種別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 外の人と関わる仕事（E）</div>
+                  <div>□ 一人で集中できる仕事（I）</div>
+                </div>
               </div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
@@ -253,9 +259,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 成長・戦略 (N ~ S) - 職種別 */}
             <div className="bg-white rounded-xl p-3 sm:p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略 (N ⇄ S) - 職種別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 新しいことに挑戦したい（N）</div>
+                  <div>□ 安定した業務を求める（S）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -275,6 +287,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -303,9 +316,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 組織運営 (P ~ R) - 職種別 */}
             <div className="bg-white rounded-xl p-3 sm:p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営 (P ⇄ R) - 職種別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 自分なりのやり方で進められる（P）</div>
+                  <div>□ 数値的な目標に向かって突き進む（T）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -325,6 +344,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -353,9 +373,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 意思決定 (F ~ O) - 職種別 */}
             <div className="bg-white rounded-xl p-3 sm:p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定 (F ⇄ O) - 職種別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 人を大切にする柔らかい雰囲気（F）</div>
+                  <div>□ ルールが明確で迷わず働ける（J）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -375,6 +401,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -418,9 +445,15 @@ export function CompanyPersonalityStatistics({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
             {/* 市場への関わり方 (E ~ I) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方 (E ⇄ I) - 年代別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 外の人と関わる仕事（E）</div>
+                  <div>□ 一人で集中できる仕事（I）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -440,6 +473,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -468,9 +502,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 成長・戦略 (N ~ S) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略 (N ⇄ S) - 年代別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>成長・戦略</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 新しいことに挑戦したい（N）</div>
+                  <div>□ 安定した業務を求める（S）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -490,6 +530,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -518,9 +559,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 組織運営 (P ~ R) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営 (P ⇄ R) - 年代別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-orange-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>組織運営</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 自分なりのやり方で進められる（P）</div>
+                  <div>□ 数値的な目標に向かって突き進む（T）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -540,6 +587,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -568,9 +616,15 @@ export function CompanyPersonalityStatistics({
 
             {/* 意思決定 (F ~ O) - 年代別 */}
             <div className="bg-white rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
-                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定 (F ⇄ O) - 年代別</h3>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <BarChart3 className="w-5 h-5 text-pink-600 mr-2" />
+                  <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>意思決定</h3>
+                </div>
+                <div className="text-xs text-gray-600 space-y-1 ml-7">
+                  <div>□ 人を大切にする柔らかい雰囲気（F）</div>
+                  <div>□ ルールが明確で迷わず働ける（J）</div>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
@@ -590,6 +644,7 @@ export function CompanyPersonalityStatistics({
                   />
                   <YAxis 
                     type="number"
+                    allowDecimals={false}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
