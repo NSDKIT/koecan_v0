@@ -215,7 +215,7 @@ export function CompanyPersonalityStatistics({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={jobMarketData} 
-                margin={{ top: 10, right: 0, left: 0, bottom: 60 }}
+                margin={{ top: 50, right: 0, left: 0, bottom: 60 }}
                 barCategoryGap={0}
                 barGap={0}
               >
@@ -242,7 +242,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {jobTypeResults.map((result, index) => (
                   <Bar 
@@ -272,7 +272,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobGrowthData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -299,7 +299,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {jobTypeResults.map((result, index) => (
                   <Bar 
@@ -329,7 +329,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobOrgData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -356,7 +356,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {jobTypeResults.map((result, index) => (
                   <Bar 
@@ -386,7 +386,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobDecisionData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -413,7 +413,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {jobTypeResults.map((result, index) => (
                   <Bar 
@@ -458,7 +458,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsMarketData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -485,7 +485,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {yearsResults.map((result, index) => (
                   <Bar 
@@ -515,7 +515,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsGrowthData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -542,7 +542,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {yearsResults.map((result, index) => (
                   <Bar 
@@ -572,7 +572,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsOrgData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -599,7 +599,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {yearsResults.map((result, index) => (
                   <Bar 
@@ -629,7 +629,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsDecisionData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 50, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -656,7 +656,7 @@ export function CompanyPersonalityStatistics({
                     padding: '8px'
                   }}
                 />
-                <Legend />
+                <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '10px' }} />
                 <ReferenceLine x={0} stroke="#9ca3af" strokeDasharray="2 2" />
                 {yearsResults.map((result, index) => (
                   <Bar 
