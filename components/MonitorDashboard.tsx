@@ -2117,33 +2117,33 @@ export default function MonitorDashboard() {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-0">
                 {/* フィルターセクション */}
                 <div className="border-b border-gray-200 bg-white">
-                  {/* 横並びフィルターバー */}
-                  <div className="flex items-center divide-x divide-gray-300">
-                    {/* 8つの価値観から選択 */}
-                    <button
-                      onClick={() => setShowValueFilter(true)}
-                      className={`flex-1 flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 transition-all duration-200 group ${
-                        selectedValues.length > 0 ? 'bg-purple-50' : 'bg-white hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                        selectedValues.length > 0 
-                          ? 'border-orange-500 bg-orange-50' 
-                          : 'border-orange-400 bg-white group-hover:border-orange-500'
-                      }`}>
-                        <Heart className={`w-5 h-5 ${selectedValues.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
+                  {/* 上段: 8つの価値観から選択 */}
+                  <button
+                    onClick={() => setShowValueFilter(true)}
+                    className={`w-full flex items-center gap-3 px-4 sm:px-6 py-4 sm:py-5 transition-all duration-200 group border-b border-gray-300 ${
+                      selectedValues.length > 0 ? 'bg-purple-50' : 'bg-white hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      selectedValues.length > 0 
+                        ? 'border-orange-500 bg-orange-50' 
+                        : 'border-orange-400 bg-white group-hover:border-orange-500'
+                    }`}>
+                      <Heart className={`w-5 h-5 ${selectedValues.length > 0 ? 'text-orange-600' : 'text-orange-500'}`} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="text-base sm:text-lg font-bold text-gray-900">
+                        8つの価値観から選択
                       </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-base sm:text-lg font-bold text-gray-900">
-                          8つの価値観から選択
-                        </div>
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {selectedValues.length > 0 ? `${selectedValues.length}個選択中` : 'を選択する'}
-                        </div>
+                      <div className="text-xs sm:text-sm text-gray-500">
+                        {selectedValues.length > 0 ? `${selectedValues.length}個選択中` : 'を選択する'}
                       </div>
-                      <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
-                    </button>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                  </button>
 
+                  {/* 下段: 3つのフィルターボタン */}
+                  <div className="flex items-center divide-x divide-gray-300">
                     {/* 業界選択ボタン */}
                     <button
                       onClick={() => setShowIndustryFilter(true)}
