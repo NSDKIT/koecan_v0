@@ -408,30 +408,34 @@ export function CompanyPersonalityStatistics({
             </h2>
           </div>
 
-          {/* 市場への関わり方 (E ~ I) - 年代別 */}
-          <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-6 h-6 text-purple-600 mr-2" />
-              <h3 className="text-lg font-bold text-gray-800">市場への関わり方 (E ⇄ I) - 年代別</h3>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart 
-                data={yearsMarketData} 
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  type="number"
-                  dataKey="xValue"
-                  domain={[-2, 2]}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280' } }}
-                />
-                <YAxis 
-                  type="number"
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
-                  label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
-                />
+          {/* 4つのグラフを2×2グリッドで表示 */}
+          <div className="grid grid-cols-2 gap-6">
+            {/* 市場への関わり方 (E ~ I) - 年代別 */}
+            <div className="bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg">
+              <div className="flex items-center mb-4">
+                <BarChart3 className="w-5 h-5 text-purple-600 mr-2" />
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontSize: '14px' }}>市場への関わり方 (E ⇄ I) - 年代別</h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={yearsMarketData} 
+                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  barCategoryGap={0}
+                  barGap={0}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    type="number"
+                    dataKey="xValue"
+                    domain={[-2, 2]}
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
+                  <YAxis 
+                    type="number"
+                    tick={{ fontSize: 14, fill: '#6b7280' }}
+                    label={{ value: '人数', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: '14px' } }}
+                  />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#fff', 
