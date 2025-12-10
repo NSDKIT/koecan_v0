@@ -396,28 +396,53 @@ export default function MonitorDashboard() {
     }
   }, [activeTab]);
 
-  // 企業紹介セクションのスライドショー用：直近1ヶ月の企業をペアに分割
+  // 企業紹介セクションのスライドショー用：登録日時が新しい順にソートし、ペアに分割
   const recentCompanyPairs = useMemo(() => {
-    const recentCompanies = advertisements.filter(ad => {
-      if (!ad.created_at) return false;
-      const createdDate = new Date(ad.created_at);
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      return createdDate >= oneMonthAgo;
+    // すべての企業を取得（直近1ヶ月のフィルタを削除）
+    const allCompanies = [...advertisements].filter(ad => ad.created_at);
+    
+    // 登録日時が新しい順にソート
+    allCompanies.sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA; // 新しい順
     });
 
+    // 2つずつのペアに分割
     const pairs: Advertisement[][] = [];
-    for (let i = 0; i < recentCompanies.length; i += 2) {
-      pairs.push(recentCompanies.slice(i, i + 2));
+    for (let i = 0; i < allCompanies.length; i += 2) {
+      pairs.push(allCompanies.slice(i, i + 2));
+    }
+    
+    // 無限ループ用に、最初と最後のペアを複製
+    if (pairs.length > 1) {
+      return [pairs[pairs.length - 1], ...pairs, pairs[0]];
     }
     return pairs;
   }, [advertisements]);
 
-  // 企業紹介セクションのスライドショー自動切り替え
+  // 企業紹介セクションのスライドショー自動切り替え（無限ループ）
   useEffect(() => {
     if (recentCompanyPairs.length <= 1 || activeTab !== 'home') return;
+    
+    // 最初のスライド（複製された最後のペア）から開始
+    if (companySlideIndex === 0) {
+      setCompanySlideIndex(1);
+    }
+    
     const interval = setInterval(() => {
-      setCompanySlideIndex((prev) => (prev + 1) % recentCompanyPairs.length);
+      setCompanySlideIndex((prev) => {
+        const next = prev + 1;
+        // 最後のスライド（複製された最初のペア）に到達したら、2番目のスライド（実際の最初のペア）に戻る
+        if (next >= recentCompanyPairs.length - 1) {
+          // アニメーションなしで1番目のスライドに戻す
+          setTimeout(() => {
+            setCompanySlideIndex(1);
+          }, 500);
+          return next;
+        }
+        return next;
+      });
     }, 5000);
     return () => clearInterval(interval);
   }, [recentCompanyPairs.length, activeTab]);
@@ -1906,7 +1931,7 @@ export default function MonitorDashboard() {
         <main className={`mx-auto ${
           activeTab === 'career_consultation' ? 'pb-20' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8 pb-20'
         }`}> 
-          {activeTab !== 'career_consultation' && (
+          {activeTab !== 'career_consultation' && activeTab !== 'home' && (
             <div className="bg-white p-0 sm:p-6 mb-0 sm:mb-8">
               {personalityType && (
                 <div className="grid grid-cols-5 gap-0 sm:gap-6">
@@ -2817,16 +2842,19 @@ export default function MonitorDashboard() {
                   </div>
                   {recentCompanyPairs.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      <p>直近1ヶ月で掲載された企業はありません</p>
+                      <p>企業はありません</p>
                     </div>
                   ) : (
                     <div className="relative overflow-hidden">
                       <div 
                         className="flex transition-transform duration-500 ease-in-out"
-                        style={{ transform: `translateX(-${companySlideIndex * 100}%)` }}
+                        style={{ 
+                          transform: `translateX(-${companySlideIndex * 100}%)`,
+                          transition: companySlideIndex === 0 || companySlideIndex >= recentCompanyPairs.length - 1 ? 'none' : 'transform 0.5s ease-in-out'
+                        }}
                       >
                         {recentCompanyPairs.map((pair, pairIndex) => (
-                          <div key={pairIndex} className="min-w-full grid grid-cols-2 gap-3 sm:gap-4">
+                          <div key={`${pairIndex}-${pair[0]?.id || pairIndex}`} className="min-w-full grid grid-cols-2 gap-3 sm:gap-4">
                             {pair.map((ad) => (
                               <div
                                 key={ad.id}
@@ -2885,20 +2913,6 @@ export default function MonitorDashboard() {
                           </div>
                         ))}
                       </div>
-                      {/* インジケーター */}
-                      {recentCompanyPairs.length > 1 && (
-                        <div className="flex justify-center gap-2 mt-4">
-                          {recentCompanyPairs.map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCompanySlideIndex(index)}
-                              className={`h-2 rounded-full transition-all ${
-                                index === companySlideIndex ? 'w-8 bg-orange-600' : 'w-2 bg-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
