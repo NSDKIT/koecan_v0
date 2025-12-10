@@ -2,7 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/config/supabase';
-import { MessageCircle, Pin } from 'lucide-react';
+import { MessageCircle, Pin, Briefcase, Users, Calendar, Coffee, MessageSquare } from 'lucide-react';
+
+const categoryConfig = {
+  '就活': { icon: Briefcase, color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  'サークル': { icon: Users, color: 'bg-green-100 text-green-700 border-green-300' },
+  '学生イベント': { icon: Calendar, color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  'バイト': { icon: Coffee, color: 'bg-orange-100 text-orange-700 border-orange-300' },
+  '雑談': { icon: MessageSquare, color: 'bg-gray-100 text-gray-700 border-gray-300' },
+};
 
 interface BulletinPost {
   id: string;
@@ -10,6 +18,7 @@ interface BulletinPost {
   content: string;
   is_pinned: boolean;
   display_order: number;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -92,9 +101,17 @@ export function BulletinBoardDisplay() {
                 post.is_pinned ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
               }`}
             >
-              <div className="flex items-center space-x-2 mb-3">
+              <div className="flex items-center space-x-2 mb-3 flex-wrap gap-2">
                 {post.is_pinned && (
                   <Pin className="w-5 h-5 text-purple-600" />
+                )}
+                {post.category && categoryConfig[post.category as keyof typeof categoryConfig] && (
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${
+                    categoryConfig[post.category as keyof typeof categoryConfig].color
+                  }`}>
+                    {React.createElement(categoryConfig[post.category as keyof typeof categoryConfig].icon, { className: 'w-3 h-3' })}
+                    <span>{post.category}</span>
+                  </div>
                 )}
                 <h3 className="text-xl font-bold text-gray-800">{post.title}</h3>
               </div>

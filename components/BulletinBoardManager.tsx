@@ -11,6 +11,7 @@ interface BulletinPost {
   author_id: string;
   is_pinned: boolean;
   display_order: number;
+  category: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +21,7 @@ export function BulletinBoardManager() {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPost, setEditingPost] = useState<BulletinPost | null>(null);
-  const [formData, setFormData] = useState({ title: '', content: '', is_pinned: false, display_order: 0 });
+  const [formData, setFormData] = useState({ title: '', content: '', is_pinned: false, display_order: 0, category: '' as string | null });
 
   const fetchPosts = async () => {
     try {
@@ -46,7 +47,7 @@ export function BulletinBoardManager() {
 
   const handleCreate = () => {
     setEditingPost(null);
-    setFormData({ title: '', content: '', is_pinned: false, display_order: 0 });
+    setFormData({ title: '', content: '', is_pinned: false, display_order: 0, category: null });
     setShowEditModal(true);
   };
 
@@ -56,7 +57,8 @@ export function BulletinBoardManager() {
       title: post.title,
       content: post.content,
       is_pinned: post.is_pinned,
-      display_order: post.display_order
+      display_order: post.display_order,
+      category: post.category
     });
     setShowEditModal(true);
   };
@@ -96,7 +98,8 @@ export function BulletinBoardManager() {
             title: formData.title,
             content: formData.content,
             is_pinned: formData.is_pinned,
-            display_order: formData.display_order
+            display_order: formData.display_order,
+            category: formData.category || null
           })
           .eq('id', editingPost.id);
 
@@ -110,7 +113,8 @@ export function BulletinBoardManager() {
             content: formData.content,
             author_id: user.id,
             is_pinned: formData.is_pinned,
-            display_order: formData.display_order
+            display_order: formData.display_order,
+            category: formData.category || null
           });
 
         if (error) throw error;
@@ -180,9 +184,14 @@ export function BulletinBoardManager() {
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
+                  <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
                     {post.is_pinned && (
                       <Pin className="w-5 h-5 text-purple-600" />
+                    )}
+                    {post.category && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold border border-blue-300">
+                        {post.category}
+                      </span>
                     )}
                     <h3 className="text-xl font-bold text-gray-800">{post.title}</h3>
                   </div>
@@ -270,6 +279,24 @@ export function BulletinBoardManager() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="投稿の内容を入力"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    カテゴリー
+                  </label>
+                  <select
+                    value={formData.category || ''}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value || null })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">カテゴリーを選択（任意）</option>
+                    <option value="就活">就活</option>
+                    <option value="サークル">サークル</option>
+                    <option value="学生イベント">学生イベント</option>
+                    <option value="バイト">バイト</option>
+                    <option value="雑談">雑談</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center space-x-6">

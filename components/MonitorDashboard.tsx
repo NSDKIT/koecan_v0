@@ -34,7 +34,10 @@ import {
   BarChart3,
   Brain,
   Heart,
-  Bookmark
+  Bookmark,
+  Home,
+  TrendingUp,
+  HelpCircle
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -52,6 +55,7 @@ import { JobTypeFilterModal } from '@/components/JobTypeFilterModal';
 import { LocationFilterModal } from '@/components/LocationFilterModal';
 import { ValueFilterModal } from '@/components/ValueFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
+import { HomeBulletinBoardPosts } from '@/components/HomeBulletinBoardPosts';
 import { getRandomTip, Tip } from '@/lib/tips';
 
 // 8つの価値観の選択肢（ValueFilterModalと共有）
@@ -66,7 +70,7 @@ const VALUE_OPTIONS = [
   { id: 'J', label: 'ルールが明確で迷わず働ける（J）' },
 ];
 
-type ActiveTab = 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
+type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -113,7 +117,7 @@ export default function MonitorDashboard() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<Answer[]>([]);
   const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('bulletin_board');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
   const menuButtonRef = useRef<HTMLButtonElement>(null); 
 
@@ -2765,6 +2769,175 @@ export default function MonitorDashboard() {
               </div>
             )}
 
+            {activeTab === 'home' && (
+              <div className="space-y-6">
+                {/* 企業紹介セクション */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                      <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
+                      企業紹介
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab('recruitment')}
+                      className="text-sm text-orange-600 hover:text-orange-700 font-semibold flex items-center"
+                    >
+                      もっと見る
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {advertisements
+                      .filter(ad => {
+                        // 直近1ヶ月で掲載された企業をフィルタ
+                        if (!ad.created_at) return false;
+                        const createdDate = new Date(ad.created_at);
+                        const oneMonthAgo = new Date();
+                        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                        return createdDate >= oneMonthAgo;
+                      })
+                      .slice(0, 4)
+                      .map((ad) => (
+                        <div
+                          key={ad.id}
+                          className="border border-gray-200 rounded-xl overflow-hidden cursor-pointer group bg-white"
+                          onClick={() => {
+                            setSelectedAdvertisement(ad);
+                            setCompanyDetailView('info');
+                          }}
+                        >
+                          {(() => {
+                            const imageUrl = ad.image_url;
+                            return (imageUrl && imageUrl.length > 0);
+                          })() ? (
+                            <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                              <img
+                                src={getSecureImageUrl(ad.image_url) || ''}
+                                alt={ad.company_name || '企業情報'}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                crossOrigin="anonymous"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                              <div className="absolute top-2 left-2">
+                                <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
+                                  NEW
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                              <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                              <div className="absolute top-2 left-2">
+                                <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
+                                  NEW
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          {ad.personality_type && (
+                            <div className="p-2 sm:p-3">
+                              <div className="flex items-center justify-end">
+                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
+                                  {ad.personality_type}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                  {advertisements.filter(ad => {
+                    if (!ad.created_at) return false;
+                    const createdDate = new Date(ad.created_at);
+                    const oneMonthAgo = new Date();
+                    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+                    return createdDate >= oneMonthAgo;
+                  }).length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>直近1ヶ月で掲載された企業はありません</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 掲示板セクション */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                      <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
+                      掲示板
+                    </h2>
+                    <button
+                      onClick={() => setActiveTab('bulletin_board')}
+                      className="text-sm text-orange-600 hover:text-orange-700 font-semibold flex items-center"
+                    >
+                      もっと見る
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                  <HomeBulletinBoardPosts />
+                </div>
+
+                {/* バナーセクション */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* 紹介ポイント バナー */}
+                  <div
+                    onClick={() => setShowPointExchangeModal(true)}
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <Star className="w-6 h-6 text-white mr-2" />
+                          <h3 className="text-xl font-bold text-white">紹介ポイント</h3>
+                        </div>
+                        <p className="text-white/90 text-sm mb-2">ポイントを交換して特典をゲット！</p>
+                        <p className="text-white font-bold text-2xl">{profile?.points || 0} ポイント</p>
+                      </div>
+                      <TrendingUp className="w-12 h-12 text-white/80" />
+                    </div>
+                  </div>
+
+                  {/* 今日のクイズ バナー */}
+                  <div
+                    onClick={() => {
+                      if (availableQuizzes.length > 0) {
+                        handleQuizClick(availableQuizzes[0]);
+                      } else {
+                        setActiveTab('surveys');
+                      }
+                    }}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center mb-2">
+                          <Trophy className="w-6 h-6 text-white mr-2" />
+                          <h3 className="text-xl font-bold text-white">今日のクイズ</h3>
+                        </div>
+                        <p className="text-white/90 text-sm mb-2">
+                          {availableQuizzes.length > 0 
+                            ? `${availableQuizzes[0].title}に挑戦！`
+                            : '新しいクイズをお待ちください'}
+                        </p>
+                        {availableQuizzes.length > 0 && (
+                          <div className="flex items-center text-white">
+                            <Gift className="w-4 h-4 mr-1" />
+                            <span className="font-semibold">{availableQuizzes[0].points_reward}ポイント</span>
+                          </div>
+                        )}
+                      </div>
+                      <HelpCircle className="w-12 h-12 text-white/80" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'bulletin_board' && (
               <BulletinBoardDisplay />
             )}
@@ -2774,6 +2947,16 @@ export default function MonitorDashboard() {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div className="max-w-7xl mx-auto flex justify-around h-[83.2px] sm:h-[104px]">
+          <button
+            onClick={() => setActiveTab('home')}
+            className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
+              activeTab === 'home' ? 'text-orange-600' : 'text-gray-500 hover:text-orange-500'
+            }`}
+          >
+            <Home className="w-5 h-5 sm:w-6 sm:h-6 mb-0.5 sm:mb-1" />
+            <span className="hidden sm:inline">ホーム</span>
+            <span className="sm:hidden">ホーム</span>
+          </button>
           <button
             onClick={() => setActiveTab('bulletin_board')}
             className={`flex flex-col items-center justify-center w-full text-xs sm:text-sm font-medium transition-colors ${
