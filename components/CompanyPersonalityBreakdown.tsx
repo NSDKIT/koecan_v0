@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/config/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
@@ -41,147 +41,131 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   const [viewMode, setViewMode] = useState<'chart' | 'statistics'>('chart'); // デフォルトをチャートに
   const [studentAxes, setStudentAxes] = useState<Record<string, number> | null>(null);
 
-  const fetchResults = async () => {
+  // 個別回答データを状態として管理（統計表示でも使用）
+  const [individualData, setIndividualData] = useState<any[]>([]);
+  const [individualDataLoading, setIndividualDataLoading] = useState(false);
+
+  // 全てのデータを並列で取得（高速化）
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
+    setIndividualDataLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('company_personality_results')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('category_type')
-        .order('category_value');
+      // 並列でデータ取得
+      const [resultsResponse, individualResponse, studentResponse] = await Promise.all([
+        // 1. 企業のパーソナリティ結果
+        supabase
+          .from('company_personality_results')
+          .select('*')
+          .eq('company_id', companyId)
+          .order('category_type')
+          .order('category_value'),
+        // 2. 個別回答データ（統計表示用）
+        supabase
+          .from('company_personality_individual_responses')
+          .select('*')
+          .eq('company_id', companyId),
+        // 3. 学生のパーソナリティ（ユーザーがログインしている場合のみ）
+        user?.id ? supabase
+          .from('monitor_personality_responses')
+          .select('category, answer')
+          .eq('user_id', user.id) : Promise.resolve({ data: null, error: null })
+      ]);
 
-      if (error) throw error;
-
-      const jobTypes = data?.filter((r: PersonalityResult) => r.category_type === 'job_type') || [];
-      const years = data?.filter((r: PersonalityResult) => r.category_type === 'years_of_service') || [];
-
+      // 結果を処理
+      if (resultsResponse.error) throw resultsResponse.error;
+      const jobTypes = resultsResponse.data?.filter((r: PersonalityResult) => r.category_type === 'job_type') || [];
+      const years = resultsResponse.data?.filter((r: PersonalityResult) => r.category_type === 'years_of_service') || [];
       setJobTypeResults(jobTypes);
       setYearsResults(years);
+
+      // 個別回答データを設定
+      if (individualResponse.error) {
+        console.error('Error fetching individual data:', individualResponse.error);
+        setIndividualData([]);
+      } else {
+        setIndividualData(individualResponse.data || []);
+      }
+      setIndividualDataLoading(false);
+
+      // 学生のパーソナリティを処理
+      if (studentResponse.data && user?.id) {
+        const data = studentResponse.data;
+        if (data.length > 0) {
+          const scores: Record<string, number> = {
+            market_engagement: 0,
+            growth_strategy: 0,
+            organization_style: 0,
+            decision_making: 0
+          };
+          const counts: Record<string, number> = {
+            market_engagement: 0,
+            growth_strategy: 0,
+            organization_style: 0,
+            decision_making: 0
+          };
+
+          data.forEach((response: { category: string; answer: number }) => {
+            if (scores.hasOwnProperty(response.category)) {
+              scores[response.category] += response.answer;
+              counts[response.category] += 1;
+            }
+          });
+
+          const avgScores: Record<string, number> = {
+            market_engagement: counts.market_engagement > 0 ? scores.market_engagement / counts.market_engagement : 0,
+            growth_strategy: counts.growth_strategy > 0 ? scores.growth_strategy / counts.growth_strategy : 0,
+            organization_style: counts.organization_style > 0 ? scores.organization_style / counts.organization_style : 0,
+            decision_making: counts.decision_making > 0 ? scores.decision_making / counts.decision_making : 0
+          };
+
+          const normalizeScore = (score: number) => Math.abs(score) * 50;
+          const axes: Record<string, number> = {
+            E: 0, I: 0, N: 0, S: 0, P: 0, R: 0, F: 0, O: 0
+          };
+
+          if (avgScores.market_engagement < 0) {
+            axes.E = normalizeScore(avgScores.market_engagement);
+          } else if (avgScores.market_engagement > 0) {
+            axes.I = normalizeScore(avgScores.market_engagement);
+          }
+          if (avgScores.growth_strategy < 0) {
+            axes.N = normalizeScore(avgScores.growth_strategy);
+          } else if (avgScores.growth_strategy > 0) {
+            axes.S = normalizeScore(avgScores.growth_strategy);
+          }
+          if (avgScores.organization_style < 0) {
+            axes.P = normalizeScore(avgScores.organization_style);
+          } else if (avgScores.organization_style > 0) {
+            axes.R = normalizeScore(avgScores.organization_style);
+          }
+          if (avgScores.decision_making < 0) {
+            axes.F = normalizeScore(avgScores.decision_making);
+          } else if (avgScores.decision_making > 0) {
+            axes.O = normalizeScore(avgScores.decision_making);
+          }
+
+          setStudentAxes(axes);
+        } else {
+          setStudentAxes(null);
+        }
+      }
     } catch (err) {
-      console.error('Error fetching company personality results:', err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId, user?.id]);
 
   useEffect(() => {
     if (companyId) {
-      fetchResults();
+      fetchAllData();
     }
-  }, [companyId]);
+  }, [companyId, fetchAllData]);
 
   // ビュー切り替え時に選択状態をリセット
   useEffect(() => {
     setSelectedForComparison(new Set());
   }, [selectedView]);
-
-  // 学生自身のパーソナリティ診断結果を取得
-  useEffect(() => {
-    const fetchStudentPersonality = async () => {
-      if (!user?.id) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('monitor_personality_responses')
-          .select('category, answer')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        if (!data || data.length === 0) {
-          setStudentAxes(null);
-          return;
-        }
-
-        // 各カテゴリーのスコアを合計し、質問数で割って平均を計算
-        const questionCounts: Record<string, number> = {
-          market_engagement: 7,
-          growth_strategy: 7,
-          organization_style: 7,
-          decision_making: 7
-        };
-
-        const scores: Record<string, number> = {
-          market_engagement: 0, // E vs I
-          growth_strategy: 0,   // N vs S
-          organization_style: 0,// P vs R
-          decision_making: 0    // F vs O
-        };
-
-        const counts: Record<string, number> = {
-          market_engagement: 0,
-          growth_strategy: 0,
-          organization_style: 0,
-          decision_making: 0
-        };
-
-        data.forEach((response: { category: string; answer: number }) => {
-          if (scores.hasOwnProperty(response.category)) {
-            scores[response.category] += response.answer;
-            counts[response.category] += 1;
-          }
-        });
-
-        // 各カテゴリーの平均を計算（-2から+2の範囲）
-        const avgScores: Record<string, number> = {
-          market_engagement: counts.market_engagement > 0 ? scores.market_engagement / counts.market_engagement : 0,
-          growth_strategy: counts.growth_strategy > 0 ? scores.growth_strategy / counts.growth_strategy : 0,
-          organization_style: counts.organization_style > 0 ? scores.organization_style / counts.organization_style : 0,
-          decision_making: counts.decision_making > 0 ? scores.decision_making / counts.decision_making : 0
-        };
-
-        // 8軸に変換
-        const axes: Record<string, number> = {
-          E: 0, I: 0,
-          N: 0, S: 0,
-          P: 0, R: 0,
-          F: 0, O: 0
-        };
-
-        // スコアを0-100の範囲に正規化（-2から+2の範囲を0-100に変換）
-        const normalizeScore = (score: number) => {
-          // 絶対値を取って0-100に変換（-2→100, 0→0, +2→100）
-          return Math.abs(score) * 50; // -2から+2の範囲を0-100に変換
-        };
-
-        // 市場への関わり方: E ⇄ I
-        if (avgScores.market_engagement < 0) {
-          axes.E = normalizeScore(avgScores.market_engagement);
-        } else if (avgScores.market_engagement > 0) {
-          axes.I = normalizeScore(avgScores.market_engagement);
-        }
-
-        // 成長・戦略スタンス: N ⇄ S
-        if (avgScores.growth_strategy < 0) {
-          axes.N = normalizeScore(avgScores.growth_strategy);
-        } else if (avgScores.growth_strategy > 0) {
-          axes.S = normalizeScore(avgScores.growth_strategy);
-        }
-
-        // 組織運営スタンス: P ⇄ R
-        if (avgScores.organization_style < 0) {
-          axes.P = normalizeScore(avgScores.organization_style);
-        } else if (avgScores.organization_style > 0) {
-          axes.R = normalizeScore(avgScores.organization_style);
-        }
-
-        // 意思決定スタイル: F ⇄ O
-        if (avgScores.decision_making < 0) {
-          axes.F = normalizeScore(avgScores.decision_making);
-        } else if (avgScores.decision_making > 0) {
-          axes.O = normalizeScore(avgScores.decision_making);
-        }
-
-        setStudentAxes(axes);
-      } catch (err) {
-        console.error('Error fetching student personality:', err);
-        setStudentAxes(null);
-      }
-    };
-
-    fetchStudentPersonality();
-  }, [user?.id]);
 
   const toggleCategory = (categoryValue: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -296,71 +280,21 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
     return axes;
   };
 
-  // 個人データを取得（Supabaseから）
-  const [individualData, setIndividualData] = useState<any[]>([]);
-  
-  useEffect(() => {
-    const fetchIndividualData = async () => {
-      try {
-        // Supabaseから個別回答データを取得
-        const { data, error } = await supabase
-          .from('company_personality_individual_responses')
-          .select('*')
-          .eq('company_id', companyId);
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-          // 選択されたカテゴリーに該当するデータのみをフィルタリング
-          // selectedResultsが空の場合は、currentResultsを使用
-          const resultsToUse = selectedResults.length > 0 ? selectedResults : currentResults;
-          const filtered = data.filter((row: any) => {
-            if (selectedView === 'job') {
-              // 職種別の場合：選択された職種に該当するすべての従業員
-              return resultsToUse.some((r: PersonalityResult) => r.category_value === row.job_type);
-            } else {
-              // 年代別の場合：選択された年代に該当するすべての従業員
-              return resultsToUse.some((r: PersonalityResult) => r.category_value === row.years_of_service);
-            }
-          });
-          setIndividualData(filtered);
-        } else {
-          setIndividualData([]);
-        }
-      } catch (err) {
-        console.error('Error loading individual data from Supabase:', err);
-        // フォールバック: localStorageから取得
-        try {
-          const storedData = localStorage.getItem('company_personality_data');
-          if (storedData) {
-            const data = JSON.parse(storedData);
-            const resultsToUse = selectedResults.length > 0 ? selectedResults : currentResults;
-            const filtered = data.filter((row: any) => {
-              if (!row.company_id || row.company_id !== companyId) return false;
-              if (selectedView === 'job') {
-                return resultsToUse.some((r: PersonalityResult) => r.category_value === row.job_type);
-              } else {
-                return resultsToUse.some((r: PersonalityResult) => r.category_value === row.years_of_service);
-              }
-            });
-            setIndividualData(filtered);
-          }
-        } catch (localErr) {
-          console.error('Error loading individual data from localStorage:', localErr);
-          setIndividualData([]);
-        }
+  // 個別データをフィルタリング（レーダーチャート用）
+  const filteredIndividualData = useMemo(() => {
+    if (!individualData || individualData.length === 0) return [];
+    const resultsToUse = selectedResults.length > 0 ? selectedResults : currentResults;
+    return individualData.filter((row: any) => {
+      if (selectedView === 'job') {
+        return resultsToUse.some((r: PersonalityResult) => r.category_value === row.job_type);
+      } else {
+        return resultsToUse.some((r: PersonalityResult) => r.category_value === row.years_of_service);
       }
-    };
-
-    if (companyId && currentResults.length > 0) {
-      fetchIndividualData();
-    } else {
-      setIndividualData([]);
-    }
-  }, [selectedResults, selectedView, companyId, currentResults]);
+    });
+  }, [individualData, selectedResults, selectedView, currentResults]);
 
   // 個人データを8軸に変換し、職種別/年代別にグループ化
-  const individual8AxesDataWithCategory = individualData.map((row: any) => {
+  const individual8AxesDataWithCategory = filteredIndividualData.map((row: any) => {
     // 各質問の回答を合計してスコアを計算
     const marketEngagement = (row.market_engagement_q1 || 0) + (row.market_engagement_q2 || 0) + (row.market_engagement_q3 || 0);
     const growthStrategy = (row.growth_strategy_q1 || 0) + (row.growth_strategy_q2 || 0) + (row.growth_strategy_q3 || 0) + (row.growth_strategy_q4 || 0);
@@ -805,6 +739,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           companyId={companyId}
           selectedView={selectedView}
           studentAxes={studentAxes}
+          individualData={individualData}
         />
       )}
 

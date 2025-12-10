@@ -23,6 +23,7 @@ interface CompanyPersonalityStatisticsProps {
   companyId: string; // 個別回答データを取得するために必要
   selectedView: 'job' | 'years'; // 現在選択されているビュー
   studentAxes?: Record<string, number> | null;
+  individualData?: any[]; // 個別回答データ（親コンポーネントから渡される）
 }
 
 // スコアを0-100の範囲に正規化
@@ -36,31 +37,9 @@ export function CompanyPersonalityStatistics({
   yearsResults,
   companyId,
   selectedView,
-  studentAxes
+  studentAxes,
+  individualData = [] // propsから受け取る（デフォルトは空配列）
 }: CompanyPersonalityStatisticsProps) {
-  const [individualData, setIndividualData] = React.useState<any[]>([]);
-
-  // 個別回答データを取得
-  React.useEffect(() => {
-    const fetchIndividualData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('company_personality_individual_responses')
-          .select('*')
-          .eq('company_id', companyId);
-
-        if (error) throw error;
-        setIndividualData(data || []);
-      } catch (err) {
-        console.error('Error fetching individual data:', err);
-        setIndividualData([]);
-      }
-    };
-
-    if (companyId) {
-      fetchIndividualData();
-    }
-  }, [companyId]);
   
   // UI値（1-5）をDB値（-2〜+2）に変換
   const convertUIToDB = (uiValue: number): number => {
