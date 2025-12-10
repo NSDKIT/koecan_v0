@@ -268,7 +268,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -317,7 +318,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -366,7 +368,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -430,7 +433,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -479,7 +483,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -528,7 +533,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
@@ -577,7 +583,8 @@ export function CompanyPersonalityStatistics({
                   <XAxis 
                     type="number"
                     dataKey="xValue"
-                    domain={[-2, 2]}
+                    domain={[-3, 3]}
+                    ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
                     label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
