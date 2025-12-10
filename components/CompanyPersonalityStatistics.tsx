@@ -208,6 +208,7 @@ export function CompanyPersonalityStatistics({
               <BarChart 
                 data={jobMarketData} 
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                barCategoryGap={0}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis 
