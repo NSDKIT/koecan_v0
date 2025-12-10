@@ -2135,9 +2135,11 @@ export default function MonitorDashboard() {
                       <div className="text-base sm:text-lg font-bold text-gray-900">
                         8つの価値観から選択
                       </div>
-                      <div className="text-xs sm:text-sm text-gray-500">
-                        {selectedValues.length > 0 ? `${selectedValues.length}個選択中` : 'を選択する'}
-                      </div>
+                      {selectedValues.length > 0 && (
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          {selectedValues.length}個選択中
+                        </div>
+                      )}
                     </div>
                     <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                   </button>
@@ -2162,9 +2164,11 @@ export default function MonitorDashboard() {
                         <div className="text-base sm:text-lg font-bold text-gray-900">
                           業界
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {selectedIndustries.length > 0 ? `${selectedIndustries.length}個選択中` : 'を選択する'}
-                        </div>
+                        {selectedIndustries.length > 0 && (
+                          <div className="text-xs sm:text-sm text-gray-500">
+                            {selectedIndustries.length}個選択中
+                          </div>
+                        )}
                       </div>
                       <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                     </button>
@@ -2187,9 +2191,11 @@ export default function MonitorDashboard() {
                         <div className="text-base sm:text-lg font-bold text-gray-900">
                           職種
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {selectedJobTypes.length > 0 ? `${selectedJobTypes.length}個選択中` : 'を選択する'}
-                        </div>
+                        {selectedJobTypes.length > 0 && (
+                          <div className="text-xs sm:text-sm text-gray-500">
+                            {selectedJobTypes.length}個選択中
+                          </div>
+                        )}
                       </div>
                       <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                     </button>
@@ -2212,9 +2218,11 @@ export default function MonitorDashboard() {
                         <div className="text-base sm:text-lg font-bold text-gray-900">
                           勤務地
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-500">
-                          {selectedLocations.length > 0 ? `${selectedLocations.length}個選択中` : 'を選択する'}
-                        </div>
+                        {selectedLocations.length > 0 && (
+                          <div className="text-xs sm:text-sm text-gray-500">
+                            {selectedLocations.length}個選択中
+                          </div>
+                        )}
                       </div>
                       <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
                     </button>
