@@ -458,7 +458,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            </div>
 
             {/* 成長・戦略 (N ~ S) - 年代別 */}
             <div className="bg-white rounded-xl p-6 border-2 border-green-200 shadow-lg">
@@ -507,7 +507,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            </div>
 
             {/* 組織運営 (P ~ R) - 年代別 */}
             <div className="bg-white rounded-xl p-6 border-2 border-orange-200 shadow-lg">
@@ -556,7 +556,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
-          </div>
+            </div>
 
             {/* 意思決定 (F ~ O) - 年代別 */}
             <div className="bg-white rounded-xl p-6 border-2 border-pink-200 shadow-lg">
@@ -605,6 +605,7 @@ export function CompanyPersonalityStatistics({
                 ))}
               </BarChart>
             </ResponsiveContainer>
+            </div>
           </div>
         </div>
       )}
