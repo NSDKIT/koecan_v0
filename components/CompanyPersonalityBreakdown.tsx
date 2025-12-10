@@ -845,6 +845,7 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           jobTypeResults={jobTypeResults}
           yearsResults={yearsResults}
           companyId={companyId}
+          selectedView={selectedView}
           studentAxes={studentAxes}
         />
       )}

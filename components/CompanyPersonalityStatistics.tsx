@@ -21,6 +21,7 @@ interface CompanyPersonalityStatisticsProps {
   jobTypeResults: PersonalityResult[]; // 職種別の結果
   yearsResults: PersonalityResult[];    // 年代別の結果
   companyId: string; // 個別回答データを取得するために必要
+  selectedView: 'job' | 'years'; // 現在選択されているビュー
   studentAxes?: Record<string, number> | null;
 }
 
@@ -58,6 +59,7 @@ export function CompanyPersonalityStatistics({
   jobTypeResults,
   yearsResults,
   companyId,
+  selectedView,
   studentAxes
 }: CompanyPersonalityStatisticsProps) {
   const [individualData, setIndividualData] = React.useState<any[]>([]);
