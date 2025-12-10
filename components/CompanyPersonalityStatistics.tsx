@@ -215,7 +215,7 @@ export function CompanyPersonalityStatistics({
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={jobMarketData} 
-                margin={{ top: 10, right: 0, left: 0, bottom: 40 }}
+                margin={{ top: 10, right: 0, left: 0, bottom: 60 }}
                 barCategoryGap={0}
                 barGap={0}
               >
@@ -226,7 +226,7 @@ export function CompanyPersonalityStatistics({
                   domain={[-3, 3]}
                   ticks={[-2, -1, 0, 1, 2]}
                   tick={{ fontSize: 14, fill: '#6b7280' }}
-                  label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                  label={{ value: 'E ← → I', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                 />
                 <YAxis 
                   type="number"
@@ -272,7 +272,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobGrowthData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -283,7 +283,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'N ← → S', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -329,7 +329,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobOrgData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -340,7 +340,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'P ← → R', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -386,7 +386,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={jobDecisionData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -397,7 +397,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'F ← → O', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -458,7 +458,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsMarketData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -469,7 +469,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'E ← → I', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'E ← → I', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -515,7 +515,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsGrowthData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -526,7 +526,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'N ← → S', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'N ← → S', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -572,7 +572,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsOrgData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -583,7 +583,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'P ← → R', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'P ← → R', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
@@ -629,7 +629,7 @@ export function CompanyPersonalityStatistics({
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart 
                   data={yearsDecisionData} 
-                  margin={{ top: 10, right: 20, left: 10, bottom: 40 }}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 60 }}
                   barCategoryGap={0}
                   barGap={0}
                 >
@@ -640,7 +640,7 @@ export function CompanyPersonalityStatistics({
                     domain={[-3, 3]}
                     ticks={[-2, -1, 0, 1, 2]}
                     tick={{ fontSize: 14, fill: '#6b7280' }}
-                    label={{ value: 'F ← → O', position: 'insideBottom', offset: -5, style: { fill: '#6b7280', fontSize: '14px' } }}
+                    label={{ value: 'F ← → O', position: 'bottom', offset: 10, style: { fill: '#6b7280', fontSize: '14px' } }}
                   />
                   <YAxis 
                     type="number"
