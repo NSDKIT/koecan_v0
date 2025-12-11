@@ -20,6 +20,17 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // カメラの状態を保持するためのref
+  const cameraStateRef = useRef<{
+    yaw: number;
+    pitch: number;
+    currentStudentPosition: THREE.Vector3 | null;
+  }>({
+    yaw: 0,
+    pitch: 0,
+    currentStudentPosition: null
+  });
 
   // パーソナリティタイプを数値に変換（簡易版）
   const personalityTypeToPosition = (type: string | null): THREE.Vector3 => {
@@ -192,17 +203,27 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     // ファーストパーソン視点のコントロール
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let yaw = 0; // 左右の回転
-    let pitch = 0; // 上下の回転
+    
+    // カメラの状態を初期化（既存の状態があれば使用、なければ初期値）
+    let yaw = cameraStateRef.current.yaw;
+    let pitch = cameraStateRef.current.pitch;
+    let currentStudentPosition: THREE.Vector3;
+    
+    if (cameraStateRef.current.currentStudentPosition) {
+      // 既存の状態があれば使用
+      currentStudentPosition = cameraStateRef.current.currentStudentPosition;
+    } else {
+      // 初回のみ初期位置を設定
+      currentStudentPosition = new THREE.Vector3(
+        studentPosition.x,
+        1.6, // 目の高さ（地面から1.6m）
+        studentPosition.z
+      );
+      cameraStateRef.current.currentStudentPosition = currentStudentPosition;
+    }
+    
     const moveSpeed = 0.1;
     const keys: { [key: string]: boolean } = {};
-
-    // 学生アバターの位置を追跡（目の高さ）
-    let currentStudentPosition = new THREE.Vector3(
-      studentPosition.x,
-      1.6, // 目の高さ（地面から1.6m）
-      studentPosition.z
-    );
 
     const onMouseDown = (e: MouseEvent) => {
       // 通常通りドラッグを開始
@@ -220,6 +241,10 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       yaw -= deltaX * 0.002;
       pitch -= deltaY * 0.002;
       pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // 上下の回転を制限
+      
+      // 状態を保存
+      cameraStateRef.current.yaw = yaw;
+      cameraStateRef.current.pitch = pitch;
 
       previousMousePosition = { x: e.clientX, y: e.clientY };
     };
@@ -261,6 +286,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
         // 移動
         currentStudentPosition.add(direction.multiplyScalar(moveSpeed));
         currentStudentPosition.y = 1.6; // Y座標は固定（目の高さ）
+        
+        // 状態を保存
+        cameraStateRef.current.currentStudentPosition = currentStudentPosition;
       }
     };
 
@@ -281,6 +309,11 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       // カメラの位置と回転を更新（視点を固定）
       camera.position.copy(currentStudentPosition);
       camera.rotation.set(pitch, yaw, 0);
+      
+      // 状態を保存（アニメーションループ内でも更新）
+      cameraStateRef.current.yaw = yaw;
+      cameraStateRef.current.pitch = pitch;
+      cameraStateRef.current.currentStudentPosition = currentStudentPosition;
       
       // 学生アバターの位置も更新（可視化のため）
       // 体の下端が0になるように配置（体の中心が0.4なので、位置は0）
