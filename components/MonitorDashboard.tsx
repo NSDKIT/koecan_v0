@@ -3958,6 +3958,21 @@ export default function MonitorDashboard() {
           }}
         />
       )}
+
+      {/* 3Dマップモーダル */}
+      {showCompanyMap3D && (
+        <CompanyMap3D
+          onClose={() => setShowCompanyMap3D(false)}
+          studentPersonalityType={personalityType}
+          companies={advertisements
+            .filter(ad => ad.personality_type && ad.is_active)
+            .map(ad => ({
+              id: ad.id,
+              name: ad.company_name || '企業名未設定',
+              personality_type: ad.personality_type
+            }))}
+        />
+      )}
       
       {showLineLinkModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
