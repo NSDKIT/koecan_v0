@@ -56,7 +56,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const studentPosition = personalityTypeToPosition(studentPersonalityType);
     
     // カメラの作成（ファーストパーソン視点 - 目の高さに配置）
-    camera.position.set(studentPosition.x, studentPosition.y + 1.6, studentPosition.z); // 目の高さ（約1.6m）
+    camera.position.set(studentPosition.x, 1.6, studentPosition.z); // 目の高さ（約1.6m、地面から）
     camera.rotation.set(0, 0, 0); // 水平方向を向く
     cameraRef.current = camera;
 
@@ -150,7 +150,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
         color: new THREE.Color().setHSL(index * 0.1, 0.7, 0.5)
       });
       const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-      building.position.y = 0.5;
+      building.position.y = 0.5; // 建物の中心が0.5（高さ1なので、0.0〜1.0）
       building.castShadow = true;
       building.receiveShadow = true;
       buildingGroup.add(building);
@@ -177,7 +177,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       }
 
       buildingGroup.position.copy(companyPosition);
-      buildingGroup.position.y = 0.5; // 建物の高さが1なので、中心が0.5で地面に接する
+      buildingGroup.position.y = 0; // 地面に接する（建物の下端が0になる）
       scene.add(buildingGroup);
     });
 
@@ -274,10 +274,10 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       camera.rotation.set(pitch, yaw, 0);
       
       // 学生アバターの位置も更新（可視化のため）
-      // 体の中心が0.4なので、目の高さ1.6mから計算すると0.4になる
+      // 体の下端が0になるように配置（体の中心が0.4なので、位置は0）
       studentGroup.position.set(
         currentStudentPosition.x,
-        0.4, // 地面に足をつける
+        0, // 地面に足をつける
         currentStudentPosition.z
       );
       studentGroup.rotation.y = yaw + Math.PI; // カメラの向きに合わせて回転
