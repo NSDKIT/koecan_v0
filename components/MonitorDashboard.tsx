@@ -70,7 +70,7 @@ const VALUE_OPTIONS = [
   { id: 'J', label: 'ルールが明確で迷わず働ける（J）' },
 ];
 
-type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board';
+type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board' | 'mypage';
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -1851,7 +1851,10 @@ export default function MonitorDashboard() {
                   </button>
                 )}
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  onClick={() => {
+                    setActiveTab('mypage');
+                    setIsMenuOpen(false);
+                  }}
                   className="ml-auto p-1"
                 >
                   <UserIcon className="w-7 h-7 text-white" />
@@ -1883,7 +1886,10 @@ export default function MonitorDashboard() {
                 </button>
                 )}
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  onClick={() => {
+                    setActiveTab('mypage');
+                    setIsMenuOpen(false);
+                  }}
                   className="ml-auto p-1 text-gray-700 hover:text-orange-600 transition-colors"
                 >
                   <UserIcon className="w-7 h-7" />
@@ -1893,45 +1899,6 @@ export default function MonitorDashboard() {
           </div>
         </header>
 
-        {isMenuOpen && (
-          <div
-            id="hamburger-menu-dropdown" 
-            className="fixed right-4 top-16 mt-2 w-56 bg-white rounded-lg py-2 z-[1000] border border-gray-100" 
-            style={{ zIndex: 1000 }} 
-          >
-            
-            <button
-              onClick={() => {
-                setShowProfileModal(true);
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <UserIcon className="w-5 h-5 mr-2" />
-              プロフィール設定
-            </button>
-            <button
-              onClick={() => {
-                setShowPersonalityAssessmentModal(true); 
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 w-full text-left"
-            >
-              <BarChart3 className="w-5 h-5 mr-2" /> 
-              価値観診断
-            </button>
-            <button
-              onClick={() => {
-                signOut();
-                setIsMenuOpen(false);
-              }}
-              className="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 w-full text-left"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              ログアウト
-            </button>
-          </div>
-        )}
 
         <main className={`mx-auto ${
           activeTab === 'career_consultation' ? 'pb-20' : 'max-w-7xl px-0 sm:px-6 lg:px-8 pt-8 pb-20'
@@ -3014,6 +2981,96 @@ export default function MonitorDashboard() {
 
             {activeTab === 'bulletin_board' && (
               <BulletinBoardDisplay />
+            )}
+
+            {activeTab === 'mypage' && (
+              <div className="space-y-6">
+                {/* マイページヘッダー */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                  <div className="flex items-center mb-6">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mr-4">
+                      <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">マイページ</h1>
+                      <p className="text-sm sm:text-base text-gray-600 mt-1">
+                        {profile?.points || 0} ポイント
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* プロフィール設定 */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
+                    プロフィール設定
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600 mb-6">
+                    プロフィール情報を編集できます
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowProfileModal(true);
+                    }}
+                    className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center"
+                  >
+                    <UserIcon className="w-5 h-5 mr-2" />
+                    プロフィールを編集
+                  </button>
+                </div>
+
+                {/* 価値観診断 */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
+                    価値観診断
+                  </h2>
+                  {personalityType ? (
+                    <div className="mb-6">
+                      <p className="text-sm sm:text-base text-gray-600 mb-2">
+                        あなたのパーソナリティタイプ:
+                      </p>
+                      <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
+                        {personalityType}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm sm:text-base text-gray-600 mb-6">
+                      まだ診断を受けていません
+                    </p>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowPersonalityAssessmentModal(true);
+                    }}
+                    className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center"
+                  >
+                    <BarChart3 className="w-5 h-5 mr-2" />
+                    {personalityType ? '診断を再受ける' : '診断を受ける'}
+                  </button>
+                </div>
+
+                {/* ログアウト */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <LogOut className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-red-600" />
+                    ログアウト
+                  </h2>
+                  <p className="text-sm sm:text-base text-gray-600 mb-6">
+                    アカウントからログアウトします
+                  </p>
+                  <button
+                    onClick={() => {
+                      signOut();
+                    }}
+                    className="w-full px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors flex items-center justify-center"
+                  >
+                    <LogOut className="w-5 h-5 mr-2" />
+                    ログアウト
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </main>
