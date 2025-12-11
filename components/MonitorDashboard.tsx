@@ -37,7 +37,8 @@ import {
   Bookmark,
   Home,
   TrendingUp,
-  HelpCircle
+  HelpCircle,
+  Download
 } from 'lucide-react';
 import { ProfileModal } from '@/components/ProfileModal';
 import { CareerConsultationModal } from '@/components/CareerConsultationModal';
@@ -3101,31 +3102,39 @@ export default function MonitorDashboard() {
                           </button>
                         </div>
 
-                        <div className="flex flex-col items-center mb-8">
-                          {(() => {
-                            let videoType = typeCode;
-                            if (videoType.length === 4) {
-                              return (
-                                <video
-                                  src={`/character/${videoType}.mp4`}
-                                  autoPlay
-                                  loop
-                                  muted
-                                  playsInline
-                                  className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg mb-4"
-                                />
-                              );
-                            }
-                            return null;
-                          })()}
-                          <div className="text-center">
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-                              あなたのタイプ: <span className="text-purple-600">{typeInfo.code}</span>
-                            </h2>
+                        {/* キャラクターカードと説明文のレイアウト */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          {/* 左側：キャラクターカード */}
+                          <div className="flex flex-col items-center">
+                            <div className="relative mb-4">
+                              <img
+                                src={`/character/${typeCode}.png`}
+                                alt={`${typeInfo.name} キャラクターカード`}
+                                className="w-full max-w-sm rounded-lg shadow-lg"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <button
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/character/${typeCode}.png`;
+                                link.download = `${typeInfo.code}_${typeInfo.name}_キャラクターカード.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              }}
+                              className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                            >
+                              <Download className="w-5 h-5" />
+                              キャラクターカードをダウンロード
+                            </button>
                           </div>
-                        </div>
 
-                        <div className="space-y-6">
+                          {/* 右側：説明文 */}
+                          <div className="space-y-6">
                           {/* 基本性格 */}
                           <section className="bg-white border-2 border-purple-200 rounded-lg p-4 sm:p-6">
                             <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
@@ -3218,6 +3227,7 @@ export default function MonitorDashboard() {
                               {typeInfo.details.summary}
                             </p>
                           </section>
+                          </div>
                         </div>
                       </div>
                     </>
