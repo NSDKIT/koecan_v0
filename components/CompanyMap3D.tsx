@@ -117,6 +117,11 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     studentGroup.position.y = 0.4; // 地面に足をつける（体の中心が0.4なので、足が地面に接する）
     scene.add(studentGroup);
 
+    // レイキャスター（クリック検出用）
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const buildingGroups: THREE.Group[] = [];
+
     // 同じタイプの企業をグループ化して、位置をずらす
     const companiesByType = new Map<string, number>();
     
