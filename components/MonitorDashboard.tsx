@@ -2981,6 +2981,17 @@ export default function MonitorDashboard() {
                       <span className="text-white text-sm font-medium">今日のクイズに回答する</span>
                     </div>
                   </div>
+
+                  {/* 3Dマップで遊ぶ バナー */}
+                  <div
+                    onClick={() => setShowCompanyMap3D(true)}
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity"
+                  >
+                    <div className="flex items-center justify-center text-center">
+                      <MapPin className="w-4 h-4 mr-2 text-white" />
+                      <span className="text-white text-sm font-medium">3Dマップで遊ぶ</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
