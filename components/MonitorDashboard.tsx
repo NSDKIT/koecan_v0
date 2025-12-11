@@ -2989,13 +2989,10 @@ export default function MonitorDashboard() {
               <div className="space-y-6">
                 {/* プロフィール設定 */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
                     プロフィール設定
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 mb-6">
-                    プロフィール情報を編集できます
-                  </p>
                   <button
                     onClick={() => {
                       setShowProfileModal(true);
@@ -3009,19 +3006,14 @@ export default function MonitorDashboard() {
 
                 {/* 価値観診断 */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600" />
                     価値観診断
                   </h2>
                   {personalityType ? (
                     <div className="mb-6 space-y-4">
-                      <div>
-                        <p className="text-sm sm:text-base text-gray-600 mb-2">
-                          あなたのパーソナリティタイプ:
-                        </p>
-                        <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
-                          {personalityType}
-                        </div>
+                      <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
+                        {personalityType}
                       </div>
                       <button
                         onClick={() => {
@@ -3033,11 +3025,7 @@ export default function MonitorDashboard() {
                         キャラクター紹介を見る
                       </button>
                     </div>
-                  ) : (
-                    <p className="text-sm sm:text-base text-gray-600 mb-6">
-                      まだ診断を受けていません
-                    </p>
-                  )}
+                  ) : null}
                   <button
                     onClick={() => {
                       setShowPersonalityAssessmentModal(true);
@@ -3051,13 +3039,10 @@ export default function MonitorDashboard() {
 
                 {/* ログアウト */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <LogOut className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-red-600" />
                     ログアウト
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 mb-6">
-                    アカウントからログアウトします
-                  </p>
                   <button
                     onClick={() => {
                       signOut();
