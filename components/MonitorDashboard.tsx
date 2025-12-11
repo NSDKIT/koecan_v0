@@ -72,7 +72,7 @@ const VALUE_OPTIONS = [
   { id: 'J', label: 'ルールが明確で迷わず働ける（J）' },
 ];
 
-type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board' | 'mypage' | 'character';
+type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board' | 'mypage' | 'character' | 'character_list';
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -130,6 +130,7 @@ export default function MonitorDashboard() {
   const [personalityType, setPersonalityType] = useState<string | null>(null);
   const [showCompanyPersonalityTypeModal, setShowCompanyPersonalityTypeModal] = useState(false);
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
+  const [selectedCharacterType, setSelectedCharacterType] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
   const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [lineUserId, setLineUserId] = useState<string | null>(null);
