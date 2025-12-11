@@ -3408,7 +3408,14 @@ export default function MonitorDashboard() {
 
               {/* ヘッダー - 白背景にオレンジテキスト */}
               <div className="bg-white p-4 sm:p-8 pb-4 sm:pb-6 pt-12 sm:pt-16">
-                <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-4 sm:mb-6">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+                <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 flex-wrap">
+                  <h2 className="text-2xl sm:text-4xl font-bold text-orange-600">{displayValue(selectedAdvertisement.company_name) || '企業名未設定'}</h2>
+                  {selectedAdvertisement.personality_type && (
+                    <div className="inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-base sm:text-lg">
+                      {selectedAdvertisement.personality_type}
+                    </div>
+                  )}
+                </div>
                 
                 {/* タブ切り替えボタン */}
                 <div className="flex space-x-2 sm:space-x-4">
