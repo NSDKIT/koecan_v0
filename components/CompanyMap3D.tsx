@@ -179,6 +179,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       buildingGroup.position.copy(companyPosition);
       buildingGroup.position.y = 0; // 地面に接する（建物の下端が0になる）
       scene.add(buildingGroup);
+      
+      // クリック検出用に配列に追加
+      buildingGroups.push(buildingGroup);
     });
 
     // ファーストパーソン視点のコントロール
@@ -196,7 +199,27 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       studentPosition.z
     );
 
+    // レイキャスター（クリック検出用）
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const buildingGroups: THREE.Group[] = [];
+
     const onMouseDown = (e: MouseEvent) => {
+      // クリック位置を正規化
+      mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+      mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+      // レイキャスターでクリックしたオブジェクトを検出
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(buildingGroups, true);
+
+      // 企業の建物やラベルをクリックした場合は、ドラッグを開始しない
+      if (intersects.length > 0) {
+        // 企業をクリックした場合の処理（必要に応じて追加）
+        // ここでは何もしない（カメラ位置をリセットしない）
+        return;
+      }
+
       isDragging = true;
       previousMousePosition = { x: e.clientX, y: e.clientY };
     };
