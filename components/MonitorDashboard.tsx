@@ -70,7 +70,7 @@ const VALUE_OPTIONS = [
   { id: 'J', label: 'ルールが明確で迷わず働ける（J）' },
 ];
 
-type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board' | 'mypage';
+type ActiveTab = 'home' | 'surveys' | 'recruitment' | 'career_consultation' | 'bulletin_board' | 'mypage' | 'character';
 
 const SUPABASE_SUPPORT_USER_ID = '39087559-d1da-4fd7-8ef9-4143de30d06d';
 const C8_LINE_ADD_URL = 'https://lin.ee/f2zHhiB';
@@ -2985,21 +2985,6 @@ export default function MonitorDashboard() {
 
             {activeTab === 'mypage' && (
               <div className="space-y-6">
-                {/* マイページヘッダー */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
-                  <div className="flex items-center mb-6">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mr-4">
-                      <UserIcon className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">マイページ</h1>
-                      <p className="text-sm sm:text-base text-gray-600 mt-1">
-                        {profile?.points || 0} ポイント
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* プロフィール設定 */}
                 <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 flex items-center">
@@ -3027,13 +3012,24 @@ export default function MonitorDashboard() {
                     価値観診断
                   </h2>
                   {personalityType ? (
-                    <div className="mb-6">
-                      <p className="text-sm sm:text-base text-gray-600 mb-2">
-                        あなたのパーソナリティタイプ:
-                      </p>
-                      <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
-                        {personalityType}
+                    <div className="mb-6 space-y-4">
+                      <div>
+                        <p className="text-sm sm:text-base text-gray-600 mb-2">
+                          あなたのパーソナリティタイプ:
+                        </p>
+                        <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
+                          {personalityType}
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          setActiveTab('character');
+                        }}
+                        className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center"
+                      >
+                        <UserIcon className="w-5 h-5 mr-2" />
+                        キャラクター紹介を見る
+                      </button>
                     </div>
                   ) : (
                     <p className="text-sm sm:text-base text-gray-600 mb-6">
