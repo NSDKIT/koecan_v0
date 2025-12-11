@@ -3976,7 +3976,7 @@ export default function MonitorDashboard() {
           onClose={() => setShowCompanyMap3D(false)}
           studentPersonalityType={personalityType}
           companies={advertisements
-            .filter(ad => ad.personality_type && ad.is_active)
+            .filter(ad => ad.is_active)
             .map(ad => ({
               id: ad.id,
               name: ad.company_name || '企業名未設定',
