@@ -2462,6 +2462,13 @@ export default function MonitorDashboard() {
                                         <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                                       </button>
                                     </div>
+                                    {ad.personality_type && (
+                                      <div className="absolute top-12 right-2 z-10">
+                                        <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                          {ad.personality_type}
+                                        </div>
+                                      </div>
+                                    )}
                                     {displayValue(ad.company_vision) && (
                                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                         <div className="flex items-center gap-1 mb-0.5">
@@ -2475,8 +2482,15 @@ export default function MonitorDashboard() {
                                     )}
                           </div>
                         ) : (
-                                  <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                  <div className="w-full aspect-[16/9] bg-gray-200 flex items-center justify-center relative">
                                     <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
+                                    {ad.personality_type && (
+                                      <div className="absolute top-2 right-2 z-10">
+                                        <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                          {ad.personality_type}
+                                        </div>
+                                      </div>
+                                    )}
                                     {displayValue(ad.company_vision) && (
                                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                         <div className="flex items-center gap-1 mb-0.5">
@@ -2488,15 +2502,6 @@ export default function MonitorDashboard() {
                                         </p>
                           </div>
                         )}
-                                  </div>
-                                )}
-                                {ad.personality_type && (
-                                  <div className="p-3 sm:p-4">
-                                    <div className="flex items-center justify-end">
-                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
-                                        {ad.personality_type}
-                                      </div>
-                                    </div>
                                   </div>
                                 )}
                       </div>
@@ -2607,6 +2612,13 @@ export default function MonitorDashboard() {
                                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                                               </button>
                         </div>
+                                            {ad.personality_type && (
+                                              <div className="absolute top-12 right-2 z-10">
+                                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                                  {ad.personality_type}
+                                                </div>
+                                              </div>
+                                            )}
                                             {displayValue(ad.company_vision) && (
                                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2647,6 +2659,13 @@ export default function MonitorDashboard() {
                                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                                               </button>
                                             </div>
+                                            {ad.personality_type && (
+                                              <div className="absolute top-12 right-2 z-10">
+                                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                                  {ad.personality_type}
+                                                </div>
+                                              </div>
+                                            )}
                                             {displayValue(ad.company_vision) && (
                                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2658,15 +2677,6 @@ export default function MonitorDashboard() {
                                                 </p>
                                               </div>
                                             )}
-                                          </div>
-                                        )}
-                                        {ad.personality_type && (
-                                          <div className="p-3 sm:p-4">
-                                            <div className="flex items-center justify-end">
-                                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
-                                                {ad.personality_type}
-                                              </div>
-                                            </div>
                                           </div>
                                         )}
                                       </div>
@@ -2756,6 +2766,13 @@ export default function MonitorDashboard() {
                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                               </button>
                 </div>
+                            {ad.personality_type && (
+                              <div className="absolute top-12 right-2 z-10">
+                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                  {ad.personality_type}
+                                </div>
+                              </div>
+                            )}
                             {displayValue(ad.company_vision) && (
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2796,6 +2813,13 @@ export default function MonitorDashboard() {
                                 <Bookmark className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${savedCompanyIds.has(ad.id) ? 'fill-current' : ''}`} />
                               </button>
                             </div>
+                            {ad.personality_type && (
+                              <div className="absolute top-12 right-2 z-10">
+                                <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                  {ad.personality_type}
+                                </div>
+                              </div>
+                            )}
                             {displayValue(ad.company_vision) && (
                               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                 <div className="flex items-center gap-1 mb-0.5">
@@ -2807,16 +2831,6 @@ export default function MonitorDashboard() {
                                 </p>
                               </div>
                             )}
-                          </div>
-                        )}
-                        
-                        {ad.personality_type && (
-                          <div className="p-3 sm:p-4">
-                            <div className="flex items-center justify-end">
-                              <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
-                                {ad.personality_type}
-                              </div>
-                            </div>
                           </div>
                         )}
                       </div>
@@ -2891,6 +2905,13 @@ export default function MonitorDashboard() {
                                         NEW
                                       </span>
                                     </div>
+                                    {ad.personality_type && (
+                                      <div className="absolute top-2 right-2 z-10">
+                                        <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                          {ad.personality_type}
+                                        </div>
+                                      </div>
+                                    )}
                                     {displayValue(ad.company_vision) && (
                                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                                         <div className="flex items-center gap-1 mb-0.5">
@@ -2904,13 +2925,20 @@ export default function MonitorDashboard() {
                                     )}
                                   </div>
                                 ) : (
-                                  <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                  <div className="w-full aspect-[16/9] bg-gray-200 flex items-center justify-center relative">
                                     <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
                                     <div className="absolute top-2 left-2">
                                       <span className="bg-red-500 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full">
                                         NEW
                                       </span>
                                     </div>
+                                    {ad.personality_type && (
+                                      <div className="absolute top-2 right-2 z-10">
+                                        <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold">
+                                          {ad.personality_type}
+                                        </div>
+                                      </div>
+                                    )}
                                     {displayValue(ad.company_vision) && (
                                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-800/70 to-transparent p-2">
                                         <div className="flex items-center gap-1 mb-0.5">
@@ -2922,15 +2950,6 @@ export default function MonitorDashboard() {
                                         </p>
                                       </div>
                                     )}
-                                  </div>
-                                )}
-                                {ad.personality_type && (
-                                  <div className="p-2 sm:p-3">
-                                    <div className="flex items-center justify-end">
-                                      <div className="bg-purple-600 text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold">
-                                        {ad.personality_type}
-                                      </div>
-                                    </div>
                                   </div>
                                 )}
                               </div>
