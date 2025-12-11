@@ -76,8 +76,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     directionalLight.castShadow = true;
     scene.add(directionalLight);
 
-    // 地面の作成
-    const groundGeometry = new THREE.PlaneGeometry(20, 20);
+    // 地面の作成（距離に合わせて拡大）
+    const groundSize = 30;
+    const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x90EE90,
       roughness: 0.8,
@@ -89,8 +90,8 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // グリッドの追加
-    const gridHelper = new THREE.GridHelper(20, 20, 0x888888, 0xcccccc);
+    // グリッドの追加（距離に合わせて拡大）
+    const gridHelper = new THREE.GridHelper(groundSize, groundSize, 0x888888, 0xcccccc);
     scene.add(gridHelper);
 
     // 学生アバター（人型の簡易表現）
