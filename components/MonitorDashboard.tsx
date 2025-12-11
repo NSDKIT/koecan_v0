@@ -131,6 +131,7 @@ export default function MonitorDashboard() {
   const [showCompanyPersonalityTypeModal, setShowCompanyPersonalityTypeModal] = useState(false);
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [selectedCharacterType, setSelectedCharacterType] = useState<string | null>(null);
+  const [selectedBulletinPostId, setSelectedBulletinPostId] = useState<string | null>(null);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
   const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [lineUserId, setLineUserId] = useState<string | null>(null);
@@ -2983,7 +2984,9 @@ export default function MonitorDashboard() {
             )}
 
             {activeTab === 'bulletin_board' && (
-              <BulletinBoardDisplay />
+              <BulletinBoardDisplay 
+                initialPostId={selectedBulletinPostId}
+              />
             )}
 
             {activeTab === 'mypage' && (

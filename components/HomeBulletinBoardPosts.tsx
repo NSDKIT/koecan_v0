@@ -33,7 +33,11 @@ const categoryConfig = {
   '雑談': { icon: MessageSquare, color: 'bg-gray-100 text-gray-700 border-gray-300' },
 };
 
-export function HomeBulletinBoardPosts() {
+interface HomeBulletinBoardPostsProps {
+  onPostClick?: (postId: string) => void;
+}
+
+export function HomeBulletinBoardPosts({ onPostClick }: HomeBulletinBoardPostsProps) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -261,8 +265,17 @@ export function HomeBulletinBoardPosts() {
     );
   }
 
-  // 詳細ページ表示
-  if (selectedPost) {
+  // 投稿がクリックされたときの処理
+  const handlePostClick = (post: BulletinPost) => {
+    if (onPostClick) {
+      onPostClick(post.id);
+    } else {
+      setSelectedPost(post);
+    }
+  };
+
+  // 詳細ページ表示（onPostClickが提供されていない場合のみ）
+  if (selectedPost && !onPostClick) {
     const postComments = comments[selectedPost.id] || [];
     const categoryInfo = selectedPost.category ? categoryConfig[selectedPost.category as keyof typeof categoryConfig] : null;
     const CategoryIcon = categoryInfo?.icon || MessageCircle;
@@ -415,7 +428,7 @@ export function HomeBulletinBoardPosts() {
               return (
                 <div
                   key={post.id}
-                  onClick={() => setSelectedPost(post)}
+                  onClick={() => handlePostClick(post)}
                   className={`bg-white border-2 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
                     post.is_pinned ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
                   }`}

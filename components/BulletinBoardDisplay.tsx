@@ -33,7 +33,11 @@ interface BulletinPostComment {
   updated_at: string;
 }
 
-export function BulletinBoardDisplay() {
+interface BulletinBoardDisplayProps {
+  initialPostId?: string | null;
+}
+
+export function BulletinBoardDisplay({ initialPostId }: BulletinBoardDisplayProps = {}) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
