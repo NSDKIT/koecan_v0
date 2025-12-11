@@ -44,8 +44,8 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const pValue = type.includes('P') ? 1 : -1;
     
     // 3D空間に配置（X: E/I, Y: F/T, Z: N/S）
-    // 距離を離すためにスケールを5倍に
-    const scale = 5;
+    // 距離を離すためにスケールを10倍に（企業間の距離を確保）
+    const scale = 10;
     return new THREE.Vector3(eValue * scale, fValue * scale, nValue * scale);
   };
 
@@ -89,7 +89,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     scene.add(directionalLight);
 
     // 地面の作成（距離に合わせて拡大）
-    const groundSize = 50;
+    const groundSize = 100; // 企業間の距離が広がったので、地面も拡大
     const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x90EE90,
@@ -335,8 +335,14 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
         currentStudentPosition.add(direction.multiplyScalar(moveSpeed));
         currentStudentPosition.y = 1.6; // Y座標は固定（目の高さ）
         
+        // 歩行アニメーションを更新
+        walkAnimationTime += 0.2;
+        
         // 状態を保存
         cameraStateRef.current.currentStudentPosition = currentStudentPosition;
+      } else {
+        // 停止時は歩行アニメーションをリセット
+        walkAnimationTime = 0;
       }
     };
 
