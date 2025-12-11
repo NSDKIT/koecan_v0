@@ -728,20 +728,20 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
               <p className="text-sm text-gray-600">比較対象を選択してください</p>
             </div>
           )}
+
+          {/* 統計表示をレーダーチャートの下に表示 */}
+          <CompanyPersonalityStatistics
+            jobTypeResults={jobTypeResults}
+            yearsResults={yearsResults}
+            companyId={companyId}
+            selectedView={selectedView}
+            studentAxes={studentAxes}
+            individualData={individualData}
+          />
         </div>
       )}
 
-      {/* 統計表示 */}
-      {viewMode === 'statistics' && (
-        <CompanyPersonalityStatistics
-          jobTypeResults={jobTypeResults}
-          yearsResults={yearsResults}
-          companyId={companyId}
-          selectedView={selectedView}
-          studentAxes={studentAxes}
-          individualData={individualData}
-        />
-      )}
+      {/* 統計表示のみ（viewMode === 'statistics'の場合は表示しない） */}
 
 
       {/* タイプ詳細モーダル */}
