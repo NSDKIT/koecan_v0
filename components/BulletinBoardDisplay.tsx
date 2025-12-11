@@ -139,15 +139,15 @@ export function BulletinBoardDisplay({ initialPostId, onPostClick }: BulletinBoa
     };
   }, [user?.id]);
 
-  // 初期投稿IDが設定されている場合、その投稿を選択（onPostClickがない場合のみ）
+  // 初期投稿IDが設定されている場合、その投稿を選択
   useEffect(() => {
-    if (initialPostId && posts.length > 0 && !selectedPost && !onPostClick) {
+    if (initialPostId && posts.length > 0 && !selectedPost) {
       const post = posts.find(p => p.id === initialPostId);
       if (post) {
         setSelectedPost(post);
       }
     }
-  }, [initialPostId, posts, selectedPost, onPostClick]);
+  }, [initialPostId, posts, selectedPost]);
 
   // 投稿が選択されたらコメントを取得
   useEffect(() => {
@@ -259,8 +259,8 @@ export function BulletinBoardDisplay({ initialPostId, onPostClick }: BulletinBoa
     );
   }
 
-  // 詳細ページ表示（onPostClickがない場合のみ）
-  if (selectedPost && !onPostClick) {
+  // 詳細ページ表示
+  if (selectedPost) {
     const postComments = comments[selectedPost.id] || [];
     const categoryInfo = selectedPost.category ? categoryConfig[selectedPost.category as keyof typeof categoryConfig] : null;
     const CategoryIcon = categoryInfo?.icon || MessageCircle;

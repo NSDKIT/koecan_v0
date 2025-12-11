@@ -2986,9 +2986,6 @@ export default function MonitorDashboard() {
             {activeTab === 'bulletin_board' && (
               <BulletinBoardDisplay 
                 initialPostId={selectedBulletinPostId}
-                onPostClick={(postId) => {
-                  setSelectedBulletinPostId(postId);
-                }}
               />
             )}
 
