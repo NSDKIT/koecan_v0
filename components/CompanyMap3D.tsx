@@ -50,8 +50,10 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       0.1,
       1000
     );
-    // 学生アバターの位置（目の高さ）にカメラを配置
+    // 学生アバターの位置を計算
     const studentPosition = personalityTypeToPosition(studentPersonalityType);
+    
+    // カメラの作成（ファーストパーソン視点 - 目の高さに配置）
     camera.position.set(studentPosition.x, studentPosition.y + 1.6, studentPosition.z); // 目の高さ（約1.6m）
     camera.rotation.set(0, 0, 0); // 水平方向を向く
     cameraRef.current = camera;
@@ -90,7 +92,6 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     scene.add(gridHelper);
 
     // 学生アバター（人型の簡易表現）
-    const studentPosition = personalityTypeToPosition(studentPersonalityType);
     const studentGroup = new THREE.Group();
     
     // 体（円柱）
