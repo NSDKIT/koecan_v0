@@ -114,7 +114,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     studentGroup.add(head);
 
     studentGroup.position.copy(studentPosition);
-    studentGroup.position.y = 0.5; // 地面の上
+    studentGroup.position.y = 0.4; // 地面に足をつける（体の中心が0.4なので、足が地面に接する）
     scene.add(studentGroup);
 
     // 同じタイプの企業をグループ化して、位置をずらす
@@ -177,7 +177,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       }
 
       buildingGroup.position.copy(companyPosition);
-      buildingGroup.position.y = 0.5;
+      buildingGroup.position.y = 0.5; // 建物の高さが1なので、中心が0.5で地面に接する
       scene.add(buildingGroup);
     });
 
@@ -251,7 +251,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
         
         // 移動
         currentStudentPosition.add(direction.multiplyScalar(moveSpeed));
-        currentStudentPosition.y = studentPosition.y + 1.6; // Y座標は固定（目の高さ）
+        currentStudentPosition.y = 1.6; // Y座標は固定（目の高さ）
       }
     };
 
@@ -269,14 +269,15 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       // 移動処理
       updateMovement();
       
-      // カメラの位置と回転を更新
+      // カメラの位置と回転を更新（視点を固定）
       camera.position.copy(currentStudentPosition);
       camera.rotation.set(pitch, yaw, 0);
       
       // 学生アバターの位置も更新（可視化のため）
+      // 体の中心が0.4なので、目の高さ1.6mから計算すると0.4になる
       studentGroup.position.set(
         currentStudentPosition.x,
-        currentStudentPosition.y - 1.6 + 0.5, // 地面の上
+        0.4, // 地面に足をつける
         currentStudentPosition.z
       );
       studentGroup.rotation.y = yaw + Math.PI; // カメラの向きに合わせて回転
