@@ -189,10 +189,10 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const moveSpeed = 0.1;
     const keys: { [key: string]: boolean } = {};
 
-    // 学生アバターの位置を追跡
+    // 学生アバターの位置を追跡（目の高さ）
     let currentStudentPosition = new THREE.Vector3(
       studentPosition.x,
-      studentPosition.y + 1.6,
+      1.6, // 目の高さ（地面から1.6m）
       studentPosition.z
     );
 
