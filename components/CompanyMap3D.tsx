@@ -32,8 +32,8 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const pValue = type.includes('P') ? 1 : -1;
     
     // 3D空間に配置（X: E/I, Y: F/T, Z: N/S）
-    // 距離を離すためにスケールを3倍に
-    const scale = 3;
+    // 距離を離すためにスケールを5倍に
+    const scale = 5;
     return new THREE.Vector3(eValue * scale, fValue * scale, nValue * scale);
   };
 
@@ -131,7 +131,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       companiesByType.set(company.personality_type, typeCount + 1);
       
       // 同じタイプの企業が複数ある場合、円形に配置
-      const offsetRadius = 0.3; // オフセットの半径
+      const offsetRadius = 1.0; // オフセットの半径（企業間の距離を広げる）
       const angle = (typeCount * 2 * Math.PI) / (companies.filter(c => c.personality_type === company.personality_type).length || 1);
       const offsetX = Math.cos(angle) * offsetRadius;
       const offsetZ = Math.sin(angle) * offsetRadius;
