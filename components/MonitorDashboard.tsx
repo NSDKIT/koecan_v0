@@ -2982,26 +2982,19 @@ export default function MonitorDashboard() {
                 </div>
 
                 {/* バナーセクション */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* 紹介ポイント バナー */}
+                <div className="space-y-3">
+                  {/* 現在のポイント バナー */}
                   <div
                     onClick={() => setShowPointExchangeModal(true)}
-                    className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity"
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center mb-2">
-                          <Star className="w-6 h-6 text-white mr-2" />
-                          <h3 className="text-xl font-bold text-white">紹介ポイント</h3>
-                        </div>
-                        <p className="text-white/90 text-sm mb-2">ポイントを交換して特典をゲット！</p>
-                        <p className="text-white font-bold text-2xl">{profile?.points || 0} ポイント</p>
-                      </div>
-                      <TrendingUp className="w-12 h-12 text-white/80" />
+                      <span className="text-white text-sm font-medium">現在のポイント</span>
+                      <span className="text-white text-sm font-bold">{profile?.points || 0} ポイント</span>
                     </div>
                   </div>
 
-                  {/* 今日のクイズ バナー */}
+                  {/* 今日のクイズに回答する バナー */}
                   <div
                     onClick={() => {
                       if (availableQuizzes.length > 0) {
@@ -3010,27 +3003,10 @@ export default function MonitorDashboard() {
                         setActiveTab('surveys');
                       }
                     }}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition-all transform hover:scale-105"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center mb-2">
-                          <Trophy className="w-6 h-6 text-white mr-2" />
-                          <h3 className="text-xl font-bold text-white">今日のクイズ</h3>
-                        </div>
-                        <p className="text-white/90 text-sm mb-2">
-                          {availableQuizzes.length > 0 
-                            ? `${availableQuizzes[0].title}に挑戦！`
-                            : '新しいクイズをお待ちください'}
-                        </p>
-                        {availableQuizzes.length > 0 && (
-                          <div className="flex items-center text-white">
-                            <Gift className="w-4 h-4 mr-1" />
-                            <span className="font-semibold">{availableQuizzes[0].points_reward}ポイント</span>
-                          </div>
-                        )}
-                      </div>
-                      <HelpCircle className="w-12 h-12 text-white/80" />
+                    <div className="flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">今日のクイズに回答する</span>
                     </div>
                   </div>
                 </div>
