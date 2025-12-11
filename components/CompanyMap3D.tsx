@@ -32,7 +32,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const pValue = type.includes('P') ? 1 : -1;
     
     // 3D空間に配置（X: E/I, Y: F/T, Z: N/S）
-    return new THREE.Vector3(eValue, fValue, nValue);
+    // 距離を離すためにスケールを3倍に
+    const scale = 3;
+    return new THREE.Vector3(eValue * scale, fValue * scale, nValue * scale);
   };
 
   useEffect(() => {
