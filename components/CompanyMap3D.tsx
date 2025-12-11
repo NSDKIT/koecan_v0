@@ -205,25 +205,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     );
 
     const onMouseDown = (e: MouseEvent) => {
-      // クリック位置を正規化
-      mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-      mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
-      // レイキャスターでクリックしたオブジェクトを検出（企業の建物やラベルのみ）
-      if (buildingGroups.length > 0) {
-        raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(buildingGroups, true);
-
-        // 企業の建物やラベルをクリックした場合は、ドラッグを開始しない
-        if (intersects.length > 0) {
-          // 企業をクリックした場合の処理（必要に応じて追加）
-          // ここでは何もしない（カメラ位置をリセットしない）
-          e.preventDefault();
-          return;
-        }
-      }
-
-      // 企業以外をクリックした場合は、通常通りドラッグを開始
+      // 通常通りドラッグを開始
       isDragging = true;
       previousMousePosition = { x: e.clientX, y: e.clientY };
     };
