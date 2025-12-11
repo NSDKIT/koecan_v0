@@ -524,11 +524,67 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       <div className="bg-white/90 backdrop-blur-sm p-4 text-sm text-gray-700">
         <div className="space-y-2">
           <p className="font-bold text-gray-800">操作方法:</p>
-          <ul className="list-disc list-inside space-y-1 text-gray-600">
-            <li><strong>WASDキー</strong>: 前後左右に歩いて移動（W: 前進、S: 後退、A: 左、D: 右）</li>
-            <li><strong>マウスドラッグ</strong>: 視点を回転（上下左右を見回す）</li>
-            <li>企業の近くまで歩いて行くと、「目指す未来」が表示されます</li>
-          </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="font-semibold text-gray-700 mb-1">PC:</p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li><strong>WASDキー</strong>: 前後左右に歩いて移動</li>
+                <li><strong>マウスドラッグ</strong>: 視点を回転</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-700 mb-1">モバイル:</p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li><strong>画面をスワイプ</strong>: 視点を回転</li>
+                <li><strong>移動ボタン</strong>: 前後左右に移動</li>
+              </ul>
+            </div>
+          </div>
+          <p className="text-gray-600 mt-2">企業の近くまで歩いて行くと、「目指す未来」が表示されます</p>
+        </div>
+      </div>
+      
+      {/* モバイル用の移動ボタン */}
+      <div className="md:hidden fixed bottom-20 right-4 z-50">
+        <div className="grid grid-cols-3 gap-2 bg-white/80 backdrop-blur-sm p-3 rounded-lg shadow-lg">
+          <div className="col-span-3 flex justify-center">
+            <button
+              onTouchStart={() => mobileMoveDirectionRef.current.forward = true}
+              onTouchEnd={() => mobileMoveDirectionRef.current.forward = false}
+              onMouseDown={() => mobileMoveDirectionRef.current.forward = true}
+              onMouseUp={() => mobileMoveDirectionRef.current.forward = false}
+              className="w-12 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold active:bg-blue-600"
+            >
+              ↑
+            </button>
+          </div>
+          <button
+            onTouchStart={() => mobileMoveDirectionRef.current.left = true}
+            onTouchEnd={() => mobileMoveDirectionRef.current.left = false}
+            onMouseDown={() => mobileMoveDirectionRef.current.left = true}
+            onMouseUp={() => mobileMoveDirectionRef.current.left = false}
+            className="w-12 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold active:bg-blue-600"
+          >
+            ←
+          </button>
+          <button
+            onTouchStart={() => mobileMoveDirectionRef.current.backward = true}
+            onTouchEnd={() => mobileMoveDirectionRef.current.backward = false}
+            onMouseDown={() => mobileMoveDirectionRef.current.backward = true}
+            onMouseUp={() => mobileMoveDirectionRef.current.backward = false}
+            className="w-12 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold active:bg-blue-600"
+          >
+            ↓
+          </button>
+          <button
+            onTouchStart={() => mobileMoveDirectionRef.current.right = true}
+            onTouchEnd={() => mobileMoveDirectionRef.current.right = false}
+            onMouseDown={() => mobileMoveDirectionRef.current.right = true}
+            onMouseUp={() => mobileMoveDirectionRef.current.right = false}
+            className="w-12 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center text-xl font-bold active:bg-blue-600"
+          >
+            →
+          </button>
         </div>
       </div>
     </div>
