@@ -111,11 +111,31 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     studentGroup.position.y = 0.5; // 地面の上
     scene.add(studentGroup);
 
+    // 同じタイプの企業をグループ化して、位置をずらす
+    const companiesByType = new Map<string, number>();
+    
     // 企業の建物を作成
     companies.forEach((company, index) => {
       if (!company.personality_type) return;
 
-      const companyPosition = personalityTypeToPosition(company.personality_type);
+      const basePosition = personalityTypeToPosition(company.personality_type);
+      
+      // 同じタイプの企業が何番目かをカウント
+      const typeCount = companiesByType.get(company.personality_type) || 0;
+      companiesByType.set(company.personality_type, typeCount + 1);
+      
+      // 同じタイプの企業が複数ある場合、円形に配置
+      const offsetRadius = 0.3; // オフセットの半径
+      const angle = (typeCount * 2 * Math.PI) / (companies.filter(c => c.personality_type === company.personality_type).length || 1);
+      const offsetX = Math.cos(angle) * offsetRadius;
+      const offsetZ = Math.sin(angle) * offsetRadius;
+      
+      const companyPosition = new THREE.Vector3(
+        basePosition.x + offsetX,
+        basePosition.y,
+        basePosition.z + offsetZ
+      );
+      
       const buildingGroup = new THREE.Group();
 
       // 建物（箱）
