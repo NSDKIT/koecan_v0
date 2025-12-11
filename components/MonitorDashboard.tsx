@@ -3113,7 +3113,7 @@ export default function MonitorDashboard() {
                                 loop
                                 muted
                                 playsInline
-                                className="w-full rounded-lg shadow-lg"
+                                className="w-full rounded-lg"
                               />
                             </div>
                             <button
