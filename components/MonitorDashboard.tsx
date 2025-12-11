@@ -2424,11 +2424,11 @@ export default function MonitorDashboard() {
                           const optimizedUrl = getSecureImageUrl(imageUrl);
                           return (imageUrl && imageUrl.length > 0);
                         })() ? (
-                                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                  <div className="w-full bg-gray-100 overflow-hidden relative">
                             <img
                               src={getSecureImageUrl(ad.image_url) || ''}
                                       alt={ad.company_name || '企業情報'}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               referrerPolicy="no-referrer"
                               crossOrigin="anonymous"
@@ -2569,11 +2569,11 @@ export default function MonitorDashboard() {
                                           const imageUrl = ad.image_url;
                                           return (imageUrl && imageUrl.length > 0);
                                         })() ? (
-                                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                          <div className="w-full bg-gray-100 overflow-hidden relative">
                                             <img
                                               src={getSecureImageUrl(ad.image_url) || ''}
                                               alt={ad.company_name || '企業情報'}
-                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
                                               loading="lazy"
                                               referrerPolicy="no-referrer"
                                               crossOrigin="anonymous"
@@ -2620,7 +2620,7 @@ export default function MonitorDashboard() {
                                             )}
                                           </div>
                                         ) : (
-                                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                                          <div className="w-full bg-gray-200 flex items-center justify-center relative min-h-[200px]">
                                             <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
                                             {/* いいね・保存ボタン */}
                                             <div className="absolute top-2 right-2 flex gap-2 z-10">
@@ -2717,11 +2717,11 @@ export default function MonitorDashboard() {
                           }
                           return (imageUrl && imageUrl.length > 0);
                         })() ? (
-                          <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                          <div className="w-full bg-gray-100 overflow-hidden relative">
                             <img
                               src={getSecureImageUrl(ad.image_url) || ''}
                               alt={ad.company_name || ad.title || ad.company_vision || '企業情報'} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               referrerPolicy="no-referrer"
                               crossOrigin="anonymous"
@@ -2769,7 +2769,7 @@ export default function MonitorDashboard() {
                             )}
                           </div>
                         ) : (
-                          <div className="aspect-[4/3] bg-gray-200 flex items-center justify-center relative">
+                          <div className="w-full bg-gray-200 flex items-center justify-center relative min-h-[200px]">
                             <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-gray-500" />
                             {/* いいね・保存ボタン */}
                             <div className="absolute top-2 right-2 flex gap-2 z-10">
@@ -2873,11 +2873,11 @@ export default function MonitorDashboard() {
                                   const imageUrl = ad.image_url;
                                   return (imageUrl && imageUrl.length > 0);
                                 })() ? (
-                                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                                  <div className="w-full bg-gray-100 overflow-hidden relative">
                                     <img
                                       src={getSecureImageUrl(ad.image_url) || ''}
                                       alt={ad.company_name || '企業情報'}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
                                       loading="lazy"
                                       referrerPolicy="no-referrer"
                                       crossOrigin="anonymous"
