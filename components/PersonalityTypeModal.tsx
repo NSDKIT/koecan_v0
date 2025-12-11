@@ -24,7 +24,7 @@ interface PersonalityType {
   };
 }
 
-const personalityTypes: Record<string, PersonalityType> = {
+export const personalityTypes: Record<string, PersonalityType> = {
   ENPF: {
     code: 'ENPF',
     name: 'ひらめきロケット',

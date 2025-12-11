@@ -48,6 +48,7 @@ import { PointExchangeModal } from '@/components/PointExchangeModal';
 import { MonitorProfileSurveyModal } from '@/components/MonitorProfileSurveyModal'; 
 import { PersonalityAssessmentModal } from '@/components/PersonalityAssessmentModal';
 import { PersonalityTypeModal } from '@/components/PersonalityTypeModal';
+import { personalityTypes } from '@/components/PersonalityTypeModal';
 import { CompanyPersonalityBreakdown } from '@/components/CompanyPersonalityBreakdown';
 import { IndustryFilterModal } from '@/components/IndustryFilterModal';
 import { PersonalityFilterModal } from '@/components/PersonalityFilterModal';
@@ -3071,8 +3072,156 @@ export default function MonitorDashboard() {
 
             {activeTab === 'character' && (
               <div className="space-y-6">
-                {personalityType ? (
-                  <>
+                {personalityType ? (() => {
+                  // パーソナリティタイプが "/" を含む場合、最初の4文字を取得
+                  let typeCode = personalityType;
+                  if (personalityType.includes('/')) {
+                    const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                    if (parts.length === 4) {
+                      typeCode = parts;
+                    }
+                  }
+                  const typeInfo = personalityTypes[typeCode];
+                  
+                  return typeInfo ? (
+                    <>
+                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+                              {typeInfo.name}
+                            </h1>
+                            <p className="text-sm sm:text-base text-gray-600">{typeInfo.description}</p>
+                          </div>
+                          <button
+                            onClick={() => setActiveTab('mypage')}
+                            className="text-gray-600 hover:text-gray-800 transition-colors"
+                          >
+                            <X className="w-6 h-6" />
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col items-center mb-8">
+                          {(() => {
+                            let videoType = typeCode;
+                            if (videoType.length === 4) {
+                              return (
+                                <video
+                                  src={`/character/${videoType}.mp4`}
+                                  autoPlay
+                                  loop
+                                  muted
+                                  playsInline
+                                  className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg mb-4"
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                          <div className="text-center">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                              あなたのタイプ: <span className="text-purple-600">{typeInfo.code}</span>
+                            </h2>
+                          </div>
+                        </div>
+
+                        <div className="space-y-6">
+                          {/* 基本性格 */}
+                          <section className="bg-white border-2 border-purple-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">🧭</span>
+                              基本性格
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.basicPersonality}
+                            </p>
+                          </section>
+
+                          {/* 得意分野 */}
+                          <section className="bg-white border-2 border-green-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">💡</span>
+                              得意分野
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.strengths}
+                            </p>
+                          </section>
+
+                          {/* 苦手分野 */}
+                          <section className="bg-white border-2 border-yellow-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">🪫</span>
+                              苦手分野
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.weaknesses}
+                            </p>
+                          </section>
+
+                          {/* 仕事の価値観 */}
+                          <section className="bg-white border-2 border-blue-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">💬</span>
+                              仕事の価値観
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.workValues}
+                            </p>
+                          </section>
+
+                          {/* あなたの強み */}
+                          <section className="bg-white border-2 border-purple-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">💎</span>
+                              あなたの強み
+                            </h3>
+                            <ul className="space-y-2">
+                              {typeInfo.details.keyStrengths.map((strength, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-purple-600 mr-2 font-bold">•</span>
+                                  <span className="text-sm sm:text-base text-gray-700">{strength}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </section>
+
+                          {/* 活躍しやすい職場 */}
+                          <section className="bg-white border-2 border-orange-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">🏢</span>
+                              活躍しやすい職場
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.idealWorkplaces}
+                            </p>
+                          </section>
+
+                          {/* 就活の軸 */}
+                          <section className="bg-white border-2 border-pink-200 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">🎯</span>
+                              就活の軸（傾向）
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed whitespace-pre-line">
+                              {typeInfo.details.jobHuntingAxis}
+                            </p>
+                          </section>
+
+                          {/* まとめ */}
+                          <section className="bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-300 rounded-lg p-4 sm:p-6">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 flex items-center">
+                              <span className="text-2xl mr-2">🪞</span>
+                              まとめ
+                            </h3>
+                            <p className="text-sm sm:text-base text-gray-800 leading-relaxed font-medium whitespace-pre-line">
+                              {typeInfo.details.summary}
+                            </p>
+                          </section>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
                     <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
                       <div className="flex items-center justify-between mb-6">
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">キャラクター紹介</h1>
@@ -3083,58 +3232,12 @@ export default function MonitorDashboard() {
                           <X className="w-6 h-6" />
                         </button>
                       </div>
-
-                      <div className="flex flex-col items-center mb-6">
-                        {(() => {
-                          let videoType = personalityType;
-                          if (personalityType.includes('/')) {
-                            const parts = personalityType.replace(/\//g, '').substring(0, 4);
-                            if (parts.length === 4) {
-                              videoType = parts;
-                            } else {
-                              return null;
-                            }
-                          }
-                          if (videoType.length === 4) {
-                            return (
-                              <video
-                                src={`/character/${videoType}.mp4`}
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
-                                className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg mb-4"
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                        <div className="text-center">
-                          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-                            あなたのタイプ: <span className="text-purple-600">{personalityType}</span>
-                          </h2>
-                          {characterTip && (
-                            <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 sm:p-6 max-w-2xl">
-                              <p className="text-sm sm:text-base text-gray-800 whitespace-pre-line">
-                                {characterTip.content}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">パーソナリティタイプについて</h3>
-                        <p className="text-sm sm:text-base text-gray-700 mb-4">
-                          {personalityType}タイプの特徴や傾向について詳しく知ることができます。
-                        </p>
-                        <p className="text-sm sm:text-base text-gray-600">
-                          このタイプは、あなたの価値観や行動パターンを表しています。就職活動やキャリア選択の参考にしてください。
-                        </p>
-                      </div>
+                      <p className="text-gray-600 text-center">
+                        パーソナリティタイプ「{personalityType}」の詳細情報が見つかりませんでした。
+                      </p>
                     </div>
-                  </>
-                ) : (
+                  );
+                })() : (
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 text-center">
                     <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">キャラクター紹介</h1>
                     <p className="text-gray-600 mb-6">
