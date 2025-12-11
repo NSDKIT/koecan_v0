@@ -2982,15 +2982,14 @@ export default function MonitorDashboard() {
                 </div>
 
                 {/* バナーセクション */}
-                <div className="space-y-3">
+                <div className="space-y-3 px-4 sm:px-6">
                   {/* 現在のポイント バナー */}
                   <div
                     onClick={() => setShowPointExchangeModal(true)}
                     className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-sm font-medium">現在のポイント</span>
-                      <span className="text-white text-sm font-bold">{profile?.points || 0} ポイント</span>
+                    <div className="flex items-center justify-center text-center">
+                      <span className="text-white text-sm font-medium">現在のポイント <span className="font-bold">{profile?.points || 0} ポイント</span></span>
                     </div>
                   </div>
 
@@ -3005,7 +3004,7 @@ export default function MonitorDashboard() {
                     }}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg px-4 py-3 cursor-pointer hover:opacity-90 transition-opacity"
                   >
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center text-center">
                       <span className="text-white text-sm font-medium">今日のクイズに回答する</span>
                     </div>
                   </div>
