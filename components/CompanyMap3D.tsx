@@ -204,11 +204,6 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       studentPosition.z
     );
 
-    // レイキャスター（クリック検出用）
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const buildingGroups: THREE.Group[] = [];
-
     const onMouseDown = (e: MouseEvent) => {
       // クリック位置を正規化
       mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
