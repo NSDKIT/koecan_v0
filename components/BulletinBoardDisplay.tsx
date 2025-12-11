@@ -35,9 +35,10 @@ interface BulletinPostComment {
 
 interface BulletinBoardDisplayProps {
   initialPostId?: string | null;
+  onPostClick?: (postId: string) => void;
 }
 
-export function BulletinBoardDisplay({ initialPostId }: BulletinBoardDisplayProps = {}) {
+export function BulletinBoardDisplay({ initialPostId, onPostClick }: BulletinBoardDisplayProps = {}) {
   const { user } = useAuth();
   const [posts, setPosts] = useState<BulletinPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,15 +139,15 @@ export function BulletinBoardDisplay({ initialPostId }: BulletinBoardDisplayProp
     };
   }, [user?.id]);
 
-  // 初期投稿IDが設定されている場合、その投稿を選択
+  // 初期投稿IDが設定されている場合、その投稿を選択（onPostClickがない場合のみ）
   useEffect(() => {
-    if (initialPostId && posts.length > 0 && !selectedPost) {
+    if (initialPostId && posts.length > 0 && !selectedPost && !onPostClick) {
       const post = posts.find(p => p.id === initialPostId);
       if (post) {
         setSelectedPost(post);
       }
     }
-  }, [initialPostId, posts, selectedPost]);
+  }, [initialPostId, posts, selectedPost, onPostClick]);
 
   // 投稿が選択されたらコメントを取得
   useEffect(() => {
@@ -258,8 +259,8 @@ export function BulletinBoardDisplay({ initialPostId }: BulletinBoardDisplayProp
     );
   }
 
-  // 詳細ページ表示
-  if (selectedPost) {
+  // 詳細ページ表示（onPostClickがない場合のみ）
+  if (selectedPost && !onPostClick) {
     const postComments = comments[selectedPost.id] || [];
     const categoryInfo = selectedPost.category ? categoryConfig[selectedPost.category as keyof typeof categoryConfig] : null;
     const CategoryIcon = categoryInfo?.icon || MessageCircle;
@@ -404,7 +405,13 @@ export function BulletinBoardDisplay({ initialPostId }: BulletinBoardDisplayProp
             return (
               <div
                 key={post.id}
-                onClick={() => setSelectedPost(post)}
+                onClick={() => {
+                  if (onPostClick) {
+                    onPostClick(post.id);
+                  } else {
+                    setSelectedPost(post);
+                  }
+                }}
                 className={`bg-white border-2 rounded-xl p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
                   post.is_pinned ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
                 }`}
