@@ -3983,6 +3983,15 @@ export default function MonitorDashboard() {
               personality_type: ad.personality_type || null,
               company_vision: ad.company_vision || null
             }))}
+          onCompanyClick={(companyId) => {
+            // 企業をクリックしたら、3Dマップを閉じて企業詳細ページを表示
+            const company = advertisements.find(ad => ad.id === companyId);
+            if (company) {
+              setSelectedAdvertisement(company);
+              setCompanyDetailView('info');
+              setShowCompanyMap3D(false);
+            }
+          }}
         />
       )}
       

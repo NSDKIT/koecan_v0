@@ -12,9 +12,10 @@ interface CompanyMap3DProps {
     personality_type: string | null;
     company_vision?: string | null;
   }>;
+  onCompanyClick?: (companyId: string) => void;
 }
 
-export function CompanyMap3D({ onClose, studentPersonalityType, companies }: CompanyMap3DProps) {
+export function CompanyMap3D({ onClose, studentPersonalityType, companies, onCompanyClick }: CompanyMap3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -245,6 +246,10 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
 
       buildingGroup.position.copy(companyPosition);
       buildingGroup.position.y = 0; // 地面に接する（建物の下端が0になる）
+      
+      // 企業IDを建物グループに保存（クリック検出用）
+      (buildingGroup as any).companyId = company.id;
+      
       scene.add(buildingGroup);
       
       // クリック検出用に配列に追加
@@ -313,6 +318,31 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
+        // クリック位置を正規化（タッチ操作）
+        mouse.x = (e.touches[0].clientX / renderer.domElement.clientWidth) * 2 - 1;
+        mouse.y = -(e.touches[0].clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+        // レイキャスターでタッチしたオブジェクトを検出
+        if (buildingGroups.length > 0 && onCompanyClick) {
+          raycaster.setFromCamera(mouse, camera);
+          const intersects = raycaster.intersectObjects(buildingGroups, true);
+
+          // 企業の建物やラベルをタッチした場合
+          if (intersects.length > 0) {
+            const clickedObject = intersects[0].object;
+            // 親グループを探して企業IDを取得
+            let parent = clickedObject.parent;
+            while (parent && !(parent as any).companyId) {
+              parent = parent.parent;
+            }
+            if (parent && (parent as any).companyId) {
+              onCompanyClick((parent as any).companyId);
+              e.preventDefault();
+              return;
+            }
+          }
+        }
+
         // 1本指: 視点操作
         touchStartPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         touchMovePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
