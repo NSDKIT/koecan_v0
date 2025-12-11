@@ -10,6 +10,7 @@ interface CompanyMap3DProps {
     id: string;
     name: string;
     personality_type: string | null;
+    company_vision?: string | null;
   }>;
 }
 
@@ -124,6 +125,25 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     head.castShadow = true;
     studentGroup.add(head);
 
+    // 足（歩行アニメーション用）
+    const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.4, 8);
+    const legMaterial = new THREE.MeshStandardMaterial({ color: 0x2E5090 });
+    
+    // 左足
+    const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+    leftLeg.position.set(-0.1, -0.2, 0);
+    leftLeg.castShadow = true;
+    studentGroup.add(leftLeg);
+    
+    // 右足
+    const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+    rightLeg.position.set(0.1, -0.2, 0);
+    rightLeg.castShadow = true;
+    studentGroup.add(rightLeg);
+    
+    // 歩行アニメーション用の変数
+    let walkAnimationTime = 0;
+
     studentGroup.position.copy(studentPosition);
     studentGroup.position.y = 0.4; // 地面に足をつける（体の中心が0.4なので、足が地面に接する）
     scene.add(studentGroup);
@@ -147,7 +167,8 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       companiesByType.set(company.personality_type, typeCount + 1);
       
       // 同じタイプの企業が複数ある場合、円形に配置
-      const offsetRadius = 1.0; // オフセットの半径（企業間の距離を広げる）
+      // 企業間の距離を5以上にするため、オフセットの半径を大きくする
+      const offsetRadius = 5.0; // オフセットの半径（企業間の距離を広げる、最小5）
       const angle = (typeCount * 2 * Math.PI) / (companies.filter(c => c.personality_type === company.personality_type).length || 1);
       const offsetX = Math.cos(angle) * offsetRadius;
       const offsetZ = Math.sin(angle) * offsetRadius;
@@ -171,24 +192,51 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       building.receiveShadow = true;
       buildingGroup.add(building);
 
-      // 建物の上にラベル（簡易版）
+      // 建物の上にラベル（目指す未来を表示）
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (context) {
-        canvas.width = 256;
-        canvas.height = 64;
-        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        // ラベルのサイズを大きくして、長いテキストに対応
+        canvas.width = 512;
+        canvas.height = 128;
+        context.fillStyle = 'rgba(255, 255, 255, 0.95)';
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = '#000000';
-        context.font = '24px Arial';
+        context.font = 'bold 20px Arial';
         context.textAlign = 'center';
-        context.fillText(company.name.substring(0, 10), canvas.width / 2, canvas.height / 2);
+        context.textBaseline = 'middle';
+        
+        // 目指す未来を表示（なければ企業名）
+        const displayText = company.company_vision || company.name || '企業情報';
+        // テキストを折り返して表示（最大2行）
+        const maxWidth = canvas.width - 20;
+        const words = displayText.split('');
+        let line = '';
+        let y = canvas.height / 2 - 15;
+        const lineHeight = 25;
+        let lineCount = 0;
+        
+        for (let i = 0; i < words.length && lineCount < 2; i++) {
+          const testLine = line + words[i];
+          const metrics = context.measureText(testLine);
+          if (metrics.width > maxWidth && line.length > 0) {
+            context.fillText(line, canvas.width / 2, y);
+            line = words[i];
+            y += lineHeight;
+            lineCount++;
+          } else {
+            line = testLine;
+          }
+        }
+        if (line.length > 0 && lineCount < 2) {
+          context.fillText(line, canvas.width / 2, y);
+        }
         
         const texture = new THREE.CanvasTexture(canvas);
         const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
         const sprite = new THREE.Sprite(spriteMaterial);
         sprite.position.set(0, 1.5, 0);
-        sprite.scale.set(2, 0.5, 1);
+        sprite.scale.set(4, 1, 1); // ラベルを大きく表示
         buildingGroup.add(sprite);
       }
 
@@ -323,6 +371,26 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
         currentStudentPosition.z
       );
       studentGroup.rotation.y = yaw + Math.PI; // カメラの向きに合わせて回転
+      
+      // 歩行アニメーション（足の動きを模擬）
+      const isMoving = keys['w'] || keys['s'] || keys['a'] || keys['d'];
+      if (isMoving) {
+        // 左右の足を交互に動かす（歩行の模擬）
+        const legSwing = Math.sin(walkAnimationTime) * 0.3; // 足の振り幅
+        const legLift = Math.max(0, Math.sin(walkAnimationTime)) * 0.1; // 足の上げ幅
+        
+        // 左足と右足を交互に動かす
+        leftLeg.rotation.x = Math.sin(walkAnimationTime) * 0.5;
+        leftLeg.position.y = -0.2 + (Math.sin(walkAnimationTime) > 0 ? legLift : 0);
+        rightLeg.rotation.x = -Math.sin(walkAnimationTime) * 0.5;
+        rightLeg.position.y = -0.2 + (Math.sin(walkAnimationTime) < 0 ? legLift : 0);
+      } else {
+        // 停止時は足を元の位置に戻す
+        leftLeg.rotation.x = 0;
+        leftLeg.position.y = -0.2;
+        rightLeg.rotation.x = 0;
+        rightLeg.position.y = -0.2;
+      }
       
       renderer.render(scene, camera);
     };

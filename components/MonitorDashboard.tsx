@@ -3980,7 +3980,8 @@ export default function MonitorDashboard() {
             .map(ad => ({
               id: ad.id,
               name: ad.company_name || '企業名未設定',
-              personality_type: ad.personality_type || null
+              personality_type: ad.personality_type || null,
+              company_vision: ad.company_vision || null
             }))}
         />
       )}
