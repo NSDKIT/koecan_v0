@@ -43,15 +43,17 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     scene.background = new THREE.Color(0x87CEEB); // 空色
     sceneRef.current = scene;
 
-    // カメラの作成
+    // カメラの作成（ファーストパーソン視点）
     const camera = new THREE.PerspectiveCamera(
       75,
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(5, 5, 5);
-    camera.lookAt(0, 0, 0);
+    // 学生アバターの位置（目の高さ）にカメラを配置
+    const studentPosition = personalityTypeToPosition(studentPersonalityType);
+    camera.position.set(studentPosition.x, studentPosition.y + 1.6, studentPosition.z); // 目の高さ（約1.6m）
+    camera.rotation.set(0, 0, 0); // 水平方向を向く
     cameraRef.current = camera;
 
     // レンダラーの作成
@@ -217,13 +219,27 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     renderer.domElement.addEventListener('mousemove', onMouseMove);
     renderer.domElement.addEventListener('mouseup', onMouseUp);
     renderer.domElement.addEventListener('wheel', onWheel);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
 
     // アニメーションループ
     const animate = () => {
       animationFrameRef.current = requestAnimationFrame(animate);
       
-      // 学生アバターを少し回転
-      studentGroup.rotation.y += 0.01;
+      // 移動処理
+      updateMovement();
+      
+      // カメラの位置と回転を更新
+      camera.position.copy(currentStudentPosition);
+      camera.rotation.set(pitch, yaw, 0);
+      
+      // 学生アバターの位置も更新（可視化のため）
+      studentGroup.position.set(
+        currentStudentPosition.x,
+        currentStudentPosition.y - 1.6 + 0.5, // 地面の上
+        currentStudentPosition.z
+      );
+      studentGroup.rotation.y = yaw + Math.PI; // カメラの向きに合わせて回転
       
       renderer.render(scene, camera);
     };
@@ -240,6 +256,8 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       renderer.domElement.removeEventListener('mousemove', onMouseMove);
       renderer.domElement.removeEventListener('mouseup', onMouseUp);
       renderer.domElement.removeEventListener('wheel', onWheel);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
       if (mountRef.current && renderer.domElement.parentNode) {
         mountRef.current.removeChild(renderer.domElement);
       }
@@ -290,7 +308,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
 
       {/* 操作説明 */}
       <div className="bg-white/90 backdrop-blur-sm p-4 text-sm text-gray-700">
-        <p>操作: マウスドラッグで回転、ホイールでズーム</p>
+        <p>操作: マウスドラッグで視点を回転、WASDキーで移動</p>
       </div>
     </div>
   );
