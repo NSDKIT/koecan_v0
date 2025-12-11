@@ -77,7 +77,7 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     scene.add(directionalLight);
 
     // 地面の作成（距離に合わせて拡大）
-    const groundSize = 30;
+    const groundSize = 50;
     const groundGeometry = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x90EE90,
