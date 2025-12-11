@@ -22,6 +22,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
   const animationFrameRef = useRef<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
+  // モバイル用の移動方向（コンポーネントレベルで管理）
+  const mobileMoveDirectionRef = useRef({ forward: false, backward: false, left: false, right: false });
+  
   // カメラの状態を保持するためのref
   const cameraStateRef = useRef<{
     yaw: number;
@@ -272,6 +275,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     
     const moveSpeed = 0.1;
     const keys: { [key: string]: boolean } = {};
+    
+    // モバイル用の移動方向（タッチ操作）
+    const mobileMoveDirection = mobileMoveDirectionRef.current;
 
     const onMouseDown = (e: MouseEvent) => {
       // 通常通りドラッグを開始
@@ -301,6 +307,42 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       isDragging = false;
     };
 
+    // タッチ操作（モバイル対応）
+    let touchStartPosition: { x: number; y: number } | null = null;
+    let touchMovePosition: { x: number; y: number } | null = null;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        // 1本指: 視点操作
+        touchStartPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        touchMovePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1 && touchStartPosition) {
+        // 1本指: 視点を回転
+        touchMovePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        const deltaX = touchMovePosition.x - touchStartPosition.x;
+        const deltaY = touchMovePosition.y - touchStartPosition.y;
+
+        yaw -= deltaX * 0.002;
+        pitch -= deltaY * 0.002;
+        pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch));
+
+        cameraStateRef.current.yaw = yaw;
+        cameraStateRef.current.pitch = pitch;
+
+        touchStartPosition = touchMovePosition;
+      }
+    };
+
+    const onTouchEnd = () => {
+      touchStartPosition = null;
+      touchMovePosition = null;
+    };
+
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       // ズーム機能は無効化（ファーストパーソン視点では不要）
@@ -319,10 +361,17 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     const updateMovement = () => {
       const direction = new THREE.Vector3();
       
+      // キーボード操作（PC）
       if (keys['w']) direction.z -= 1;
       if (keys['s']) direction.z += 1;
       if (keys['a']) direction.x -= 1;
       if (keys['d']) direction.x += 1;
+      
+      // モバイル操作（タッチボタン）
+      if (mobileMoveDirection.forward) direction.z -= 1;
+      if (mobileMoveDirection.backward) direction.z += 1;
+      if (mobileMoveDirection.left) direction.x -= 1;
+      if (mobileMoveDirection.right) direction.x += 1;
 
       if (direction.length() > 0) {
         direction.normalize();
@@ -352,6 +401,11 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
     renderer.domElement.addEventListener('wheel', onWheel);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    
+    // タッチ操作（モバイル対応）
+    renderer.domElement.addEventListener('touchstart', onTouchStart);
+    renderer.domElement.addEventListener('touchmove', onTouchMove);
+    renderer.domElement.addEventListener('touchend', onTouchEnd);
 
     // アニメーションループ
     const animate = () => {
@@ -415,6 +469,9 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       renderer.domElement.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      renderer.domElement.removeEventListener('touchstart', onTouchStart);
+      renderer.domElement.removeEventListener('touchmove', onTouchMove);
+      renderer.domElement.removeEventListener('touchend', onTouchEnd);
       if (mountRef.current && renderer.domElement.parentNode) {
         mountRef.current.removeChild(renderer.domElement);
       }
