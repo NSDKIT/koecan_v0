@@ -3068,6 +3068,91 @@ export default function MonitorDashboard() {
                 </div>
               </div>
             )}
+
+            {activeTab === 'character' && (
+              <div className="space-y-6">
+                {personalityType ? (
+                  <>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">キャラクター紹介</h1>
+                        <button
+                          onClick={() => setActiveTab('mypage')}
+                          className="text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          <X className="w-6 h-6" />
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col items-center mb-6">
+                        {(() => {
+                          let videoType = personalityType;
+                          if (personalityType.includes('/')) {
+                            const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                            if (parts.length === 4) {
+                              videoType = parts;
+                            } else {
+                              return null;
+                            }
+                          }
+                          if (videoType.length === 4) {
+                            return (
+                              <video
+                                src={`/character/${videoType}.mp4`}
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-lg mb-4"
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
+                        <div className="text-center">
+                          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                            あなたのタイプ: <span className="text-purple-600">{personalityType}</span>
+                          </h2>
+                          {characterTip && (
+                            <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 sm:p-6 max-w-2xl">
+                              <p className="text-sm sm:text-base text-gray-800 whitespace-pre-line">
+                                {characterTip.content}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">パーソナリティタイプについて</h3>
+                        <p className="text-sm sm:text-base text-gray-700 mb-4">
+                          {personalityType}タイプの特徴や傾向について詳しく知ることができます。
+                        </p>
+                        <p className="text-sm sm:text-base text-gray-600">
+                          このタイプは、あなたの価値観や行動パターンを表しています。就職活動やキャリア選択の参考にしてください。
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 text-center">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">キャラクター紹介</h1>
+                    <p className="text-gray-600 mb-6">
+                      キャラクター紹介を見るには、まず価値観診断を受けてください。
+                    </p>
+                    <button
+                      onClick={() => {
+                        setActiveTab('mypage');
+                        setShowPersonalityAssessmentModal(true);
+                      }}
+                      className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                    >
+                      価値観診断を受ける
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
