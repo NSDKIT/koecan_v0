@@ -177,12 +177,24 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       scene.add(buildingGroup);
     });
 
-    // マウスコントロール
+    // ファーストパーソン視点のコントロール
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
+    let yaw = 0; // 左右の回転
+    let pitch = 0; // 上下の回転
+    const moveSpeed = 0.1;
+    const keys: { [key: string]: boolean } = {};
+
+    // 学生アバターの位置を追跡
+    let currentStudentPosition = new THREE.Vector3(
+      studentPosition.x,
+      studentPosition.y + 1.6,
+      studentPosition.z
+    );
 
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -191,14 +203,12 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
       const deltaX = e.clientX - previousMousePosition.x;
       const deltaY = e.clientY - previousMousePosition.y;
 
-      const spherical = new THREE.Spherical();
-      spherical.setFromVector3(camera.position);
-      spherical.theta -= deltaX * 0.01;
-      spherical.phi += deltaY * 0.01;
-      spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
+      // マウスの動きに応じて視点を回転
+      yaw -= deltaX * 0.002;
+      pitch -= deltaY * 0.002;
+      pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch)); // 上下の回転を制限
 
-      camera.position.setFromSpherical(spherical);
-      camera.lookAt(0, 0, 0);
+      previousMousePosition = { x: e.clientX, y: e.clientY };
     };
 
     const onMouseUp = () => {
@@ -207,12 +217,38 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const distance = camera.position.length();
-      const newDistance = distance + e.deltaY * 0.01;
-      const clampedDistance = Math.max(3, Math.min(20, newDistance));
+      // ズーム機能は無効化（ファーストパーソン視点では不要）
+    };
+
+    // キーボード入力
+    const onKeyDown = (e: KeyboardEvent) => {
+      keys[e.key.toLowerCase()] = true;
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      keys[e.key.toLowerCase()] = false;
+    };
+
+    // 移動処理
+    const updateMovement = () => {
+      const direction = new THREE.Vector3();
       
-      camera.position.normalize().multiplyScalar(clampedDistance);
-      camera.lookAt(0, 0, 0);
+      if (keys['w']) direction.z -= 1;
+      if (keys['s']) direction.z += 1;
+      if (keys['a']) direction.x -= 1;
+      if (keys['d']) direction.x += 1;
+
+      if (direction.length() > 0) {
+        direction.normalize();
+        
+        // カメラの向きに応じて移動方向を回転
+        const yawRotation = new THREE.Matrix4().makeRotationY(yaw);
+        direction.applyMatrix4(yawRotation);
+        
+        // 移動
+        currentStudentPosition.add(direction.multiplyScalar(moveSpeed));
+        currentStudentPosition.y = studentPosition.y + 1.6; // Y座標は固定（目の高さ）
+      }
     };
 
     renderer.domElement.addEventListener('mousedown', onMouseDown);
