@@ -3016,15 +3016,27 @@ export default function MonitorDashboard() {
                       <div className="inline-flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-bold text-lg">
                         {personalityType}
                       </div>
-                      <button
-                        onClick={() => {
-                          setActiveTab('character');
-                        }}
-                        className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center"
-                      >
-                        <UserIcon className="w-5 h-5 mr-2" />
-                        キャラクター紹介を見る
-                      </button>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSelectedCharacterType(null);
+                            setActiveTab('character');
+                          }}
+                          className="w-full px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center"
+                        >
+                          <UserIcon className="w-5 h-5 mr-2" />
+                          キャラクター紹介を見る
+                        </button>
+                        <button
+                          onClick={() => {
+                            setActiveTab('character_list');
+                          }}
+                          className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center"
+                        >
+                          <Users className="w-5 h-5 mr-2" />
+                          他のキャラクターを見る
+                        </button>
+                      </div>
                     </div>
                   ) : null}
                   <button
@@ -3057,13 +3069,67 @@ export default function MonitorDashboard() {
               </div>
             )}
 
+            {activeTab === 'character_list' && (
+              <div className="space-y-6">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">キャラクター一覧</h1>
+                    <button
+                      onClick={() => setActiveTab('mypage')}
+                      className="text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {Object.values(personalityTypes).map((type) => (
+                      <button
+                        key={type.code}
+                        onClick={() => {
+                          setSelectedCharacterType(type.code);
+                          setActiveTab('character');
+                        }}
+                        className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-purple-500 hover:shadow-lg transition-all text-center"
+                      >
+                        <div className="text-lg font-bold text-gray-800 mb-1">{type.code}</div>
+                        <div className="text-sm text-gray-600">{type.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'character' && (
               <div className="space-y-6">
-                {personalityType ? (() => {
+                {(() => {
+                  // 選択されたキャラクタータイプまたは自分のパーソナリティタイプを使用
+                  const displayType = selectedCharacterType || personalityType;
+                  if (!displayType) {
+                    return (
+                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 text-center">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">キャラクター紹介</h1>
+                        <p className="text-gray-600 mb-6">
+                          キャラクター紹介を見るには、まず価値観診断を受けてください。
+                        </p>
+                        <button
+                          onClick={() => {
+                            setActiveTab('mypage');
+                            setShowPersonalityAssessmentModal(true);
+                          }}
+                          className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+                        >
+                          価値観診断を受ける
+                        </button>
+                      </div>
+                    );
+                  }
+                  
                   // パーソナリティタイプが "/" を含む場合、最初の4文字を取得
-                  let typeCode = personalityType;
-                  if (personalityType.includes('/')) {
-                    const parts = personalityType.replace(/\//g, '').substring(0, 4);
+                  let typeCode = displayType;
+                  if (displayType.includes('/')) {
+                    const parts = displayType.replace(/\//g, '').substring(0, 4);
                     if (parts.length === 4) {
                       typeCode = parts;
                     }
@@ -3081,7 +3147,14 @@ export default function MonitorDashboard() {
                             <p className="text-sm sm:text-base text-gray-600">{typeInfo.description}</p>
                           </div>
                           <button
-                            onClick={() => setActiveTab('mypage')}
+                            onClick={() => {
+                              if (selectedCharacterType) {
+                                setActiveTab('character_list');
+                                setSelectedCharacterType(null);
+                              } else {
+                                setActiveTab('mypage');
+                              }
+                            }}
                             className="text-gray-600 hover:text-gray-800 transition-colors"
                           >
                             <X className="w-6 h-6" />
@@ -3228,27 +3301,11 @@ export default function MonitorDashboard() {
                         </button>
                       </div>
                       <p className="text-gray-600 text-center">
-                        パーソナリティタイプ「{personalityType}」の詳細情報が見つかりませんでした。
+                        パーソナリティタイプ「{displayType}」の詳細情報が見つかりませんでした。
                       </p>
                     </div>
                   );
-                })() : (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 sm:p-8 text-center">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">キャラクター紹介</h1>
-                    <p className="text-gray-600 mb-6">
-                      キャラクター紹介を見るには、まず価値観診断を受けてください。
-                    </p>
-                    <button
-                      onClick={() => {
-                        setActiveTab('mypage');
-                        setShowPersonalityAssessmentModal(true);
-                      }}
-                      className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
-                    >
-                      価値観診断を受ける
-                    </button>
-                  </div>
-                )}
+                })()}
               </div>
             )}
           </div>
