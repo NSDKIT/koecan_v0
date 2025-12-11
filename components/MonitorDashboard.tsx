@@ -59,6 +59,7 @@ import { ValueFilterModal } from '@/components/ValueFilterModal';
 import { BulletinBoardDisplay } from '@/components/BulletinBoardDisplay';
 import { HomeBulletinBoardPosts } from '@/components/HomeBulletinBoardPosts';
 import { getRandomTip, Tip } from '@/lib/tips';
+import { CompanyMap3D } from '@/components/CompanyMap3D';
 
 // 8つの価値観の選択肢（ValueFilterModalと共有）
 const VALUE_OPTIONS = [
@@ -132,6 +133,7 @@ export default function MonitorDashboard() {
   const [companyPersonalityType, setCompanyPersonalityType] = useState<string | null>(null);
   const [selectedCharacterType, setSelectedCharacterType] = useState<string | null>(null);
   const [selectedBulletinPostId, setSelectedBulletinPostId] = useState<string | null>(null);
+  const [showCompanyMap3D, setShowCompanyMap3D] = useState(false);
   const [showLineLinkModal, setShowLineLinkModal] = useState(false);
   const [isLineLinked, setIsLineLinked] = useState<boolean>(false);
   const [lineUserId, setLineUserId] = useState<string | null>(null);
@@ -3881,6 +3883,19 @@ export default function MonitorDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* 3Dマップで遊ぶボタン */}
+                {companyDetailView === 'info' && (
+                  <div className="mt-8 mb-4">
+                    <button
+                      onClick={() => setShowCompanyMap3D(true)}
+                      className="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-bold text-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                    >
+                      <MapPin className="w-6 h-6" />
+                      3Dマップで遊ぶ
+                    </button>
+                  </div>
+                )}
                   </>
                 )}
 
