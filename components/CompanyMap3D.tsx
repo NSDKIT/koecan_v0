@@ -465,7 +465,14 @@ export function CompanyMap3D({ onClose, studentPersonalityType, companies }: Com
 
       {/* 操作説明 */}
       <div className="bg-white/90 backdrop-blur-sm p-4 text-sm text-gray-700">
-        <p>操作: マウスドラッグで視点を回転、WASDキーで移動</p>
+        <div className="space-y-2">
+          <p className="font-bold text-gray-800">操作方法:</p>
+          <ul className="list-disc list-inside space-y-1 text-gray-600">
+            <li><strong>WASDキー</strong>: 前後左右に歩いて移動（W: 前進、S: 後退、A: 左、D: 右）</li>
+            <li><strong>マウスドラッグ</strong>: 視点を回転（上下左右を見回す）</li>
+            <li>企業の近くまで歩いて行くと、「目指す未来」が表示されます</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
