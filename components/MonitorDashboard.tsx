@@ -3106,22 +3106,21 @@ export default function MonitorDashboard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                           {/* 左側：キャラクターカード */}
                           <div className="flex flex-col items-center">
-                            <div className="relative mb-4">
-                              <img
-                                src={`/character/${typeCode}.png`}
-                                alt={`${typeInfo.name} キャラクターカード`}
-                                className="w-full max-w-sm rounded-lg shadow-lg"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
+                            <div className="relative mb-4 w-full max-w-sm">
+                              <video
+                                src={`/character/${typeCode}.mp4`}
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full rounded-lg shadow-lg"
                               />
                             </div>
                             <button
                               onClick={() => {
                                 const link = document.createElement('a');
-                                link.href = `/character/${typeCode}.png`;
-                                link.download = `${typeInfo.code}_${typeInfo.name}_キャラクターカード.png`;
+                                link.href = `/character/${typeCode}.mp4`;
+                                link.download = `${typeInfo.code}_${typeInfo.name}_キャラクターカード.mp4`;
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
