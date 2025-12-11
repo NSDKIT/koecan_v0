@@ -3108,7 +3108,7 @@ export default function MonitorDashboard() {
                           <div className="flex flex-col items-center">
                             <div className="relative mb-4 w-full max-w-sm">
                               <video
-                                src={`/character/${typeCode}.mp4`}
+                                src={`/character_card/${typeCode}.mp4`}
                                 autoPlay
                                 loop
                                 muted
@@ -3119,7 +3119,7 @@ export default function MonitorDashboard() {
                             <button
                               onClick={() => {
                                 const link = document.createElement('a');
-                                link.href = `/character/${typeCode}.mp4`;
+                                link.href = `/character_card/${typeCode}.mp4`;
                                 link.download = `${typeInfo.code}_${typeInfo.name}_キャラクターカード.mp4`;
                                 document.body.appendChild(link);
                                 link.click();
