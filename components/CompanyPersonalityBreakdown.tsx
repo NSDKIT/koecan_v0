@@ -38,7 +38,6 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'chart' | 'statistics'>('chart'); // デフォルトをチャートに
   const [studentAxes, setStudentAxes] = useState<Record<string, number> | null>(null);
 
   // 個別回答データを状態として管理（統計表示でも使用）
@@ -554,36 +553,10 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
           </button>
         </div>
 
-        {/* 表示モード切り替え */}
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setViewMode('chart')}
-            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
-              viewMode === 'chart'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <BarChart3 className="w-5 h-5 mr-2" />
-            レーダーチャート
-          </button>
-          <button
-            onClick={() => setViewMode('statistics')}
-            className={`flex-1 px-6 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center ${
-              viewMode === 'statistics'
-                ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <TrendingUp className="w-5 h-5 mr-2" />
-            統計表示
-          </button>
-        </div>
       </div>
 
-      {/* レーダーチャート表示 */}
-      {viewMode === 'chart' && (
-        <div className="space-y-6">
+      {/* レーダーチャートと統計表示を常に表示 */}
+      <div className="space-y-6">
           {/* レーダーチャート */}
           {chartData.length > 0 && (
             <div className="bg-white rounded-xl p-0">
@@ -729,19 +702,16 @@ export function CompanyPersonalityBreakdown({ companyId, isAdmin = false, onDele
             </div>
           )}
 
-          {/* 統計表示をレーダーチャートの下に表示 */}
-          <CompanyPersonalityStatistics
-            jobTypeResults={jobTypeResults}
-            yearsResults={yearsResults}
-            companyId={companyId}
-            selectedView={selectedView}
-            studentAxes={studentAxes}
-            individualData={individualData}
-          />
-        </div>
-      )}
-
-      {/* 統計表示のみ（viewMode === 'statistics'の場合は表示しない） */}
+        {/* 統計表示をレーダーチャートの下に表示 */}
+        <CompanyPersonalityStatistics
+          jobTypeResults={jobTypeResults}
+          yearsResults={yearsResults}
+          companyId={companyId}
+          selectedView={selectedView}
+          studentAxes={studentAxes}
+          individualData={individualData}
+        />
+      </div>
 
 
       {/* タイプ詳細モーダル */}
